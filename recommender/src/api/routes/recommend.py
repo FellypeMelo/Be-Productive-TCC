@@ -13,6 +13,7 @@ class RecommendRequest(BaseModel):
     """Request schema for recommendations (RF014)"""
     user_id: int
     category: Optional[Literal["PRODUTIVIDADE", "ENTRETENIMENTO"]] = None
+    topic_id: Optional[int] = None
     limit: int = 20
     emotional_state: Optional[str] = None
 
@@ -39,6 +40,7 @@ async def recommend(request: RecommendRequest):
         result = get_recommendations(
             user_id=request.user_id,
             category=request.category,
+            topic_id=request.topic_id,
             limit=request.limit,
             emotional_state=request.emotional_state
         )
@@ -51,6 +53,7 @@ async def recommend(request: RecommendRequest):
 async def recommend_get(
     user_id: int,
     category: Optional[str] = None,
+    topic_id: Optional[int] = None,
     limit: int = 20
 ):
     """GET version for simple recommendations"""
@@ -58,6 +61,7 @@ async def recommend_get(
         result = get_recommendations(
             user_id=user_id,
             category=category,
+            topic_id=topic_id,
             limit=limit
         )
         return result

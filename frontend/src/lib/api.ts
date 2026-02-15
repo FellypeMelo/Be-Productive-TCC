@@ -212,6 +212,7 @@ export interface Content {
     data_publicacao: string;
     score_de_qualidade: number;
     tags_relevantes: string;
+    topics?: Topic[];
 }
 
 export interface CreateContentInput {

@@ -79,15 +79,14 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*domain.Content, error
 // GetFeed returns personalized feed (RF011, RF014)
 func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int) ([]domain.Content, error) {
 	// 1. Try to get recommendations from external service
-	// For now, topicID is only used in DB fallback (KISS)
-	contentIDs, err := s.fetchRecommendations(ctx, userID, category, limit)
+	contentIDs, err := s.fetchRecommendations(ctx, userID, category, topicID, limit)
 	if err != nil || len(contentIDs) == 0 {
 		// Fallback: simple DB-only feed if recommender fails or returns nothing (KISS/Resilience)
 		fmt.Printf("Warning: Recommender failed or returned no data: %v. Falling back to DB feed.\n", err)
 		return s.repo.GetFeed(ctx, userID, category, topicID, limit)
 	}
 
-	fmt.Printf("Success: Received %d recommendations from service for user %d\n", len(contentIDs), userID)
+	fmt.Printf("Success: Received %d recommendations from service for user %d (Topic: %d)\n", len(contentIDs), userID, topicID)
 	// 2. Fetch content details from Repository using Batch Get
 	contents, err := s.repo.GetByIDs(ctx, contentIDs)
 	if err != nil {
@@ -98,7 +97,7 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 	return contents, nil
 }
 
-func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, limit int) ([]int64, error) {
+func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int) ([]int64, error) {
 	url := fmt.Sprintf("%s/api/v1/recommend", s.recommenderURL)
 
 	params := map[string]interface{}{
@@ -107,6 +106,9 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 	}
 	if category != "" {
 		params["category"] = category
+	}
+	if topicID > 0 {
+		params["topic_id"] = topicID
 	}
 
 	reqBody, _ := json.Marshal(params)

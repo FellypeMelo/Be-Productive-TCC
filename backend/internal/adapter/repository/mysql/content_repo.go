@@ -66,6 +66,13 @@ func (r *ContentRepository) GetByID(ctx context.Context, id int64) (*domain.Cont
 	if err != nil {
 		return nil, err
 	}
+
+	// Fetch topics
+	topics, err := r.fetchTopicsForContents(ctx, []int64{id})
+	if err == nil {
+		content.Topics = topics[id]
+	}
+
 	return content, nil
 }
 
@@ -106,6 +113,7 @@ func (r *ContentRepository) GetByIDs(ctx context.Context, ids []int64) ([]domain
 	defer rows.Close()
 
 	contents := []domain.Content{}
+	contentIDs := []int64{}
 	for rows.Next() {
 		var c domain.Content
 		if err := rows.Scan(&c.ID, &c.Titulo, &c.Corpo, &c.MidiaURL, &c.TipoDeMidia,
@@ -113,7 +121,17 @@ func (r *ContentRepository) GetByIDs(ctx context.Context, ids []int64) ([]domain
 			return nil, err
 		}
 		contents = append(contents, c)
+		contentIDs = append(contentIDs, c.ID)
 	}
+
+	// Fetch topics for all contents
+	topicsMap, err := r.fetchTopicsForContents(ctx, contentIDs)
+	if err == nil {
+		for i := range contents {
+			contents[i].Topics = topicsMap[contents[i].ID]
+		}
+	}
+
 	return contents, nil
 }
 
@@ -141,6 +159,7 @@ func (r *ContentRepository) GetFeed(ctx context.Context, userID int64, category 
 	defer rows.Close()
 
 	contents := []domain.Content{}
+	contentIDs := []int64{}
 	for rows.Next() {
 		var c domain.Content
 		if err := rows.Scan(&c.ID, &c.Titulo, &c.Corpo, &c.MidiaURL, &c.TipoDeMidia,
@@ -148,8 +167,58 @@ func (r *ContentRepository) GetFeed(ctx context.Context, userID int64, category 
 			return nil, err
 		}
 		contents = append(contents, c)
+		contentIDs = append(contentIDs, c.ID)
 	}
+
+	// Fetch topics for all contents
+	topicsMap, err := r.fetchTopicsForContents(ctx, contentIDs)
+	if err == nil {
+		for i := range contents {
+			contents[i].Topics = topicsMap[contents[i].ID]
+		}
+	}
+
 	return contents, nil
+}
+
+func (r *ContentRepository) fetchTopicsForContents(ctx context.Context, contentIDs []int64) (map[int64][]domain.Topic, error) {
+	if len(contentIDs) == 0 {
+		return make(map[int64][]domain.Topic), nil
+	}
+
+	query := `
+		SELECT ct.id_conteudo, t.id_topico, t.nome_topico, t.descricao
+		FROM topico t
+		INNER JOIN conteudo_topico ct ON t.id_topico = ct.id_topico
+		WHERE ct.id_conteudo IN (`
+
+	args := make([]interface{}, len(contentIDs))
+	for i, id := range contentIDs {
+		query += "?"
+		if i < len(contentIDs)-1 {
+			query += ","
+		}
+		args[i] = id
+	}
+	query += ")"
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	topicsMap := make(map[int64][]domain.Topic)
+	for rows.Next() {
+		var contentID int64
+		var t domain.Topic
+		if err := rows.Scan(&contentID, &t.ID, &t.NomeTopico, &t.Descricao); err != nil {
+			continue
+		}
+		topicsMap[contentID] = append(topicsMap[contentID], t)
+	}
+
+	return topicsMap, nil
 }
 
 // UpdateQualityScore updates content quality score

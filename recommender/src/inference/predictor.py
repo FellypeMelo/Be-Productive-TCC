@@ -29,6 +29,7 @@ def get_model() -> HybridRecommender:
 def get_recommendations(
     user_id: int,
     category: Optional[str] = None,
+    topic_id: Optional[int] = None,
     limit: int = 20,
     emotional_state: Optional[str] = None
 ) -> Dict[str, Any]:
@@ -38,6 +39,7 @@ def get_recommendations(
     Args:
         user_id: The user to recommend for
         category: Optional category filter (PRODUTIVIDADE or ENTRETENIMENTO)
+        topic_id: Optional topic ID filter
         limit: Maximum number of recommendations
         emotional_state: User's current emotional state for adjustments
     
@@ -48,14 +50,18 @@ def get_recommendations(
     
     # Get candidate content IDs from DB (UC14)
     try:
-        candidate_ids = get_all_content_ids(category=category)
+        candidate_ids = get_all_content_ids(category=category, topic_id=topic_id)
     except Exception as e:
         print(f"Error fetching candidate IDs from DB: {e}")
         candidate_ids = []
 
     if not candidate_ids:
-        # Fallback to local range if DB is empty or failed
-        candidate_ids = list(range(1, 101))
+        # Fallback if DB query returned nothing
+        return {
+            "content_ids": [],
+            "scores": [],
+            "model_version": MODEL_VERSION
+        }
     
     # Get predictions from hybrid model
     content_ids, scores = model.predict(

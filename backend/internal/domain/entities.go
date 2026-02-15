@@ -57,6 +57,7 @@ type Content struct {
 	DataPublicacao   time.Time       `json:"data_publicacao"`
 	TagsRelevantes   string          `json:"tags_relevantes"`
 	ScoreDeQualidade float64         `json:"score_de_qualidade"`
+	Topics           []Topic         `json:"topics,omitempty"`
 }
 
 // FocusGoalStatus enum

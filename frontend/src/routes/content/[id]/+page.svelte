@@ -111,6 +111,18 @@
             >
               {content.titulo}
             </h1>
+
+            {#if content.topics && content.topics.length > 0}
+              <div class="flex flex-wrap gap-2 mb-12">
+                {#each content.topics as topic}
+                  <span
+                    class="px-3 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-widest"
+                  >
+                    {topic.nome_topico}
+                  </span>
+                {/each}
+              </div>
+            {/if}
           </header>
 
           {#if content.tipo_de_midia === "VIDEO"}

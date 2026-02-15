@@ -340,6 +340,16 @@
                                         : ""}>{content.categoria}</span
                                 >
                             </div>
+
+                            {#if content.topics && content.topics.length > 0}
+                                <div class="flex flex-wrap gap-1 mt-3">
+                                    {#each content.topics as topic}
+                                        <span class="px-1 bg-black text-white text-[8px] font-bold uppercase tracking-tighter">
+                                            {topic.nome_topico}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </article>
                     </a>
                 {/each}
