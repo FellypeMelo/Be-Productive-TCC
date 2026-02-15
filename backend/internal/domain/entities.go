@@ -94,4 +94,5 @@ type Session struct {
 	TempoProdutividadeRealizado  int       `json:"tempo_produtividade_realizado"`
 	TempoEntretenimentoRealizado int       `json:"tempo_entretenimento_realizado"`
 	FeedbackDaSessao             *int      `json:"feedback_da_sessao"` // 1-5, nullable
+	ModoAbsoluto                 bool      `json:"modo_absoluto"`
 }

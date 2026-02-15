@@ -68,11 +68,50 @@ func (h *FocusHandler) ListGoals(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, goals)
 }
 
+// ListSessions lists focus sessions
+func (h *FocusHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.URL.Query().Get("user_id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+
+	activeOnly := r.URL.Query().Get("active") == "true"
+
+	sessions, err := h.service.ListSessions(r.Context(), userID, activeOnly)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, sessions)
+}
+
+// GetSessionGoals lists goals for a session
+func (h *FocusHandler) GetSessionGoals(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid session ID")
+		return
+	}
+
+	goals, err := h.service.GetSessionGoals(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, goals)
+}
+
 // StartSession starts a focus session (RF011)
 func (h *FocusHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		UserID  int64   `json:"user_id"`
-		GoalIDs []int64 `json:"goal_ids"`
+		UserID       int64   `json:"user_id"`
+		GoalIDs      []int64 `json:"goal_ids"`
+		ModoAbsoluto bool    `json:"modo_absoluto"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -80,7 +119,7 @@ func (h *FocusHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.service.StartSession(r.Context(), req.UserID, req.GoalIDs)
+	session, err := h.service.StartSession(r.Context(), req.UserID, req.GoalIDs, req.ModoAbsoluto)
 	if err != nil {
 		handleError(w, err)
 		return

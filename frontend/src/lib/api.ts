@@ -132,10 +132,16 @@ export const api = {
     listGoals: (userId: number) =>
         fetchApi<FocusGoal[]>(`/focus/goals?user_id=${userId}`).then(data => data || []),
 
-    startSession: (userId: number, goalIds: number[]) =>
+    listActiveSessions: (userId: number) =>
+        fetchApi<Session[]>(`/focus/sessions?user_id=${userId}&active=true`).then(data => data || []),
+
+    getSessionGoals: (sessionId: number) =>
+        fetchApi<FocusGoal[]>(`/focus/sessions/${sessionId}/goals`).then(data => data || []),
+
+    startSession: (userId: number, goalIds: number[], modoAbsoluto: boolean) =>
         fetchApi<Session>('/focus/sessions', {
             method: 'POST',
-            body: JSON.stringify({ user_id: userId, goal_ids: goalIds }),
+            body: JSON.stringify({ user_id: userId, goal_ids: goalIds, modo_absoluto: modoAbsoluto }),
         }),
 
     endSession: (sessionId: number, data: EndSessionInput) =>

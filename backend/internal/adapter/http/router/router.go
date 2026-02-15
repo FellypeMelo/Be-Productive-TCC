@@ -74,6 +74,8 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 	// Focus routes (Protected)
 	mux.Handle("POST /api/v1/focus/goals", auth(http.HandlerFunc(focusHandler.CreateGoal)))
 	mux.Handle("GET /api/v1/focus/goals", auth(http.HandlerFunc(focusHandler.ListGoals)))
+	mux.Handle("GET /api/v1/focus/sessions", auth(http.HandlerFunc(focusHandler.ListSessions)))
+	mux.Handle("GET /api/v1/focus/sessions/{id}/goals", auth(http.HandlerFunc(focusHandler.GetSessionGoals)))
 	mux.Handle("POST /api/v1/focus/sessions", auth(http.HandlerFunc(focusHandler.StartSession)))
 	mux.Handle("PUT /api/v1/focus/sessions/{id}", auth(http.HandlerFunc(focusHandler.EndSession)))
 	mux.Handle("GET /api/v1/focus/sessions/{id}/report", auth(http.HandlerFunc(focusHandler.GetReport)))

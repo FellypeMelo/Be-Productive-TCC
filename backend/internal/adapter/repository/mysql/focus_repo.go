@@ -89,10 +89,10 @@ func (r *FocusRepository) UpdateGoal(ctx context.Context, goal *domain.FocusGoal
 // CreateSession inserts a new session
 func (r *FocusRepository) CreateSession(ctx context.Context, session *domain.Session) error {
 	query := `
-		INSERT INTO sessao_de_uso (usuario_associado_id, hora_inicio, hora_fim, tempo_produtividade_realizado, tempo_entretenimento_realizado)
-		VALUES (?, ?, ?, 0, 0)
+		INSERT INTO sessao_de_uso (usuario_associado_id, hora_inicio, hora_fim, tempo_produtividade_realizado, tempo_entretenimento_realizado, modo_absoluto)
+		VALUES (?, ?, NULL, 0, 0, ?)
 	`
-	result, err := r.db.ExecContext(ctx, query, session.UsuarioAssociadoID, session.HoraInicio, session.HoraInicio)
+	result, err := r.db.ExecContext(ctx, query, session.UsuarioAssociadoID, session.HoraInicio, session.ModoAbsoluto)
 	if err != nil {
 		return err
 	}
@@ -109,13 +109,13 @@ func (r *FocusRepository) CreateSession(ctx context.Context, session *domain.Ses
 func (r *FocusRepository) GetSessionByID(ctx context.Context, id int64) (*domain.Session, error) {
 	query := `
 		SELECT id_sessao, usuario_associado_id, hora_inicio, hora_fim, 
-		       tempo_produtividade_realizado, tempo_entretenimento_realizado, feedback_da_sessao
+		       tempo_produtividade_realizado, tempo_entretenimento_realizado, feedback_da_sessao, modo_absoluto
 		FROM sessao_de_uso WHERE id_sessao = ?
 	`
 	session := &domain.Session{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&session.ID, &session.UsuarioAssociadoID, &session.HoraInicio, &session.HoraFim,
-		&session.TempoProdutividadeRealizado, &session.TempoEntretenimentoRealizado, &session.FeedbackDaSessao)
+		&session.TempoProdutividadeRealizado, &session.TempoEntretenimentoRealizado, &session.FeedbackDaSessao, &session.ModoAbsoluto)
 	if err == sql.ErrNoRows {
 		return nil, domain.ErrNotFound
 	}
@@ -125,15 +125,45 @@ func (r *FocusRepository) GetSessionByID(ctx context.Context, id int64) (*domain
 	return session, nil
 }
 
+// ListSessions retrieves user's sessions
+func (r *FocusRepository) ListSessions(ctx context.Context, userID int64, activeOnly bool) ([]domain.Session, error) {
+	query := `
+		SELECT id_sessao, usuario_associado_id, hora_inicio, hora_fim, 
+		       tempo_produtividade_realizado, tempo_entretenimento_realizado, feedback_da_sessao, modo_absoluto
+		FROM sessao_de_uso WHERE usuario_associado_id = ?
+	`
+	if activeOnly {
+		query += " AND hora_fim IS NULL"
+	}
+	query += " ORDER BY id_sessao DESC"
+
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	sessions := []domain.Session{}
+	for rows.Next() {
+		var s domain.Session
+		if err := rows.Scan(&s.ID, &s.UsuarioAssociadoID, &s.HoraInicio, &s.HoraFim,
+			&s.TempoProdutividadeRealizado, &s.TempoEntretenimentoRealizado, &s.FeedbackDaSessao, &s.ModoAbsoluto); err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, s)
+	}
+	return sessions, nil
+}
+
 // UpdateSession updates a session
 func (r *FocusRepository) UpdateSession(ctx context.Context, session *domain.Session) error {
 	query := `
 		UPDATE sessao_de_uso 
-		SET hora_fim = ?, tempo_produtividade_realizado = ?, tempo_entretenimento_realizado = ?, feedback_da_sessao = ?
+		SET hora_fim = ?, tempo_produtividade_realizado = ?, tempo_entretenimento_realizado = ?, feedback_da_sessao = ?, modo_absoluto = ?
 		WHERE id_sessao = ?
 	`
 	_, err := r.db.ExecContext(ctx, query,
-		session.HoraFim, session.TempoProdutividadeRealizado, session.TempoEntretenimentoRealizado, session.FeedbackDaSessao, session.ID)
+		session.HoraFim, session.TempoProdutividadeRealizado, session.TempoEntretenimentoRealizado, session.FeedbackDaSessao, session.ModoAbsoluto, session.ID)
 	return err
 }
 

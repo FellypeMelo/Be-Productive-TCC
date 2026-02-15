@@ -16,6 +16,7 @@ type Repository interface {
 	
 	CreateSession(ctx context.Context, session *domain.Session) error
 	GetSessionByID(ctx context.Context, id int64) (*domain.Session, error)
+	ListSessions(ctx context.Context, userID int64, activeOnly bool) ([]domain.Session, error)
 	UpdateSession(ctx context.Context, session *domain.Session) error
 	LinkSessionGoals(ctx context.Context, sessionID int64, goalIDs []int64) error
 	GetSessionGoals(ctx context.Context, sessionID int64) ([]domain.FocusGoal, error)
@@ -92,11 +93,22 @@ func (s *Service) ListGoals(ctx context.Context, userID int64) ([]domain.FocusGo
 	return s.repo.ListGoals(ctx, userID)
 }
 
+// ListSessions returns user's focus sessions
+func (s *Service) ListSessions(ctx context.Context, userID int64, activeOnly bool) ([]domain.Session, error) {
+	return s.repo.ListSessions(ctx, userID, activeOnly)
+}
+
+// GetSessionGoals returns goals linked to a session
+func (s *Service) GetSessionGoals(ctx context.Context, sessionID int64) ([]domain.FocusGoal, error) {
+	return s.repo.GetSessionGoals(ctx, sessionID)
+}
+
 // StartSession starts a focus session (RF011)
-func (s *Service) StartSession(ctx context.Context, userID int64, goalIDs []int64) (*domain.Session, error) {
+func (s *Service) StartSession(ctx context.Context, userID int64, goalIDs []int64, modoAbsoluto bool) (*domain.Session, error) {
 	session := &domain.Session{
 		UsuarioAssociadoID: userID,
 		HoraInicio:         time.Now(),
+		ModoAbsoluto:       modoAbsoluto,
 	}
 
 	if err := s.repo.CreateSession(ctx, session); err != nil {
@@ -153,7 +165,7 @@ func (s *Service) GetReport(ctx context.Context, sessionID int64) (*SessionRepor
 		Goals:   goals,
 	}
 
-	// Calculate classification
+	// Calculate classification (RF013)
 	totalPlanned := 0
 	totalRealized := session.TempoProdutividadeRealizado + session.TempoEntretenimentoRealizado
 
@@ -164,6 +176,12 @@ func (s *Service) GetReport(ctx context.Context, sessionID int64) (*SessionRepor
 	if totalPlanned == 0 {
 		report.Classification = "compromisso_perdido"
 		report.Message = "A meta não foi iniciada. Que tal tentar novamente?"
+	} else if session.ModoAbsoluto && totalRealized < totalPlanned {
+		report.Classification = "compromisso_perdido"
+		report.Message = "O compromisso absoluto foi quebrado. O foco exige disciplina."
+	} else if totalRealized >= totalPlanned {
+		report.Classification = "concluido"
+		report.Message = "Missão cumprida! Você atingiu todos os seus objetivos de foco."
 	} else if totalRealized >= totalPlanned/2 {
 		report.Classification = "progresso"
 		report.Message = "Parabéns! Você está fazendo progresso. Continue assim!"
