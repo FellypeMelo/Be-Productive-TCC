@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #ffffff;
+  --color-fg: #000000;
+  --color-muted: #f5f5f5;
+  --color-border: #e2e2e2;
+  --font-family: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: white;
+    color: black;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-family);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: black;
+  }
+}
+
+@layer components {
+  .btn-minimal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid black;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  .btn-minimal:hover {
+    background-color: black;
+    color: white;
+  }
+
+  .btn-minimal:disabled {
+    opacity: 0.5;
+  }
+
+  .input-minimal {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid black;
+    outline: none;
+  }
+
+  .input-minimal:focus {
+    box-shadow: 0 0 0 1px black;
+  }
+
+  .input-minimal::placeholder {
+    color: #9ca3af;
+  }
+
+  .card-minimal {
+    border: 1px solid black;
+    padding: 1.5rem;
+    background-color: white;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
