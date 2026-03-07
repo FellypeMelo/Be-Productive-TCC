@@ -1,0 +1,97 @@
+\begin{thebibliography}{}
+
+\bibitem[Agarwal et~al., 2024]{agarwal2024}
+Agarwal, A., Usunier, N., Lazaric, A., and Nickel, M. (2024).
+\newblock Disentangling system-1 and system-2 contributions to user return with
+  hawkes processes.
+\newblock {\em arXiv preprint arXiv:2406.01611}.
+
+\bibitem[Allcott et~al., 2021]{allcott2021}
+Allcott, H. et~al. (2021).
+\newblock Digital addiction.
+\newblock NBER Working Paper 28936, National Bureau of Economic Research.
+
+\bibitem[Brasil, 2021]{brasil_sd}
+Brasil (2021).
+\newblock Saúde mental.
+
+\bibitem[Carvalho, 2023]{carvalho2023}
+Carvalho, F. (2023).
+\newblock Modelling the recommender alignment problem.
+\newblock Master's thesis, Master's Thesis.
+
+\bibitem[{Center for Humane Technology}, 2026]{cht2026}
+{Center for Humane Technology} (2020--2026).
+\newblock Time well spent movement.
+
+\bibitem[Citton, 2017]{citton2017}
+Citton, Y. (2017).
+\newblock {\em The Ecology of Attention}.
+\newblock Polity Press, Cambridge.
+
+\bibitem[Costello et~al., 2023]{costello2023}
+Costello, N. et~al. (2023).
+\newblock Algorithms, addiction, and adolescent mental health.
+\newblock {\em American Journal of Law \& Medicine}.
+
+\bibitem[{Forest Team}, 2020]{forest}
+{Forest Team} (2020).
+\newblock Forest: Stay focused, be present.
+
+\bibitem[Hari, 2022]{hari2022}
+Hari, J. (2022).
+\newblock {\em Foco Roubado}.
+\newblock Vestígio, Rio de Janeiro.
+
+\bibitem[Harris, 2019]{harris2019}
+Harris, T. (2019).
+\newblock Optimizing for engagement.
+\newblock Testimony before U.S. Senate.
+
+\bibitem[Kahneman, 2011]{kahneman2011}
+Kahneman, D. (2011).
+\newblock {\em Thinking, Fast and Slow}.
+\newblock Farrar, Straus and Giroux, New York.
+
+\bibitem[Kushlev et~al., 2022]{kushlev2022}
+Kushlev, K. et~al. (2022).
+\newblock A nudge-based intervention to reduce problematic smartphone use.
+\newblock {\em Computers in Human Behavior}.
+
+\bibitem[Lyngs et~al., 2019]{lyngs2019}
+Lyngs, U. et~al. (2019).
+\newblock Self-control in cyberspace.
+\newblock In {\em CHI 2019}.
+
+\bibitem[Paas et~al., 2023]{paas2023}
+Paas, F. et~al. (2023).
+\newblock Cognitive load theory.
+\newblock {\em Journal of Medical Education}.
+
+\bibitem[{RescueTime}, 2020]{rescuetime}
+{RescueTime} (2020).
+\newblock Rescuetime.
+
+\bibitem[Rizoiu et~al., 2017]{rizoiu2017}
+Rizoiu, M.-A. et~al. (2017).
+\newblock Expecting to be hip: Hawkes intensity processes for social media
+  popularity.
+\newblock In {\em WWW 2017}.
+
+\bibitem[{Stanford HAI}, 2021]{hai2021}
+{Stanford HAI} (2021).
+\newblock A psychiatrist's perspective on social media algorithms and mental
+  health.
+
+\bibitem[Stray et~al., 2021]{stray2021}
+Stray, J. et~al. (2021).
+\newblock What are you optimizing for? aligning recommender systems with human
+  values.
+\newblock {\em ICML 2021. arXiv:2107.10939}.
+
+\bibitem[Zuboff, 2019]{zuboff2019}
+Zuboff, S. (2019).
+\newblock {\em The Age of Surveillance Capitalism}.
+\newblock PublicAffairs, New York.
+
+\end{thebibliography}

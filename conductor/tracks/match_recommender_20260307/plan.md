@@ -1,7 +1,7 @@
 # Implementation Plan: Match The New Recommender Algorithm with BackEnd and FrontEnd
 
 ## Phase 1: Recommender Refinement (Python)
-- [ ] Task: RED - Define mental health metrics tests in Recommender
+- [~] Task: RED - Define mental health metrics tests in Recommender
     - [ ] Create `recommender/tests/test_wellbeing_metrics.py` with failing test cases for new scoring.
 - [ ] Task: GREEN - Implement wellbeing scoring in `recommender/src/domain/metrics.py`
 - [ ] Task: REFACTOR - Optimize Python ranking pipeline
