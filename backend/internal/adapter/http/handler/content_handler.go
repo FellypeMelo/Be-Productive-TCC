@@ -100,6 +100,8 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 	topicIDStr := r.URL.Query().Get("topic_id")
 	limitStr := r.URL.Query().Get("limit")
+	absoluteModeStr := r.URL.Query().Get("absolute_mode_active")
+	declaredGoal := r.URL.Query().Get("declared_goal")
 
 	topicID, _ := strconv.ParseInt(topicIDStr, 10, 64)
 
@@ -110,13 +112,28 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	feed, err := h.service.GetFeed(r.Context(), userID, domain.ContentCategory(category), topicID, limit)
+	absoluteModeActive := absoluteModeStr == "true" || absoluteModeStr == "1"
+
+	feed, frictionLevel, err := h.service.GetFeed(r.Context(), userID, domain.ContentCategory(category), topicID, limit, absoluteModeActive, declaredGoal)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
-	respondJSON(w, http.StatusOK, feed)
+	respondJSON(w, http.StatusOK, map[string]any{
+		"content_ids":   extractContentIDs(feed),
+		"scores":        nil,
+		"items":         feed,
+		"friction_level": frictionLevel,
+	})
+}
+
+func extractContentIDs(contents []domain.Content) []int64 {
+	ids := make([]int64, len(contents))
+	for i, c := range contents {
+		ids[i] = c.ID
+	}
+	return ids
 }
 
 // SubmitFeedback handles user feedback on content (RF015)

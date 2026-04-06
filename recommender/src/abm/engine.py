@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 from src.abm.agent import generate_population
-from src.domain.math_models import calculate_ego_depletion
+from src.domain.math_models import calculate_ego_depletion, calculate_hawkes_activation, thompson_sampling_choice
 from src.domain.value_objects import AttentionReserve
 
 class Simulator:
@@ -16,11 +16,13 @@ class Simulator:
         self.results = {
             "baseline": {
                 "r_curves": [[] for _ in range(num_agents)],
-                "q_allocations": [np.zeros(2) for _ in range(num_agents)] # [Prod, Ent]
+                "q_allocations": [np.zeros(2) for _ in range(num_agents)],
+                "hawkes_ratios": [[] for _ in range(num_agents)]
             },
             "sustainable": {
                 "r_curves": [[] for _ in range(num_agents)],
-                "q_allocations": [np.zeros(2) for _ in range(num_agents)]
+                "q_allocations": [np.zeros(2) for _ in range(num_agents)],
+                "hawkes_ratios": [[] for _ in range(num_agents)]
             }
         }
         
@@ -40,14 +42,35 @@ class Simulator:
             reduction = self.params.get("v_scroll_reduction", 0.66) # Default ~3x slow
             v_scroll = max(0.0, self.params.get("v_scroll_sust", np.random.normal(150 * (1 - reduction), 10)))
             v_alt = max(0.0, np.random.normal(1, 0.5))
-            # Highly aligned with user's specific declared goal
-            target_idx = 0 if agent.declared_intent == "PRODUTIVIDADE" else 1
-            cat_idx = np.random.choice([0, 1], p=[0.9, 0.1]) if target_idx == 0 else np.random.choice([0, 1], p=[0.1, 0.9])
+            # Thompson Sampling (Eq. 2 — bayesian arm selection)
+            ts_alpha_prod = self.params.get("ts_alpha_prod", 10.0)
+            ts_beta_prod = self.params.get("ts_beta_prod", 1.0)
+            if agent.declared_intent == "PRODUTIVIDADE":
+                cat_idx = thompson_sampling_choice(
+                    alpha_s1=ts_alpha_prod, beta_s1=ts_beta_prod,
+                    alpha_s2=ts_beta_prod, beta_s2=ts_alpha_prod
+                )
+            else:
+                cat_idx = thompson_sampling_choice(
+                    alpha_s1=ts_beta_prod, beta_s1=ts_alpha_prod,
+                    alpha_s2=ts_alpha_prod, beta_s2=ts_beta_prod
+                )
             
-        # Ego Depletion formula
+        # Ego Depletion formula (Eq 4): dR/dt = μ_rest·(R_max - R) - L(X,t)
         k1 = self.params.get("k1", 0.1)
         k2 = self.params.get("k2", 0.5)
-        new_reserve = calculate_ego_depletion(reserve, v_scroll, v_alt, k1=k1, k2=k2, delta_t=1.0)
+        mu_rest = 0.0 if model == "baseline" else self.params.get("mu_rest", 0.1)
+        new_reserve = calculate_ego_depletion(reserve, v_scroll, v_alt, k1=k1, k2=k2, delta_t=1.0, mu_rest=mu_rest)
+
+        # Hawkes (Eq. 2): lambda_s1 = alpha1 * exp(-beta1 * dt), lambda_s2 = alpha2 * exp(-beta2 * dt)
+        alpha1 = agent.k * self.params.get("alpha1_scale", 0.8)
+        alpha2 = self.params.get("alpha2", 0.5)
+        beta1 = self.params.get("beta1", 0.5)
+        beta2 = self.params.get("beta2", 0.01)
+        lambda_s1 = calculate_hawkes_activation(alpha=alpha1, beta=beta1, time_delta=float(t + 1))
+        lambda_s2 = calculate_hawkes_activation(alpha=alpha2, beta=beta2, time_delta=float(t + 1))
+        hawkes_ratio = lambda_s1 / max(lambda_s2, 1e-12)
+        self.results[model]["hawkes_ratios"][idx].append(hawkes_ratio)
         self.results[model]["r_curves"][idx].append(new_reserve.current)
         
         # Add Time Allocation (Continuous time unit spent instead of discrete to avoid Binomial clustering)

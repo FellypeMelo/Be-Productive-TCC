@@ -46,7 +46,7 @@ func NewService(repo Repository, recommenderURL string) *Service {
 		repo:           repo,
 		recommenderURL: recommenderURL,
 		httpClient: &http.Client{
-			Timeout: 2 * time.Second,
+			Timeout: 10 * time.Second,
 		},
 	}
 }
@@ -77,32 +77,47 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*domain.Content, error
 }
 
 // GetFeed returns personalized feed (RF011, RF014)
-func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int) ([]domain.Content, error) {
+// Optionally accepts absoluteModeActive and declaredGoal to activate the recommender's Absolute Mode filter (Eq.2 + Algorithm 4).
+func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) ([]domain.Content, string, error) {
 	// 1. Try to get recommendations from external service
-	contentIDs, err := s.fetchRecommendations(ctx, userID, category, topicID, limit)
+	contentIDs, scores, frictionLevel, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal)
 	if err != nil || len(contentIDs) == 0 {
 		// Fallback: simple DB-only feed if recommender fails or returns nothing (KISS/Resilience)
 		fmt.Printf("Warning: Recommender failed or returned no data: %v. Falling back to DB feed.\n", err)
-		return s.repo.GetFeed(ctx, userID, category, topicID, limit)
+		contents, dbErr := s.repo.GetFeed(ctx, userID, category, topicID, limit)
+		return contents, "none", dbErr
 	}
 
-	fmt.Printf("Success: Received %d recommendations from service for user %d (Topic: %d)\n", len(contentIDs), userID, topicID)
+	fmt.Printf("Success: Received %d recommendations from service for user %d (Topic: %d). Friction: %s\n", len(contentIDs), userID, topicID, frictionLevel)
 	// 2. Fetch content details from Repository using Batch Get
 	contents, err := s.repo.GetByIDs(ctx, contentIDs)
 	if err != nil {
 		fmt.Printf("Warning: Failed to fetch content details for recommended IDs: %v. Falling back.\n", err)
-		return s.repo.GetFeed(ctx, userID, category, topicID, limit)
+		contents, _ = s.repo.GetFeed(ctx, userID, category, topicID, limit)
 	}
 
-	return contents, nil
+	// 3. Update quality scores from recommender
+	s.updateContentScores(ctx, contentIDs, scores)
+
+	return contents, frictionLevel, nil
 }
 
-func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int) ([]int64, error) {
+func (s *Service) updateContentScores(ctx context.Context, contentIDs []int64, scores []float64) {
+	if len(contentIDs) != len(scores) {
+		return
+	}
+	for i, id := range contentIDs {
+		_ = s.repo.UpdateQualityScore(ctx, id, scores[i])
+	}
+}
+
+func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) ([]int64, []float64, string, error) {
 	url := fmt.Sprintf("%s/api/v1/recommend", s.recommenderURL)
 
 	params := map[string]interface{}{
-		"user_id": userID,
-		"limit":   limit,
+		"user_id":              userID,
+		"limit":                limit,
+		"absolute_mode_active": absoluteModeActive,
 	}
 	if category != "" {
 		params["category"] = category
@@ -110,33 +125,39 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 	if topicID > 0 {
 		params["topic_id"] = topicID
 	}
+	if declaredGoal != "" {
+		params["declared_goal"] = declaredGoal
+	}
 
 	reqBody, _ := json.Marshal(params)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, err
+		return nil, nil, "none", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, "none", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("recommender returned status %d", resp.StatusCode)
+		return nil, nil, "none", fmt.Errorf("recommender returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
-		ContentIDs []int64 `json:"content_ids"`
+		ContentIDs    []int64   `json:"content_ids"`
+		Scores        []float64 `json:"scores"`
+		FrictionLevel string    `json:"friction_level"`
+		ModelVersion  string    `json:"model_version"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
+		return nil, nil, "none", err
 	}
 
-	return result.ContentIDs, nil
+	return result.ContentIDs, result.Scores, result.FrictionLevel, nil
 }
 
 // SubmitFeedback records user feedback and updates quality score (RF015, RN002)

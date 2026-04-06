@@ -387,7 +387,7 @@
                 <div class="space-y-12">
                     <div class="flex justify-between items-end border-b-2 border-black pb-6">
                         <h2 class="font-bold text-xl uppercase tracking-tighter">Session Architect</h2>
-                        <button class="btn-minimal py-2 px-4" onclick={toggleGoalForm}>
+                        <button class="btn-minimal py-2 px-4" onclick={() => showGoalForm = !showGoalForm}>
                             {showGoalForm ? "Discard" : "+ New Meta"}
                         </button>
                     </div>

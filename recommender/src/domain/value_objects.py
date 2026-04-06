@@ -1,4 +1,11 @@
 from dataclasses import dataclass
+from enum import Enum
+
+class FrictionLevel(Enum):
+    NONE = "none"
+    MILD = "mild"
+    HIGH = "high"
+    BLOCK = "block"
 
 @dataclass
 class QualityScore:

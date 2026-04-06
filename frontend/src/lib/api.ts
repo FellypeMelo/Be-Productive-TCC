@@ -218,6 +218,7 @@ export interface Content {
 export interface CreateContentInput {
     titulo: string;
     corpo: string;
+    midia_url?: string;
     tipo_de_midia: string;
     categoria: string;
     autor_id: number;
@@ -248,6 +249,7 @@ export interface Session {
     tempo_produtividade_realizado: number;
     tempo_entretenimento_realizado: number;
     feedback_da_sessao: number | null;
+    modo_absoluto: boolean;
 }
 
 export interface EndSessionInput {
@@ -259,6 +261,6 @@ export interface EndSessionInput {
 export interface SessionReport {
     session: Session;
     goals: FocusGoal[];
-    classification: 'progresso' | 'nao_concluido' | 'compromisso_perdido';
+    classification: 'progresso' | 'nao_concluido' | 'compromisso_perdido' | 'concluido';
     message: string;
 }

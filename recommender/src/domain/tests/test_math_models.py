@@ -75,3 +75,80 @@ def test_system_2_activation_hawkes():
     
     # 0.5 * e^(-0.01 * 10) = 0.5 * e^(-0.1) = ~0.452
     assert pytest.approx(activation, 0.01) == 0.452
+
+def test_ego_depletion_with_recovery():
+    """
+    FASE RED — Eq. 4 completa: dR/dt = μ_rest·(R_max - R) - L(X,t)
+    Cenário de recuperação pura (L = 0):
+    recovery = 0.1 * (100 - 50) = 5.0
+    delta = (5.0 - 0.0) * 1.0 = 5.0
+    new_current = 50 + 5.0 = 55.0
+    """
+    reserve = AttentionReserve(current=50.0, r_max=100.0)
+    result = calculate_ego_depletion(
+        reserve, v_scroll=0.0, v_alt=0.0,
+        k1=0.1, k2=0.5, delta_t=1.0, mu_rest=0.1
+    )
+    assert isinstance(result, AttentionReserve)
+    assert pytest.approx(result.current, abs=0.001) == 55.0
+
+def test_ego_depletion_saturates_even_with_recovery():
+    """
+    FASE RED — Verifica saturação em zero quando L >> recovery.
+    L = (0.1 * 1000) + (1.0 * 0) = 100.0
+    recovery = 0.1 * (100 - 5) = 9.5
+    delta = (9.5 - 100.0) * 1.0 = -90.5
+    new_current = max(0, 5 + (-90.5)) = 0.0
+    """
+    reserve = AttentionReserve(current=5.0, r_max=100.0)
+    result = calculate_ego_depletion(
+        reserve, v_scroll=1000.0, v_alt=0.0,
+        k1=0.1, k2=1.0, delta_t=1.0, mu_rest=0.1
+    )
+    assert result.current == 0.0
+
+def test_thompson_sampling_choice_favors_dominant_arm():
+    """
+    FASE RED — Grupo 4: Thompson Sampling via distribuição Beta.
+    Com priors fortes alpha_s1=100, beta_s1=1 (S1 dominante),
+    a maioria das N amostras deve retornar 0 (S1).
+    """
+    from src.domain.math_models import thompson_sampling_choice
+
+    choices = [thompson_sampling_choice(
+        alpha_s1=100.0, beta_s1=1.0,
+        alpha_s2=1.0, beta_s2=100.0
+    ) for _ in range(100)]
+
+    # Com priors tão polarizados, >90% devem ser S1 (idx 0)
+    s1_count = sum(1 for c in choices if c == 0)
+    assert s1_count > 90
+
+def test_thompson_sampling_returns_valid_arm_index():
+    """Retorno deve ser 0 ou 1."""
+    from src.domain.math_models import thompson_sampling_choice
+
+    for _ in range(50):
+        arm = thompson_sampling_choice(
+            alpha_s1=1.0, beta_s1=1.0,
+            alpha_s2=1.0, beta_s2=1.0
+        )
+        assert arm in (0, 1)
+
+def test_kl_divergence_zero_for_identical():
+    """KL(P || Q) = 0 quando P == Q."""
+    from src.domain.math_models import calculate_kl_divergence
+    assert calculate_kl_divergence([0.5, 0.5], [0.5, 0.5]) == pytest.approx(0.0, abs=1e-10)
+
+def test_kl_divergence_positive_for_different():
+    """KL(P || Q) > 0 quando P ≠ Q."""
+    from src.domain.math_models import calculate_kl_divergence
+    result = calculate_kl_divergence([0.9, 0.1], [0.5, 0.5])
+    assert result > 0
+
+def test_kl_divergence_asymmetric():
+    """KL(P||Q) ≠ KL(Q||P) — KL é assimétrica."""
+    from src.domain.math_models import calculate_kl_divergence
+    kl_pq = calculate_kl_divergence([0.9, 0.1], [0.5, 0.5])
+    kl_qp = calculate_kl_divergence([0.5, 0.5], [0.9, 0.1])
+    assert kl_pq != pytest.approx(kl_qp, abs=1e-8)

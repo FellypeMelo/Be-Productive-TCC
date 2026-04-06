@@ -9,12 +9,16 @@ class ContentItem:
         self.category = category
         self.base_score = base_score
         # Absolute mode zeroing check
-        self.perceived_value = base_score 
+        self.perceived_value = base_score
 
 class ContentRepositoryInterface(ABC):
     @abstractmethod
-    def get_candidate_contents(self, category: Optional[str] = None) -> List[ContentItem]:
-        """Fetch candidates from DB."""
+    def get_candidate_contents(
+        self,
+        category: Optional[str] = None,
+        user_id: Optional[int] = None
+    ) -> List[ContentItem]:
+        """Fetch candidates from DB, optionally scored for user."""
         pass
 
 class SafetyClassifierInterface(ABC):
@@ -28,8 +32,23 @@ class TrajectoryRepositoryInterface(ABC):
     def save_fatigue_parameters(self, user_id: int, mu_rest: float, kappa1: float, kappa2: float) -> None:
         """Sincroniza os parâmetros da EDO com o cliente Edge AI."""
         pass
-    
+
     @abstractmethod
     def check_fatigue_alarm_status(self, user_id: int) -> bool:
         """Verifica se o Edge AI disparou o sinal de fadiga crítica para frear sugestões."""
+        pass
+
+    @abstractmethod
+    def set_fatigue_alarm(self, user_id: int, is_fatigued: bool) -> None:
+        """Allows Edge AI client to set alarm status."""
+        pass
+
+    @abstractmethod
+    def record_behavioral_event(self, user_id: int, v_scroll: float, v_alt: float) -> None:
+        """Record a behavioral signal event."""
+        pass
+
+    @abstractmethod
+    def get_recent_behavior(self, user_id: int, n: int = 10) -> list:
+        """Retrieve recent behavioral events."""
         pass
