@@ -1,5 +1,7 @@
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+// Python recommender URL — used for real-time telemetry (no JWT needed)
+const RECOMMENDER_URL = import.meta.env.VITE_RECOMMENDER_URL || 'http://localhost:8002';
 
 interface ApiResponse<T> {
     success: boolean;
@@ -92,14 +94,15 @@ export const api = {
         fetchApi<Topic[]>(`/users/${userId}/topics`).then(data => data || []),
 
     // Content
-    getFeed: (userId: number, category?: string, topicId?: number, limit = 20) => {
+    getFeed: (userId: number, category?: string, topicId?: number, limit = 20, absoluteModeActive = false, declaredGoal?: string) => {
         const params = new URLSearchParams({
-            user_id: userId.toString(),
             limit: limit.toString(),
         });
         if (category) params.set('category', category);
         if (topicId) params.set('topic_id', topicId.toString());
-        return fetchApi<Content[]>(`/feed?${params}`).then(data => data || []);
+        if (absoluteModeActive) params.set('absolute_mode_active', 'true');
+        if (declaredGoal) params.set('declared_goal', declaredGoal);
+        return fetchApi<FeedResponse>(`/feed?${params}`);
     },
 
     getContent: (id: number) => fetchApi<Content>(`/content/${id}`),
@@ -172,6 +175,58 @@ export const api = {
             method: 'PUT',
             body: JSON.stringify(settings)
         }),
+};
+
+// Direct Python recommender calls (no JWT, real-time telemetry)
+export const recommender = {
+    // Behavioral telemetry: send scroll velocity and context switches
+    recordTelemetry: async (userId: number, vScroll: number, vAlt: number) => {
+        try {
+            await fetch(`${RECOMMENDER_URL}/api/v1/fatigue/telemetry`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    v_scroll: vScroll,
+                    v_alt_context: vAlt,
+                }),
+            });
+        } catch {
+            // Swallow — telemetry is best-effort, must not break app
+        }
+    },
+
+    // Analyze user interaction pattern via Hawkes dual-kernel (Eq.2)
+    analyzeBehavior: async (userId: number, eventIntervals: number[]) => {
+        try {
+            const resp = await fetch(`${RECOMMENDER_URL}/api/v1/behavior/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    event_intervals: eventIntervals,
+                }),
+            });
+            return resp.json();
+        } catch {
+            return null;
+        }
+    },
+
+    // Get Thompson Sampling arm for category guidance
+    getThompsonArm: async (userId: number) => {
+        try {
+            const resp = await fetch(`${RECOMMENDER_URL}/api/v1/recommend/thompson/${userId}`);
+            return resp.json() as Promise<{
+                user_id: number;
+                selected_arm: string;
+                alpha_s2: number;
+                beta_s2: number;
+            }>;
+        } catch {
+            return null;
+        }
+    },
 };
 
 // Types
@@ -263,4 +318,11 @@ export interface SessionReport {
     goals: FocusGoal[];
     classification: 'progresso' | 'nao_concluido' | 'compromisso_perdido' | 'concluido';
     message: string;
+}
+
+export interface FeedResponse {
+    content_ids: number[];
+    scores: Record<number, number>;
+    items: Content[];
+    friction_level: "none" | "mild" | "high" | "block";
 }

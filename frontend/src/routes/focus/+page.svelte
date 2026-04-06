@@ -65,7 +65,8 @@
         if (!$currentUser) return;
         isLoadingFeed = true;
         try {
-            focusFeed = await api.getFeed($currentUser.id_usuario, currentCategory);
+            const feedResult = await api.getFeed($currentUser.id_usuario, currentCategory);
+            focusFeed = feedResult.items;
             activeSlideIndex = 0;
         } catch (err) {
             console.error("Error loading focus feed:", err);

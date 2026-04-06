@@ -1,7 +1,7 @@
 <script lang="ts">
     import { currentUser, isLoggedIn } from "$lib/stores";
-    import { api, type Content } from "$lib/api";
-    import { onMount } from "svelte";
+    import { api, type Content, recommender } from "$lib/api";
+    import { onMount, onDestroy } from "svelte";
     import Sidebar from "$lib/components/Sidebar.svelte";
     import { animate, stagger } from "motion";
 
@@ -12,6 +12,15 @@
     let selectedTopic = $state<number | null>(null);
     let topics = $state<any[]>([]);
     let gridRef: HTMLElement;
+
+    // Friction state — driven by Python recommender fatigue policy
+    let frictionLevel = $state<"none" | "mild" | "high" | "block">("none");
+
+    // Behavioral telemetry (scroll velocity + context switches)
+    let telemetryInterval: ReturnType<typeof setInterval> | null = null;
+    let contextSwitchCount = 0;
+    let lastScrollY = 0;
+    let lastScrollTime = Date.now();
 
     // Preserving original mock data for fallback/demo
     const mockFeed: Content[] = [
@@ -76,21 +85,55 @@
         if (!$isLoggedIn) return;
         loadTopics();
         loadFeed();
+        startTelemetry();
     });
+
+    onDestroy(() => {
+        if (telemetryInterval) {
+            clearInterval(telemetryInterval);
+        }
+        document.removeEventListener("visibilitychange", trackVisibility);
+    });
+
+    function startTelemetry() {
+        if (!$currentUser) return;
+
+        // Track context switches (visibility API)
+        document.addEventListener("visibilitychange", trackVisibility);
+
+        telemetryInterval = setInterval(async () => {
+            const now = Date.now();
+            const dt = (now - lastScrollTime) / 1000;
+            if (dt <= 0) return;
+
+            const currentScrollY = window.scrollY || document.documentElement.scrollTop;
+            const vScroll = Math.abs(currentScrollY - lastScrollY) / dt;
+
+            await recommender.recordTelemetry(
+                $currentUser.id_usuario,
+                vScroll,
+                contextSwitchCount,
+            ).catch(() => {});
+
+            lastScrollY = currentScrollY;
+            lastScrollTime = now;
+            contextSwitchCount = 0;
+        }, 5000);
+    }
+
+    function trackVisibility() {
+        if (document.hidden) {
+            contextSwitchCount++;
+        }
+    }
 
     async function loadTopics() {
         if (!$currentUser) return;
         try {
-            // Reusing getMyCommunities as it also implies interests,
-            // but let's check if there's a direct topic list for user.
-            // In current repo, UserRepository has GetTopics.
-            // Let's assume api.getUserTopics exists or similar.
-            // Since I didn't add it to api.ts yet, I'll add it now.
             const userTopics = await api.getUserTopics($currentUser.id_usuario);
             topics = userTopics;
         } catch (err) {
             console.error("Error loading topics:", err);
-            // Fallback topics
             topics = [
                 { id_topico: 1, nome_topico: "Focus" },
                 { id_topico: 2, nome_topico: "Health" },
@@ -103,11 +146,14 @@
         isLoading = true;
         try {
             const userID = $currentUser?.id_usuario || 1;
-            feed = await api.getFeed(
+            const result = await api.getFeed(
                 userID,
                 category || undefined,
                 selectedTopic || undefined,
             );
+
+            feed = result.items;
+            frictionLevel = result.friction_level || "none";
 
             // Animations
             setTimeout(() => {
@@ -124,6 +170,7 @@
             }, 50);
         } catch (err) {
             feed = mockFeed;
+            frictionLevel = "none";
         } finally {
             isLoading = false;
         }
@@ -138,16 +185,37 @@
         selectedTopic = id;
         loadFeed();
     }
+
+    function dismissFriction() {
+        frictionLevel = "none";
+    }
 </script>
 
 <svelte:head>
     <title>Feed | Be Productive</title>
 </svelte:head>
 
-<div class="flex min-h-screen bg-white">
+<!-- Grayscale filter on high friction -->
+<div class="flex min-h-screen bg-white {frictionLevel === 'high' || frictionLevel === 'block' ? 'feed-grayscale' : ''}">
     <Sidebar />
 
     <main class="flex-1 ml-64 p-12">
+        <!-- Friction banners -->
+        {#if frictionLevel === 'high'}
+            <div class="friction-banner">
+                <p>Você parece cansado. Que tal fazer uma pausa?</p>
+                <button onclick={dismissFriction}>Continuar navegando</button>
+            </div>
+        {/if}
+
+        {#if frictionLevel === 'block'}
+            <div class="friction-overlay">
+                <h2>Pausa recomendada</h2>
+                <p>Sua reserva cognitiva está baixa. Volte em alguns minutos.</p>
+                <button onclick={dismissFriction}>Entendi, continuar mesmo assim</button>
+            </div>
+        {/if}
+
         <!-- Header -->
         <header class="flex justify-between items-end mb-16">
             <div>
@@ -210,7 +278,7 @@
                 {#each topics as topic}
                     <button
                         onclick={() => toggleTopic(topic.id_topico)}
-                        class="px-6 py-3 text-[10px) font-bold uppercase tracking-widest border border-black transition-all whitespace-nowrap
+                        class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest border border-black transition-all whitespace-nowrap
                                {selectedTopic === topic.id_topico
                             ? 'bg-black text-white'
                             : 'border-gray-200 hover:border-black'}"
@@ -367,3 +435,77 @@
         {/if}
     </main>
 </div>
+
+<style>
+    /* Grayscale filter for friction states — reduces visual stimulation */
+    .feed-grayscale {
+        filter: grayscale(70%);
+        transition: filter 0.5s ease;
+    }
+
+    /* Friction banner (HIGH friction) */
+    .friction-banner {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .friction-banner p {
+        color: #856404;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .friction-banner button {
+        background: transparent;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        padding: 0.25rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+        color: #856404;
+    }
+
+    /* Friction overlay (BLOCK friction) */
+    .friction-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .friction-overlay h2 {
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+    }
+
+    .friction-overlay p {
+        margin-bottom: 1rem;
+        opacity: 0.8;
+    }
+
+    .friction-overlay button {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        color: white;
+        font-size: 0.8rem;
+    }
+</style>
