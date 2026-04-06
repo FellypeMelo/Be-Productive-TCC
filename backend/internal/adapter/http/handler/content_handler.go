@@ -114,17 +114,17 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 
 	absoluteModeActive := absoluteModeStr == "true" || absoluteModeStr == "1"
 
-	feed, frictionLevel, err := h.service.GetFeed(r.Context(), userID, domain.ContentCategory(category), topicID, limit, absoluteModeActive, declaredGoal)
+	result, err := h.service.GetFeed(r.Context(), userID, domain.ContentCategory(category), topicID, limit, absoluteModeActive, declaredGoal)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
 	respondJSON(w, http.StatusOK, map[string]any{
-		"content_ids":   extractContentIDs(feed),
-		"scores":        nil,
-		"items":         feed,
-		"friction_level": frictionLevel,
+		"content_ids":    extractContentIDs(result.Contents),
+		"scores":         result.Scores,
+		"items":          result.Contents,
+		"friction_level": result.FrictionLevel,
 	})
 }
 

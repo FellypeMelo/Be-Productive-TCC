@@ -33,6 +33,13 @@ type CreateContentInput struct {
 	Tags        string
 }
 
+// FeedResult holds the complete feed payload including model scores.
+type FeedResult struct {
+	Contents      []domain.Content
+	Scores        map[int64]float64
+	FrictionLevel string
+}
+
 // Service handles content business logic
 type Service struct {
 	repo           Repository
@@ -78,14 +85,21 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*domain.Content, error
 
 // GetFeed returns personalized feed (RF011, RF014)
 // Optionally accepts absoluteModeActive and declaredGoal to activate the recommender's Absolute Mode filter (Eq.2 + Algorithm 4).
-func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) ([]domain.Content, string, error) {
+func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) (*FeedResult, error) {
 	// 1. Try to get recommendations from external service
 	contentIDs, scores, frictionLevel, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal)
 	if err != nil || len(contentIDs) == 0 {
 		// Fallback: simple DB-only feed if recommender fails or returns nothing (KISS/Resilience)
 		fmt.Printf("Warning: Recommender failed or returned no data: %v. Falling back to DB feed.\n", err)
 		contents, dbErr := s.repo.GetFeed(ctx, userID, category, topicID, limit)
-		return contents, "none", dbErr
+		if dbErr != nil {
+			return nil, dbErr
+		}
+		return &FeedResult{
+			Contents:      contents,
+			Scores:        map[int64]float64{},
+			FrictionLevel: "none",
+		}, nil
 	}
 
 	fmt.Printf("Success: Received %d recommendations from service for user %d (Topic: %d). Friction: %s\n", len(contentIDs), userID, topicID, frictionLevel)
@@ -99,7 +113,19 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 	// 3. Update quality scores from recommender
 	s.updateContentScores(ctx, contentIDs, scores)
 
-	return contents, frictionLevel, nil
+	// Build score map for frontend
+	scoreMap := make(map[int64]float64)
+	for i, id := range contentIDs {
+		if i < len(scores) {
+			scoreMap[id] = scores[i]
+		}
+	}
+
+	return &FeedResult{
+		Contents:      contents,
+		Scores:        scoreMap,
+		FrictionLevel: frictionLevel,
+	}, nil
 }
 
 func (s *Service) updateContentScores(ctx context.Context, contentIDs []int64, scores []float64) {
