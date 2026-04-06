@@ -1,6 +1,6 @@
 import pytest
 from src.domain.value_objects import QualityScore, AttentionReserve, SafetyProbability
-from src.domain.math_models import calculate_quality_score, calculate_ego_depletion, calculate_hawkes_activation
+from src.domain.math_models import calculate_quality_score, calculate_ego_depletion, calculate_hawkes_activation, calculate_hyperbolic_discount
 
 def test_quality_score_min_aggregation():
     """
@@ -152,3 +152,41 @@ def test_kl_divergence_asymmetric():
     kl_pq = calculate_kl_divergence([0.9, 0.1], [0.5, 0.5])
     kl_qp = calculate_kl_divergence([0.5, 0.5], [0.9, 0.1])
     assert kl_pq != pytest.approx(kl_qp, abs=1e-8)
+
+
+def test_hyperbolic_discount_immediate_reward():
+    """When delay=0, perceived value equals intrinsic value."""
+    assert calculate_hyperbolic_discount(100.0, 0.5, 0.0) == 100.0
+
+
+def test_hyperbolic_discount_delayed_reward():
+    """Delayed reward should have lower perceived value."""
+    immediate = calculate_hyperbolic_discount(100.0, 0.5, 0.0)
+    delayed = calculate_hyperbolic_discount(100.0, 0.5, 10.0)
+    assert delayed < immediate
+    assert delayed == pytest.approx(100.0 / (1 + 0.5 * 10))  # = 16.67
+
+
+def test_hyperbolic_discount_high_impulsivity():
+    """Higher k (impulsivity) means steeper discount."""
+    low_k = calculate_hyperbolic_discount(100.0, 0.1, 5.0)
+    high_k = calculate_hyperbolic_discount(100.0, 1.0, 5.0)
+    assert high_k < low_k
+
+
+def test_hyperbolic_discount_zero_value():
+    """Zero value always returns zero."""
+    assert calculate_hyperbolic_discount(0.0, 0.5, 10.0) == 0.0
+
+
+def test_hyperbolic_discount_invalid_negative_value():
+    """Negative value should raise ValueError."""
+    with pytest.raises(ValueError, match="value must be non-negative"):
+        calculate_hyperbolic_discount(-10.0, 0.5, 5.0)
+
+
+def test_hyperbolic_discount_invalid_negative_delay():
+    """Negative delay should raise ValueError."""
+    with pytest.raises(ValueError, match="delay must be non-negative"):
+        calculate_hyperbolic_discount(100.0, 0.5, -1.0)
+

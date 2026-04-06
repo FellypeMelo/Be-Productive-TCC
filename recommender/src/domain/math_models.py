@@ -64,3 +64,25 @@ def calculate_kl_divergence(
         qi_s = max(qi, epsilon)
         kl += pi_s * math.log(pi_s / qi_s)
     return kl
+
+
+def calculate_hyperbolic_discount(value: float, k: float, delay: float) -> float:
+    """
+    Equation 5: Hyperbolic Discounting.
+    V_p = V / (1 + k * D)
+
+    Args:
+        value: Intrinsic value of the reward (V)
+        k: Impulsivity constant (discount rate)
+        delay: Time delay until reward (D)
+
+    Returns:
+        Perceived value V_p at decision time
+    """
+    if value < 0:
+        raise ValueError("value must be non-negative")
+    if k < 0:
+        raise ValueError("k (impulsivity) must be non-negative")
+    if delay < 0:
+        raise ValueError("delay must be non-negative")
+    return value / (1.0 + k * delay)

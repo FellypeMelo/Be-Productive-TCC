@@ -39,3 +39,33 @@ async def analyze_behavior(req: HawkesAnalysisRequest):
         lambda_s1=result["lambda_s1"],
         lambda_s2=result["lambda_s2"],
     )
+
+
+from src.domain.math_models import calculate_hyperbolic_discount
+
+
+class HyperbolicDiscountRequest(BaseModel):
+    user_id: int
+    value: float  # Intrinsic value V
+    delay: float  # Time delay D (minutes)
+    k: float = 0.5  # Impulsivity constant
+
+
+class HyperbolicDiscountResponse(BaseModel):
+    user_id: int
+    perceived_value: float
+    discount_factor: float
+
+
+@router.post("/behavior/hyperbolic-discount", response_model=HyperbolicDiscountResponse)
+async def compute_hyperbolic_discount(req: HyperbolicDiscountRequest):
+    """
+    Calculate perceived value via hyperbolic discounting (Eq. 5).
+    V_p = V / (1 + k * D)
+    """
+    pv = calculate_hyperbolic_discount(req.value, req.k, req.delay)
+    return HyperbolicDiscountResponse(
+        user_id=req.user_id,
+        perceived_value=pv,
+        discount_factor=pv / req.value if req.value > 0 else 0.0,
+    )
