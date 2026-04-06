@@ -52,3 +52,30 @@ class TrajectoryRepositoryInterface(ABC):
     def get_recent_behavior(self, user_id: int, n: int = 10) -> list:
         """Retrieve recent behavioral events."""
         pass
+
+    @abstractmethod
+    def init_attention_reserve(self, user_id: int, r_max: float = 100.0) -> None:
+        """Initialize R(t) = R_max for a new session."""
+        pass
+
+    @abstractmethod
+    def get_attention_reserve(self, user_id: int) -> tuple:
+        """Returns (current_reserve, r_max). Defaults to (r_max, r_max) if unset."""
+        pass
+
+    @abstractmethod
+    def update_attention_reserve(self, user_id: int, current: float, r_max: float) -> None:
+        """Persist the updated R(t) after EDO integration step."""
+        pass
+
+    @abstractmethod
+    def get_fatigue_params(self, user_id: int) -> dict:
+        """Returns {mu_rest, kappa1, kappa2} for the user. Defaults if unset."""
+        pass
+
+
+class HawkesClassifierInterface(ABC):
+    @abstractmethod
+    def classify(self, event_intervals: list) -> dict:
+        """Classify user state as System 1 (impulsive) or System 2 (deliberative)."""
+        pass

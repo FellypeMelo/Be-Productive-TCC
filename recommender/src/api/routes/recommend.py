@@ -10,6 +10,7 @@ from src.infrastructure.repositories import MySQLContentRepository
 from src.infrastructure.safety_gateway import ToxicitySafetyGateway
 from src.infrastructure.hybrid_scorer import HybridScorer
 from src.infrastructure.behavioral_trajectory_repo import BehavioralTrajectoryRepository
+from src.inference.hawkes_classifier import HawkesClassifier
 
 router = APIRouter()
 
@@ -44,7 +45,11 @@ _trajectory_repo = BehavioralTrajectoryRepository(
 def get_recommendation_use_case():
     repo = MySQLContentRepository(hybrid_scorer=_hybrid_scorer)
     safety_gateway = ToxicitySafetyGateway()
-    return RecommendationUseCase(repo, safety_gateway)
+    hawkes_clf = HawkesClassifier(
+        alpha1=0.8, beta1=0.5,    # System 1: high arousal, fast decay
+        alpha2=0.5, beta2=0.01,   # System 2: moderate arousal, slow decay
+    )
+    return RecommendationUseCase(repo, safety_gateway, hawkes_clf)
 
 def get_fatigue_use_case():
     return FatigueUseCase(_trajectory_repo)
