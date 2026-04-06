@@ -32,6 +32,7 @@ class EdgeParamsRequest(BaseModel):
     mu_rest: float
     k1: float
     k2: float
+    r_max: float = 100.0
 
 # --- DI ---
 
@@ -77,22 +78,33 @@ async def get_friction_policy(
     )
 
 @router.post("/fatigue/sync-params")
-async def sync_edge_params(req: EdgeParamsRequest):
+async def sync_edge_params(
+    req: EdgeParamsRequest,
+    use_case: FatigueUseCase = Depends(get_fatigue_use_case),
+):
     """Sync EDO parameters (mu_rest, k1, k2) from Edge AI client."""
-    _trajectory_repo.save_fatigue_parameters(
+    use_case.sync_edge_parameters(
         user_id=req.user_id,
         mu_rest=req.mu_rest,
-        kappa1=req.k1,
-        kappa2=req.k2,
+        k1=req.k1,
+        k2=req.k2,
+        r_max=req.r_max,
     )
     return {"status": "ok"}
 
 @router.post("/fatigue/telemetry")
-async def record_telemetry(req: BehavioralEventRequest):
+async def record_telemetry(
+    req: BehavioralEventRequest,
+    use_case: FatigueUseCase = Depends(get_fatigue_use_case),
+):
     """Record behavioral event for fatigue accumulation (Eq. 4)."""
-    _trajectory_repo.record_behavioral_event(
+    friction = use_case.record_telemetry_and_update_reserve(
         user_id=req.user_id,
         v_scroll=req.v_scroll,
         v_alt=req.v_alt_context,
+        delta_t=1.0,
     )
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "friction_level": friction.value,
+    }

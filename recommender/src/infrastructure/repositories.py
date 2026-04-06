@@ -76,12 +76,13 @@ class InMemoryTrajectoryRepository(TrajectoryRepositoryInterface):
         self._store = {}
 
     def save_fatigue_parameters(self, user_id: int, mu_rest: float, kappa1: float, kappa2: float) -> None:
-        self._store[user_id] = {
+        data = self._store.get(user_id, {"alarm": False})
+        data.update({
             "mu_rest": mu_rest,
             "k1": kappa1,
             "k2": kappa2,
-            "alarm": False # default state
-        }
+        })
+        self._store[user_id] = data
 
     def check_fatigue_alarm_status(self, user_id: int) -> bool:
         # Puxa o status reportado pelo Edge AI (Simulated for now)
@@ -104,3 +105,29 @@ class InMemoryTrajectoryRepository(TrajectoryRepositoryInterface):
         data = self._store.get(user_id, {})
         events = data.get("events", [])
         return events[-n:]
+
+    def init_attention_reserve(self, user_id: int, r_max: float = 100.0) -> None:
+        if user_id not in self._store:
+            self._store[user_id] = {"alarm": False}
+        self._store[user_id]["attention_reserve_current"] = r_max
+        self._store[user_id]["attention_reserve_r_max"] = r_max
+
+    def get_attention_reserve(self, user_id: int) -> tuple:
+        data = self._store.get(user_id, {})
+        r_max = data.get("attention_reserve_r_max", 100.0)
+        current = data.get("attention_reserve_current", r_max)
+        return (current, r_max)
+
+    def update_attention_reserve(self, user_id: int, current: float, r_max: float) -> None:
+        if user_id not in self._store:
+            self._store[user_id] = {"alarm": False}
+        self._store[user_id]["attention_reserve_current"] = current
+        self._store[user_id]["attention_reserve_r_max"] = r_max
+
+    def get_fatigue_params(self, user_id: int) -> dict:
+        data = self._store.get(user_id, {})
+        return {
+            "mu_rest": data.get("mu_rest", 0.05),
+            "kappa1": data.get("k1", 0.01),
+            "kappa2": data.get("k2", 0.5),
+        }
