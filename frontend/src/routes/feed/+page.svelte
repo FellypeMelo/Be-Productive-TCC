@@ -92,11 +92,13 @@
         if (telemetryInterval) {
             clearInterval(telemetryInterval);
         }
-        document.removeEventListener("visibilitychange", trackVisibility);
+        if (typeof document !== 'undefined') {
+            document.removeEventListener("visibilitychange", trackVisibility);
+        }
     });
 
     function startTelemetry() {
-        if (!$currentUser) return;
+        if (!$currentUser || typeof document === 'undefined') return;
 
         // Track context switches (visibility API)
         document.addEventListener("visibilitychange", trackVisibility);
@@ -122,7 +124,7 @@
     }
 
     function trackVisibility() {
-        if (document.hidden) {
+        if (typeof document !== 'undefined' && document.hidden) {
             contextSwitchCount++;
         }
     }
