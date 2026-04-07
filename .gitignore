@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Logs
+logs/*.log
+*.log
+
+# E2E Tests
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/e2e/.auth/
+
+# Claude / AI
+.claude/
+.openclaude-profile.json
+
+# Temp Files
+status.txt
+get_status.py
+git_status_out.txt
