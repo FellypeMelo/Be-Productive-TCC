@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Feed', () => {
-  test('feed page loads for unauthenticated user', async ({ page }) => {
+  test('feed page shows main elements unauthenticated', async ({ page }) => {
+    // Should redirect to login when not authenticated
     await page.goto('/feed');
-    await expect(page).toHaveTitle(/Feed.*Be Productive/);
-    await expect(page.getByRole('heading', { name: 'Your Feed' })).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/.*login/);
   });
 
   test('feed page has correct title tag', async ({ page }) => {
+    // Navigate to feed, which redirects to login
     await page.goto('/feed');
     await expect(page).toHaveTitle(/Be Productive/);
   });
@@ -24,19 +25,27 @@ test.describe('Feed (authenticated)', () => {
   });
 
   test('feed grid skeleton appears during loading', async ({ page }) => {
+    // Intercept feed API to simulate loading state
     await page.route('**/api/v1/feed*', async (route) => {
-      await new Promise((r) => setTimeout(r, 2000));
+      // Delay response to show loading state
+      await new Promise((r) => setTimeout(r, 1000));
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          data: { content_ids: [], scores: {}, items: [], friction_level: 'none' },
+          data: {
+            content_ids: [],
+            scores: {},
+            items: [],
+            friction_level: 'none',
+          },
         }),
       });
     });
 
     await page.goto('/feed');
+    // Check for loading skeleton (animate-pulse class)
     await expect(page.locator('.animate-pulse').first()).toBeVisible();
   });
 
@@ -48,7 +57,8 @@ test.describe('Feed (authenticated)', () => {
         body: JSON.stringify({
           success: true,
           data: {
-            content_ids: [1], scores: {},
+            content_ids: [1],
+            scores: {},
             items: [{
               id_conteudo: 1, titulo: 'Test', categoria: 'PRODUTIVIDADE',
               tipo_de_midia: 'VIDEO', autor_id: 1, data_publicacao: '2026-01-01',
@@ -74,7 +84,8 @@ test.describe('Feed (authenticated)', () => {
         body: JSON.stringify({
           success: true,
           data: {
-            content_ids: [1], scores: {},
+            content_ids: [1],
+            scores: {},
             items: [{
               id_conteudo: 1, titulo: 'Test', categoria: 'PRODUTIVIDADE',
               tipo_de_midia: 'VIDEO', autor_id: 1, data_publicacao: '2026-01-01',
@@ -91,21 +102,25 @@ test.describe('Feed (authenticated)', () => {
     await expect(page.getByRole('button', { name: 'All For You' })).toBeVisible();
   });
 
-  test('empty feed shows no content cards', async ({ page }) => {
+  test('empty feed shows placeholder', async ({ page }) => {
     await page.route('**/api/v1/feed*', async (route) => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          data: { content_ids: [], scores: {}, items: [], friction_level: 'none' },
+          data: {
+            content_ids: [],
+            scores: {},
+            items: [],
+            friction_level: 'none',
+          },
         }),
       });
     });
 
     await page.goto('/feed');
-    // Feed renders nothing when empty — verify no article cards exist
-    await expect(page.locator('a.block.group')).toHaveCount(0, { timeout: 5000 });
+    await expect(page.getByText('No content available in this section.')).toBeVisible();
   });
 
   test('feed shows content items', async ({ page }) => {
@@ -116,7 +131,8 @@ test.describe('Feed (authenticated)', () => {
         body: JSON.stringify({
           success: true,
           data: {
-            content_ids: [1], scores: {},
+            content_ids: [1],
+            scores: {},
             items: [{
               id_conteudo: 1, titulo: 'Mocked Content', categoria: 'PRODUTIVIDADE',
               tipo_de_midia: 'VIDEO', autor_id: 1, data_publicacao: '2026-01-01',

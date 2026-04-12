@@ -1,3 +1,4 @@
+import pytest
 from src.application.interfaces import (
     ContentItem,
     ContentRepositoryInterface,
@@ -6,7 +7,7 @@ from src.application.interfaces import (
 )
 from src.domain.value_objects import SafetyProbability
 from src.application.recommendation_use_case import RecommendationUseCase
-from src.domain.math_models import thompson_sampling_choice
+from src.domain.math_models import thompson_sampling_choice, calculate_hawkes_activation, calculate_quality_score
 
 
 class MockContentRepo(ContentRepositoryInterface):
@@ -109,7 +110,58 @@ def test_hawkes_penalizes_entertainment_during_impulsive_state():
     recs = use_case.generate_recommendations(user_id=1, limit=5)
     for rec in recs:
         if rec.category == "ENTRETENIMENTO":
-            # Original 0.9, safety penalty min(0.1, 0.2) = 0.1 -> 0.09
-            # Hawkes penalty 0.5 -> 0.045 max, plus safety already at 0.09
-            # Actually: quality = 0.9 * 0.1 = 0.09, then Hawkes 0.09 * 0.5 = 0.045
             assert rec.perceived_value < 0.10, f"Expected <0.10 for entertainment, got {rec.perceived_value}"
+
+
+# ---- Quality score edge cases ----
+
+def test_score_with_single_safety_flag_05():
+    """Single safety flag at 0.5 -> score halved."""
+    result = calculate_quality_score(0.8, [SafetyProbability(0.5)])
+    assert result.value == pytest.approx(0.4, abs=0.001)
+
+
+def test_score_with_all_zero_risk():
+    """All safety probabilities at 0: no penalty applied."""
+    result = calculate_quality_score(0.9, [SafetyProbability(0.0)] * 5)
+    assert result.value == pytest.approx(0.9, abs=0.001)
+
+
+def test_score_with_flag_at_one():
+    """Flag at P=1.0 -> penalty factor = 0 -> score = 0."""
+    result = calculate_quality_score(0.95, [SafetyProbability(1.0), SafetyProbability(0.0)])
+    assert result.value == pytest.approx(0.0)
+
+
+# ---- Hawkes activation ----
+
+def test_hawkes_activation_decays():
+    """Activation should decay exponentially over time."""
+    t0 = calculate_hawkes_activation(1.0, 0.1, 0.0)
+    assert t0 == pytest.approx(1.0)
+
+    t10 = calculate_hawkes_activation(1.0, 0.1, 10.0)
+    assert t10 == pytest.approx(0.3679, abs=0.001)
+
+
+def test_hawkes_high_beta_decays_faster():
+    """Higher beta means faster decay of activation."""
+    low_beta = calculate_hawkes_activation(1.0, 0.01, 5.0)
+    high_beta = calculate_hawkes_activation(1.0, 0.5, 5.0)
+    assert high_beta < low_beta
+
+
+# ---- Thompson Sampling edges ----
+
+def test_thompson_sampling_returns_valid_arm_index():
+    """Return value must always be 0 or 1."""
+    for _ in range(50):
+        arm = thompson_sampling_choice(1.0, 1.0, 1.0, 1.0)
+        assert arm in (0, 1)
+
+
+def test_thompson_biased_with_strong_s1_prior():
+    """With strong S1 priors, S1 should dominate sampling."""
+    s1_wins = sum(1 for _ in range(100)
+                  if thompson_sampling_choice(100.0, 1.0, 1.0, 100.0) == 0)
+    assert s1_wins > 90

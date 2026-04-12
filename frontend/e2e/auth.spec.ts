@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Authentication', () => {
+  test('redirects to login when accessing feed unauthenticated', async ({ page }) => {
+    await page.goto('/feed');
+    await expect(page).toHaveURL(/.*login/);
+  });
+
+  test('redirects to login when accessing focus unauthenticated', async ({ page }) => {
+    await page.goto('/focus');
+    await expect(page).toHaveURL(/.*login/);
+  });
+
   test('login page has correct title and form', async ({ page }) => {
     await page.goto('/auth/login');
     await expect(page).toHaveTitle(/Be Productive/);
