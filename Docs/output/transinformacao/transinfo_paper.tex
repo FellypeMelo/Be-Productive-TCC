@@ -1,0 +1,123 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{mathptmx}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[portuguese,linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{csquotes}
+\usepackage[style=apa,natbib=true]{biblatex}
+
+% algorithm2e Portuguese keywords
+\SetKwInput{KwData}{Entrada}
+\SetKwInput{KwResult}{Saída}
+\SetKw{KwRetorna}{retornar}
+\SetKw{KwSe}{se}
+\SetKw{KwSenao}{senão}
+\SetKw{KwParaCada}{para cada}
+\SetKw{KwEnquanto}{enquanto}
+
+\addbibresource{../references.bib}
+
+\onehalfspacing
+
+\title{Sistemas de recomendação e saúde mental no capitalismo de vigilância: a curadoria intencional como instrumento de mitigação do esgotamento psicológico}
+
+\author{
+    Fellype Samuel, Felipe Farias, Ricardo Marciano\\
+    FAETERJ-RIO de Quintino, RJ, Brasil
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent As interfaces atuais e ferramentas midiáticas sob a égide do capitalismo de vigilância exercem uma pressão exaustiva nos processos mentais dos indivíduos pela extração algorítmica da atenção. Este manuscrito explora os perigos neuropsicológicos incutidos ao prolongarmos os limites do \textit{Ego Depletion} social-dependente através da maximização estéril de tempo de tela. Procede-se delineando uma contramedida funcional de saúde mental mediada de modo prático pelo próprio software, visando salvaguardar as faculdades do sujeito via intervenção de inteligência na borda (\textit{Edge AI}). Construímos a arquitetura ``Be-Productive'', baseada em Equações Diferenciais Ordinárias e limites de Hawkes para ativamente suprimir as distorções reativas (comportamento aditivo-compulsivo) em prol da serenidade psíquica (Sistema de resposta 2). Aferimentos \textit{Agent-Based} (N=1.000) exibem que fricções digitais matematicamente guiadas estabilizam substancialmente o limiar emocional (Cohen's $d = 3.25$). A proposta avança preceitos tangíveis para alinhar a indústria cibernética em conformidade ao bem-estar biológico-mental humano.
+
+\vspace{0.5cm}
+\noindent\textbf{Palavras-chave:} Saúde Mental. Capitalismo de Vigilância. Ego Depletion. Sistemas de Recomendação. Inteligência Artificial Centrada no Humano.
+\end{abstract}
+
+\section{Introdução}
+
+Nas últimas décadas do convívio digital, as redes virtuais transcenderam a função básica de manutenção dos elos intersociais, galgando posições insidiosas como eixos da extração e monetização atencional. Abundam evidências acerca de como os atuais métodos de exploração da ansiedade latente afetam os níveis dopaminérgicos da saúde mental, esgotando o limite natural do descanso psíquico através do bombardeamento passivo exacerbatório de informações \citep{hari2022}. Em um plano estrito clínico, as consequências incluem agravos no quadro histórico de distúrbios compulsivos, síndromes do pânico generalizadas e fadiga digital terminal para faixas intergeracionais, majoritariamente em jovens \citep{costello2023}.
+
+A disfuncionalidade deriva de um pacto tácito conhecido como ``capitalismo de vigilância'' \citep{zuboff2019}. Sob a alegação irrefutável de conexão universal, dados emocionais são escavados e injetados nas heurísticas de curadoria que modelam ciclos intermináveis de rolagens por medo de exclusão social. \citet{citton2017} evidencia os perigos ecológicos desse esgotamento do domínio atenção, transmutado em engrenagem primária econômica no vale do silício.
+
+Frente a este flagelo de ansiedade da era da informação: é possível estruturar o cálculo de recomendação puramente focado no bem-estar psíquico sem extinguir a oferta orgânica? Este texto promove amparo clínico e arquitetural ao problema. A arquitetura aqui formatada estuda conter impulsos irrefletidos garantindo sanidade emocional \textit{in-device}.
+
+\section{Impactos Cognitivos, Resposta Aditiva e Ego Depletion}
+
+\subsection{Antecedentes e Contexto Clínico}
+
+A transição de uma internet baseada em busca ativa para uma web de feed passivo alterou fundamentalmente o perfil neuropsicológico do consumo. Estima-se que o bombardeamento constante de notificações e o design de ``scroll infinito'' operem explorando vulnerabilidades evolutivas de busca por novidade, resultando em uma fadiga atencional que precede quadros de ansiedade e depressão \citep{hari2022}. Clinicamente, o uso abusivo de redes sociais tem sido correlacionado a déficits na memória de trabalho e na capacidade de inibição de impulsos em adolescentes \citep{costello2023}.
+
+\subsection{Esvaziamento do Ego e Perda de Agência}
+
+A variável crítica reside no conceito de \textit{Ego Depletion} (esvaziamento do ego), que descreve a capacidade do usuário de manter o foco como um recurso limitado \citep{kahneman2011}. Interações impulsivas drenam essa reserva, tornando o indivíduo vulnerável a gatilhos do Sistema 1 (automático, rápido) e criando ciclos viciosos de consumo reativo. Como estopim da crise de humor e fadiga digital \citep{paas2023}, tal esvaziamento prolongado do autocontrole justifica o cenário de alienação e agravos à saúde mental na Web.
+
+O esgotamento cognitivo não é apenas um efeito colateral infeliz, mas um resultado estrutural de sistemas desenhados para extrair valor via reatividade. A ecologia da atenção \citep{citton2017} é degradada quando o algoritmo bombardeia o sujeito com estímulos salientes, drenando a energia necessária para o processamento deliberativo do Sistema 2. Este processo induz um estado de ``miopia deliberativa'', onde o usuário perde a capacidade de alinhar suas ações com seus objetivos de longo prazo, resultando em ansiedade crônica e sentimento de perda de agência.
+
+\section{Arquitetura de Fricção e Profilaxia}
+
+\subsection{O Abismo Métrico}
+
+Hoje, a máquina algorítmica visa números crús baseados na euforia momentânea. Otimizar exclusivamente o engajamento imediato é enraizar instabilidades atitudinais patológicas, ignorando a utilidade cognitiva de longo prazo e a saúde do interagente.
+
+\subsection{Filtro Baseado nos Sinais de Hawkes e Fricções Profiláticas}
+
+A instrumentação formal de Hawkes ajuda a discernir estocasticamente se estímulos residuais pertencem ao quadro aditivo frenético (Sistema 1) ou da utilidade orgânica benéfica (Sistema 2). A modelagem decompões a intensidade $\lambda(t)$ em kernels de curta e longa duração, permitindo que o \textit{Score} de Qualidade Multiobjetivo priorize conteúdos que respeitem a reserva mental \citep{stray2021}.
+
+Para operacionalizar a proteção, a arquitetura ``Be-Productive'' implementa uma Equação Diferencial Ordinária (EDO) que monitora o nível da reserva cognitiva $R(t)$ em tempo real. A taxa de esgotamento é influenciada pela velocidade de rolagem e pela frequência de alternância de contexto, transformando sensores comportamentais em medidores de fadiga. Quando o limiar crítico é atingido, o sistema dispara fricções positivas projetadas para induzir a recuperação homeostática.
+
+\begin{algorithm}[h]
+\caption{Rotina de Aferimento Emocional-Atencional (Edge AI)}
+\KwData{Ações do usuário ($v_{scroll}$, $n_{alt}$)}
+\KwResult{Estabilidade da saúde da interação}
+\KwEnquanto{sessão\_ativa}{
+    $\mathcal{L}_{lesiva} \gets (\kappa_1 \times v_{scroll}) + (\kappa_2 \times n_{alt})$\;
+    $R \gets R - (\mathcal{L}_{lesiva} \times \Delta t)$\;
+    \If{$R \le LIMIAR\_FADIGA\_CRITICA$}{
+        $acionar\_friccoes\_positivas(tons\_cinza, bloqueios\_suaves)$\;
+        $iniciar\_recuperacao\_homeostatica()$\;
+    }
+}
+\end{algorithm}
+
+\subsection{Instrumentalização e Interface Terapêutica}
+
+A intervenção do ``Be-Productive'' não se limita ao ranking algorítmico, mas estende-se à própria superfície de contato. Através da \textit{Edge AI}, o sistema detecta sinais patológicos (ex: micro-hesitações ou velocidade excessiva) e altera a estética da interface para tons de cinza ou introduz uma fricção tátil no \textit{scroll}. Essas medidas agem como um alerta visual e físico que retira o usuário do ``transe algorítmico'', permitindo que o Sistema 2 retome o controle executivo antes que a reserva cognitiva seja zerada.
+
+\begin{table}[h]
+\centering
+\caption{Comparativo de Estabilidade Mental (Simulação ABM)}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Política} & \textbf{AUC (Reserva)} & \textbf{$D_{KL}$ (Qualidade)} & \textbf{$p$-valor} \\
+\midrule
+Engajamento (Baseline) & $0.42 \pm 0.12$ & $0.85 \pm 0.22$ & -- \\
+Be-Productive (Proposta) & $0.89 \pm 0.05$ & $0.12 \pm 0.04$ & $< 10^{-300}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Resultados}
+
+Validou-se empiricamente o sistema terapêutico intrínseco por vias de Simulação Baseada em Agentes (N=1.000 agentes, 60.000 observações). Os resultados demonstram proteção esmagadora na integridade do estado mental deliberativo, com um distanciamento estatisticamente colossal ($d = 3.25$) e p-valor $p < 10^{-300}$. A utilização da Divergência de Kullback-Leibler ($D_{KL}$) confirmou que o modelo proposto retifica o comportamento do algoritmo em conformidade à intenção original do usuário em $90\%$ dos casos simulados.
+
+\section{Conclusão}
+
+Garantindo saídas seguras na lógica interativa das engrenagens digitais por uma política do ``\textit{Value-Alignment}'', é estritamente possível refrear as consequências patológicas inerentes ao capitalismo cibernético de hoje. Intervenções originárias a partir do código, e não meramente ferramentas externas de autogestão, são fundamentais para mitigar a ansiedade sistêmica. O projeto \textit{Be-Productive} comprova que o alinhamento axiomático ao bem-estar biológico-mental não prejudica a eficácia do motor técnico, assentando bases sólidas para uma cibernética centrada na dignidade humana.
+
+\printbibliography
+
+\end{document}

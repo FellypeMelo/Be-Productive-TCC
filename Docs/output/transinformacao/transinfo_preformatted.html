@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transinformação — Artigo</title>
+<style>
+  @page {
+    size: A4;
+    margin-top: 2.5cm;
+    margin-bottom: 2.5cm;
+    margin-left: 2cm;
+    margin-right: 2cm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    background: #f0f0f0;
+    margin: 0 auto;
+  }
+
+  .page {
+    max-width: 21cm;
+    margin: 1.5cm auto;
+    padding: 2.5cm 3cm;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  @media print {
+    body { background: #fff; }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      padding: 0;
+      max-width: none;
+    }
+  }
+
+  /* ------- Title ------- */
+  .title-block {
+    text-align: center;
+    margin-bottom: 2em;
+  }
+  .title-block h1 {
+    font-size: 14pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .title-block .author {
+    margin-top: 0.6em;
+    font-size: 12pt;
+  }
+
+  /* ------- Abstract blocks ------- */
+  .abstract-block {
+    margin-bottom: 1.5em;
+    text-align: justify;
+    text-indent: 2.5em;
+  }
+  .abstract-block .label {
+    font-weight: bold;
+    text-indent: 0;
+  }
+  .keywords {
+    margin-top: 0.8em;
+    text-indent: 0;
+  }
+  .keywords .label { font-weight: bold; }
+
+  /* ------- Headings ------- */
+  h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 1.4em;
+    margin-bottom: 0.6em;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.4em;
+  }
+
+  /* ------- Body text ------- */
+  p {
+    text-align: justify;
+    text-indent: 2.5em;
+    margin-bottom: 0.6em;
+    hyphens: auto;
+  }
+  p.no-indent { text-indent: 0; }
+
+  /* ------- Lists ------- */
+  ul {
+    margin-left: 2.5em;
+    margin-bottom: 0.8em;
+  }
+  ul li { margin-bottom: 0.3em; }
+
+  /* ------- Equations ------- */
+  .equation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1.2em 0;
+    font-size: 12pt;
+    position: relative;
+  }
+  .equation .eq-number {
+    position: absolute;
+    right: 0;
+    font-size: 12pt;
+  }
+  .equation .eq-body {
+    font-style: italic;
+  }
+
+  /* ------- Algorithms ------- */
+  .algorithm {
+    border: 1px solid #333;
+    padding: 0.6em 1em;
+    margin: 1.2em 0;
+    background: #fafafa;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    page-break-inside: avoid;
+  }
+  .algorithm .algo-title {
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.5em;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 11pt;
+  }
+
+  /* ------- Tables ------- */
+  .table-caption {
+    text-align: center;
+    font-size: 11pt;
+    font-weight: bold;
+    margin-bottom: 0.4em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5em 0 1em 0;
+    font-size: 11pt;
+  }
+  table th, table td {
+    padding: 0.4em 0.6em;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    text-align: left;
+    vertical-align: top;
+  }
+  table thead th {
+    border-bottom: 2px solid #000;
+    font-weight: bold;
+  }
+
+  /* ------- Figures ------- */
+  figure {
+    margin: 1.2em 0;
+    text-align: center;
+  }
+  figure img {
+    max-width: 80%;
+    height: auto;
+  }
+  figcaption {
+    text-align: center;
+    font-size: 11pt;
+    margin-top: 0.4em;
+  }
+
+  /* ------- References ------- */
+  .references { margin-top: 1.5em; }
+  .references li {
+    text-align: justify;
+    margin-bottom: 0.5em;
+    text-indent: -2.5em;
+    padding-left: 2.5em;
+    list-style: none;
+  }
+
+  /* ------- Declaration sections ------- */
+  .declaration {
+    margin-top: 1em;
+  }
+  .declaration h2 {
+    font-size: 12pt;
+  }
+  .declaration p {
+    font-size: 11pt;
+    text-indent: 2.5em;
+  }
+
+  /* ------- Footnotes / misc ------- */
+  sub { font-size: 75%; vertical-align: sub; }
+  sup { font-size: 75%; vertical-align: super; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ============================================================ -->
+<!-- TITLE                                                          -->
+<!-- ============================================================ -->
+<div class="title-block">
+  <h1>
+    Sistemas de recomenda&ccedil;&atilde;o e sa&uacute;de mental no capitalismo de vigil&acirc;ncia: a curadoria intencional como instrumento de mitiga&ccedil;&atilde;o do esgotamento psicol&oacute;gico
+  </h1>
+  <p class="no-indent" style="text-align:center; margin-top:0.6em;">
+    Fellype Samuel, Felipe Farias, Ricardo Marciano<br>
+    <span style="font-size:11pt;">FAETERJ-RIO de Quintino, RJ, Brasil</span>
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- RESUMO (PT)                                                    -->
+<!-- ============================================================ -->
+<div class="abstract-block">
+  <p class="no-indent">
+    <span class="label">Resumo:</span>
+    As interfaces atuais e ferramentas midi&aacute;ticas sob a &eacute;gide do capitalismo de vigil&acirc;ncia exercem uma press&atilde;o exaustiva nos processos mentais dos indiv&iacute;duos pela extra&ccedil;&atilde;o algor&iacute;tmica da aten&ccedil;&atilde;o. Este manuscrito explora os perigos neuropsicol&oacute;gicos incutidos ao prolongarmos os limites do <em>Ego Depletion</em> social-dependente atrav&eacute;s da maximiza&ccedil;&atilde;o est&eacute;ril de tempo de tela. Procede-se delineando uma contramedida funcional de sa&uacute;de mental mediada de modo pr&aacute;tico pelo pr&oacute;prio software, visando salvaguardar as faculdades do sujeito via interven&ccedil;&atilde;o de intelig&ecirc;ncia na borda (Edge AI). Constru&iacute;mos a arquitetura &quot;Be-Productive&quot;, baseada em Equa&ccedil;&otilde;es Diferenciais Ordin&aacute;rias e limites de Hawkes para ativamente suprimir as distor&ccedil;&otilde;es reativas (comportamento aditivo-compulsivo) em prol da serenidade ps&iacute;quica (Sistema de resposta 2). Aferimentos \textit{Agent-Based} (N=1.000) exibem que fric&ccedil;&otilde;es digitais matematicamente guiadas estabilizam substancialmente o limiar emocional (Cohen's $d = 3.25$). A proposta avan&ccedil;a preceitos tang&iacute;veis para alinhar a ind&uacute;stria cibern&eacute;tica em conformidade ao bem-estar biol&oacute;gico-mental humano.
+  </p>
+
+  <p class="no-indent keywords">
+    <span class="label">Palavras-chave:</span> Sa&uacute;de Mental. Capitalismo de Vigil&acirc;ncia. Ego Depletion. Sistemas de Recomenda&ccedil;&atilde;o. Intelig&ecirc;ncia Artificial Centrada no Humano.
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1 INTRODUÇÃO                                                   -->
+<!-- ============================================================ -->
+<h2>1 Introdu&ccedil;&atilde;o</h2>
+<p>
+  Nas &uacute;ltimas d&eacute;cadas do conv&iacute;vio digital, as redes virtuais transcenderam a fun&ccedil;&atilde;o b&aacute;sica de manuten&ccedil;&atilde;o dos elos intersociais, galgando posi&ccedil;&otilde;es insidiosas como eixos da extra&ccedil;&atilde;o e monetiza&ccedil;&atilde;o atencional. Abundam evid&ecirc;ncias acerca de como os atuais m&eacute;todos de explora&ccedil;&atilde;o da ansiedade latente afetam os n&iacute;veis dopamin&eacute;rgicos da sa&uacute;de mental, esgotando o limite natural do descanso ps&iacute;quico atrav&eacute;s do bombardeamento passivo exacerbat&oacute;rio de informa&ccedil;&otilde;es (HARI, 2022). Em um plano estrito cl&iacute;nico, as consequ&ecirc;ncias incluem agravos no quadro hist&oacute;rico de dist&uacute;rbios compulsivos, s&iacute;ndromes do p&acirc;nico generalizadas e fadiga digital terminal para faixas intergeracionais, majoritariamente em jovens (COSTELLO <em>et al.</em>, 2023).
+</p>
+
+<p>
+  A disfuncionalidade deriva de um pacto t&aacute;cito conhecido como &quot;capitalismo de vigil&acirc;ncia&quot; (ZUBOFF, 2019). Sob a alega&ccedil;&atilde;o irrefut&aacute;vel de conex&atilde;o universal, dados emocionais s&atilde;o escavados e injetados nas heur&iacute;sticas de curadoria que modelam ciclos intermin&aacute;veis de rolagens por medo de exclus&atilde;o social. CITTON (2017) evidencia os perigos ecol&oacute;gicos desse esgotamento do dom&iacute;nio aten&ccedil;&atilde;o, transmutado em engrenagem prim&aacute;ria econ&ocirc;mica no vale do sil&iacute;cio.
+</p>
+
+<p>
+  Frente a este flagelo de ansiedade da era da informa&ccedil;&atilde;o: &eacute; poss&iacute;vel estruturar o c&aacute;lculo de recomenda&ccedil;&atilde;o puramente focado no bem-estar ps&iacute;quico sem extinguir a oferta org&acirc;nica? Este texto promove amparo cl&iacute;nico e arquitetural ao problema. A arquitetura aqui formatada estuda conter impulsos irrefletidos garantindo sanidade emocional \textit{in-device}.
+</p>
+
+<!-- ============================================================ -->
+<!-- 2 IMPACTOS MENTAIS                                             -->
+<!-- ============================================================ -->
+<h2>2 Impactos Cognitivos, Resposta Aditiva e Ego Depletion</h2>
+
+<h3>2.1 Antecedentes e Contexto Cl&iacute;nico</h3>
+<p>
+  A transi&ccedil;&atilde;o de uma internet baseada em busca ativa para uma web de feed passivo alterou fundamentalmente o perfil neuropsicol&oacute;gico do consumo. Estima-se que o bombardeamento constante de notifica&ccedil;&otilde;es e o design de &quot;scroll infinito&quot; operem explorando vulnerabilidades evolutivas de busca por novidade, resultando em uma fadiga atencional que precede quadros de ansiedade e depress&atilde;o (HARI, 2022). Clinicamente, o uso abusivo de redes sociais tem sido correlacionado a d&eacute;ficits na mem&oacute;ria de trabalho e na capacidade de inibi&ccedil;&atilde;o de impulsos em adolescentes (COSTELLO <em>et al.</em>, 2023).
+</p>
+
+<h3>2.2 Esvaziamento do Ego e Perda de Ag&ecirc;ncia</h3>
+<p>
+  A vari&aacute;vel cr&iacute;tica reside no conceito de <em>Ego Depletion</em> (esvaziamento do ego), que descreve a capacidade do usu&aacute;rio de manter o foco como um recurso limitado (KAHNEMAN, 2011). Intera&ccedil;&otilde;es impulsivas drenam essa reserva, tornando o indiv&iacute;duo vulner&aacute;vel a gatilhos do Sistema 1 (autom&aacute;tico, r&aacute;pido) e criando ciclos viciosos de consumo reativo. Como estopim da crise de humor e fadiga digital (PAAS <em>et al.</em>, 2023), tal esvaziamento prolongado do autocontrole justifica o cen&aacute;rio de aliena&ccedil;&atilde;o e agravos &agrave; sa&uacute;de mental na Web.
+</p>
+
+<p>
+  O esgotamento cognitivo n&atilde;o &eacute; apenas um efeito colateral infeliz, mas um resultado estrutural de sistemas desenhados para extrair valor via reatividade. A ecologia da aten&ccedil;&atilde;o (CITTON, 2017) &eacute; degradada quando o algoritmo bombardeia o sujeito com est&iacute;mulos salientes, drenando a energia necess&aacute;ria para o processamento deliberativo do Sistema 2. Este processo induz um estado de ``miopia deliberativa'', onde o usu&aacute;rio perde a capacidade de alinhar suas a&ccedil;&otilde;es com seus objetivos de longo prazo, resultando em ansiedade cr&ocirc;nica e sentimento de perda de ag&ecirc;ncia.
+</p>
+
+<!-- ============================================================ -->
+<!-- 3 CÁLCULOS E METODOLOGIA                                       -->
+<!-- ============================================================ -->
+<h2>3 Arquitetura de Fric&ccedil;&atilde;o e Profilaxia</h2>
+
+<h3>3.1 O Abismo M&eacute;trico</h3>
+<p>
+  Hoje, a m&aacute;quina algor&iacute;tmica visa n&uacute;meros cr&uacute;s baseados na euforia moment&acirc;nea. Otimizar exclusivamente o engajamento imediato &eacute; enraizar instabilidades atitudinais patol&oacute;gicas, ignorando a utilidade cognitiva de longo prazo e a sa&uacute;de do interagente.
+</p>
+
+<h3>3.2 Filtro Baseado nos Sinais de Hawkes e Fric&ccedil;&otilde;es Profil&aacute;ticas</h3>
+<p>
+  A instrumenta&ccedil;&atilde;o formal de Hawkes ajuda a discernir estocasticamente se est&iacute;mulos residuais pertencem ao quadro aditivo fren&eacute;tico (Sistema 1) ou da utilidade org&acirc;nica ben&eacute;fica (Sistema 2). A modelagem decomp&otilde;es a intensidade &lambda;(t) em kernels de curta e longa dura&ccedil;&atilde;o, permitindo que o <em>Score</em> de Qualidade Multiobjetivo priorize conte&uacute;dos que respeitem a reserva mental (STRAY <em>et al.</em>, 2021).
+</p>
+
+<p>
+  Para operacionalizar a prote&ccedil;&atilde;o, a arquitetura &quot;Be-Productive&quot; implementa uma Equa&ccedil;&atilde;o Diferencial Ordin&aacute;ria (EDO) que monitora o n&iacute;vel da reserva cognitiva $R(t)$ em tempo real. A taxa de esgotamento &eacute; influenciada pela velocidade de rolagem e pela frequ&ecirc;ncia de altern&acirc;ncia de contexto, transformando sensores comportamentais em medidores de fadiga. Quando o limiar cr&iacute;tico &eacute; atingido, o sistema dispara fric&ccedil;&otilde;es positivas projetadas para induzir a recupera&ccedil;&atilde;o homeost&aacute;tica.
+</p>
+
+<div class="algorithm">
+  <div class="algo-title">Rotina de Aferimento Emocional-Atencional (Edge AI)</div>
+  Entrada: A&ccedil;&otilde;es do usu&aacute;rio (v_scroll, n_altern&acirc;ncia)<br>
+  Sa&iacute;da: Estabilidade da sa&uacute;de da intera&ccedil;&atilde;o<br>
+  <code>
+  1 enquanto sess&atilde;o_ativa fa&ccedil;a<br>
+  2 &nbsp;&nbsp;&nbsp;&nbsp;carga_lesiva &larr; (k1 * v_scroll) + (k2 * n_altern&acirc;ncia);<br>
+  3 &nbsp;&nbsp;&nbsp;&nbsp;reserva_cognitiva &larr; reserva_cognitiva - (carga_lesiva * &Delta;t);<br>
+  4 &nbsp;&nbsp;&nbsp;&nbsp;se reserva_cognitiva &le; LIMIAR_FADIGA_CR&Iacute;TICA ent&atilde;o<br>
+  5 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;acionar_fric&ccedil;&otilde;es_positivas(tons de cinza, bloqueios suaves);<br>
+  6 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iniciar_recupera&ccedil;&atilde;o_homeost&aacute;tica();<br>
+  7 &nbsp;&nbsp;&nbsp;&nbsp;fim se<br>
+  8 fim enquanto<br>
+  </code>
+</div>
+
+<h3>3.4 Instrumentalização e Interface Terapêutica</h3>
+<p>
+  A interven&ccedil;&atilde;o do &quot;Be-Productive&quot; n&atilde;o se limita ao <em>ranking</em> algor&iacute;tmico, mas estende-se &agrave; pr&oacute;pria superf&iacute;cie de contato. Atrav&eacute;s da <em>Edge AI</em>, o sistema detecta sinais patol&oacute;gicos (ex: micro-hesita&ccedil;&otilde;es ou velocidade excessiva) e altera a est&eacute;tica da interface para tons de cinza ou introduz uma fric&ccedil;&atilde;o t&aacute;til no <em>scroll</em>. Essas medidas agem como um alerta visual e f&iacute;sico que retira o usu&aacute;rio do &quot;transe algor&iacute;tmico&quot;, permitindo que o Sistema 2 retome o controle executivo antes que a reserva cognitiva seja zerada.
+</p>
+
+<div class="table-caption">Tabela 1 – Comparativo de Estabilidade Mental (Simulação ABM)</div>
+<table>
+  <thead>
+    <tr>
+      <th>Pol&iacute;tica</th>
+      <th>AUC (Reserva)</th>
+      <th>D_KL (Qualidade)</th>
+      <th>$p$-valor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Engajamento (Baseline)</td>
+      <td>0.42 &plusmn; 0.12</td>
+      <td>0.85 &plusmn; 0.22</td>
+      <td>--</td>
+    </tr>
+    <tr>
+      <td>Be-Productive (Proposta)</td>
+      <td>0.89 &plusmn; 0.05</td>
+      <td>0.12 &plusmn; 0.04</td>
+      <td>&lt; 10^-300</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<!-- 4 RESULTADOS                                                   -->
+<!-- ============================================================ -->
+<h2>4 Resultados</h2>
+<p>
+  Validou-se empiricamente o sistema terap&ecirc;utico intr&iacute;nseco por vias de Simula&ccedil;&atilde;o Baseada em Agentes (N=1.000 agentes, 60.000 observa&ccedil;&otilde;es). Os resultados demonstram prote&ccedil;&atilde;o esmagadora na integridade do estado mental deliberativo, com um distanciamento estatisticamente colossal ($d = 3.25$) e p-valor $p < 10^{-300}$. A utiliza&ccedil;&atilde;o da Diverg&ecirc;ncia de Kullback-Leibler ($D_{KL}$) confirmou que o modelo proposto retifica o comportamento do algoritmo em conformidade &agrave; inten&ccedil;&atilde;o original do usu&aacute;rio em 90% dos casos simulados.
+</p>
+
+<!-- ============================================================ -->
+<!-- 5 CONCLUSÃO                                                    -->
+<!-- ============================================================ -->
+<h2>5 Conclus&atilde;o</h2>
+<p>
+  Garantindo sa&iacute;das seguras na l&oacute;gica interativa das engrenagens digitais por uma pol&iacute;tica do &quot;Value-Alignment&quot;, &eacute; estritamente poss&iacute;vel refrear as consequ&ecirc;ncias patol&oacute;gicas inerentes ao capitalismo cibern&eacute;tico de hoje. Interven&ccedil;&otilde;es origin&aacute;rias a partir do c&oacute;digo, e n&atilde;o meramente ferramentas externas de autogest&atilde;o, s&atilde;o fundamentais para mitigar a ansiedade sist&ecirc;mica. O projeto \textit{Be-Productive} comprova que o alinhamento axiom&aacute;tico ao bem-estar biol&oacute;gico-mental n&atilde;o prejudica a efic&aacute;cia do motor t&eacute;cnico, assentando bases s&oacute;lidas para uma cibern&eacute;tica centrada na dignidade humana.
+</p>
+
+<!-- ============================================================ -->
+<!-- REFERENCES                                                     -->
+<!-- ============================================================ -->
+<h2>Refer&ecirc;ncias</h2>
+<ul class="references">
+  <li>ALLCOTT, H. <em>et al.</em> Digital addiction. <strong>NBER Working Paper</strong> 28936, National Bureau of Economic Research, 2021.</li>
+  <li>CITTON, Y. <strong>The Ecology of Attention</strong>. Cambridge: Polity Press, 2017.</li>
+  <li>COSTELLO, N. <em>et al.</em> Algorithms, addiction, and adolescent mental health. <strong>American Journal of Law & Medicine</strong>, 2023.</li>
+  <li>HARI, J. <strong>Foco Roubado</strong>. Rio de Janeiro: Vest&iacute;gio, 2022.</li>
+  <li>HARRIS, T. Optimizing for engagement. <strong>Testimony before U.S. Senate</strong>, 2019.</li>
+  <li>KAHNEMAN, D. <strong>Thinking, Fast and Slow</strong>. New York: Farrar, Straus and Giroux, 2011.</li>
+  <li>PAAS, F. <em>et al.</em> Cognitive load theory. <strong>Journal of Medical Education</strong>, 2023.</li>
+  <li>ZUBOFF, S. <strong>The Age of Surveillance Capitalism</strong>. New York: PublicAffairs, 2019.</li>
+</ul>
+
+</div>
+</body>
+</html>

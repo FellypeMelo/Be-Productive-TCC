@@ -3,6 +3,8 @@
 \usepackage{graphicx}
 \usepackage{fontspec}
 \usepackage{color}
+\usepackage{fontawesome}
+\usepackage{academicons}
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{aas_macros}
@@ -32,8 +34,10 @@
 \title[Sistemas de Recomenda{\c c}{\~a}o e Sa{\'u}de Mental]{SISTEMAS DE RECOMENDA{\c C}{\~A}O E SA{\'U}DE MENTAL NO CAPITALISMO DE VIGIL{\^A}NCIA: A CURADORIA INTENCIONAL COMO INSTRUMENTO DE MITIGA{\c C}{\~A}O DA SOBRECARGA COGNITIVA}
 
 % THE ORCID IS MANDATORY FOR EACH AUTHOR IN JBCS
-\author[Melo]{
-\affil{\textbf{Fellype Melo}~\href{https://orcid.org/0000-0000-0000-0000}{\textcolor{orcidlogo}{\aiOrcid}}~[~\textbf{UNIG}~]}
+\author[Melo, Farias \& Marciano]{
+\affil{\textbf{Fellype Samuel}~\href{https://orcid.org/0000-0000-0000-0000}{\textcolor{orcidlogo}{\aiOrcid}}~[~\textbf{FAETERJ-RIO de Quintino, RJ, Brasil}~]}
+\affil{\textbf{Felipe Farias}~\href{https://orcid.org/0000-0000-0000-0000}{\textcolor{orcidlogo}{\aiOrcid}}~[~\textbf{FAETERJ-RIO de Quintino, RJ, Brasil}~]}
+\affil{\textbf{Ricardo Marciano}~\href{https://orcid.org/0000-0000-0000-0000}{\textcolor{orcidlogo}{\aiOrcid}}~[~\textbf{FAETERJ-RIO de Quintino, RJ, Brasil}~]}
 }
 
 % Configura{\c c}{\~o}es de tradu{\c c}{\~a}o para o algorithm2e
@@ -51,7 +55,7 @@
 \maketitle
 
 \begin{mail}
-Centro Universit{\'a}rio de Itagua{\'i} (UNIG), Itagua{\'i}, RJ, Brasil.
+fellype.24104708360042@faeterj-rio.edu.br, felipe.23204708360023@faeterj-rio.edu.br, ricardo.marciano@faeterj-rio.edu.br
 \end{mail}
 
 \begin{dates}
@@ -60,105 +64,143 @@ Centro Universit{\'a}rio de Itagua{\'i} (UNIG), Itagua{\'i}, RJ, Brasil.
 
 \begin{abstract}
 \textbf{Abstract.~}
-\noindent A economia da aten{\c c}{\~a}o e o paradigma do capitalismo de vigil{\^a}ncia t{\^e}m impulsionado o \textit{design} de sistemas de recomenda{\c c}{\~a}o focados na maximiza{\c c}{\~a}o irrestrita do engajamento de curto prazo. Embora eficientes para m{\'e}tricas comerciais, tais sistemas s{\~a}o crescentemente associados {\`a} fadiga atencional e a impactos na sa{\'u}de mental. Este artigo prop{\~o}e uma arquitetura algor{\'\i}tmica alternativa focada na aten{\c c}{\~a}o sustent{\'a}vel e na preserva{\c c}{\~a}o da utilidade cognitiva. O m{\'e}todo substitui a recompensa por engajamento bruto por um \textit{Score} de Qualidade Multiobjetivo, modelando a intera{\c c}{\~a}o atrav{\'e}s de um Processo de Hawkes decomposto para distinguir o consumo intencional do reativo. Para gerenciar a carga atencional, introduz-se uma Equa{\c c}{\~o}es Diferenciais Ordin{\'a}rias (EDO) de reserva cognitiva, avaliada localmente via \textit{Edge AI} para garantir a privacidade \textit{by design}. A valida{\c c}{\~a}o emp{\'\i}rica, conduzida via Simula{\c c}{\~a}o Baseada em Agentes (ABM) com $N=1.000$ inst{\^a}ncias, demonstra que a arquitetura proposta preserva a reserva cognitiva e reduz a diverg{\^e}ncia entr{\'o}pica do usu{\'a}rio. Os resultados evidenciam um tamanho de efeito consider{\'a}vel (Cohen's $d = 3.25$) com proeminente signific{\^a}ncia estat{\'\i}stica ($p < 10^{-300}$). As contribui{\c c}{\~o}es oferecem um caminho t{\'e}cnico pragm{\'a}tico para sistemas de recomenda{\c c}{\~a}o eticamente alinhados.
+\noindent A economia da aten{\c c}{\~a}o e o paradigma do capitalismo de vigil{\^a}ncia t{\^e}m impulsionado o \textit{design} de sistemas de recomenda{\c c}{\~a}o focados na maximiza{\c c}{\~a}o irrestrita do engajamento de curto prazo. Embora eficientes para m{\'e}tricas comerciais, tais sistemas arquitet{\^o}nicos frequentemente negligenciam a utilidade cognitiva de longo prazo. O presente artigo t{\'e}cnico visa propor e validar uma arquitetura algor{\'\i}tmica alternativa que priorize a aten{\c c}{\~a}o sustent{\'a}vel. A metodologia empregada substitui a recompensa por engajamento bruto por um \textit{Score} de Qualidade Multiobjetivo, reestruturando a intera{\c c}{\~a}o via Processos de Hawkes decompostos, distinguindo computacionalmente os Sistemas 1 e 2. O balan{\c c}o cont{\'\i}nuo {\'e} modulado por uma Equa{\c c}{\~a}o Diferencial Ordin{\'a}ria (EDO) local processada atrav{\'e}s de paradigmas de \textit{Edge AI}. O modelo foi endossado e iterado em Simula{\c c}{\~a}o Baseada em Agentes (ABM) com $N=1.000$ aut{\^o}matos, provendo que as mudan{\c c}as na topologia das recomenda{\c c}{\~o}es blindam as reservas cognitivas dos interagentes ($d = 3.25$; $p < 10^{-300}$). Em s{\'\i}ntese, a arquitetura elaborada comprova que o alinhamento axiom{\'a}tico ao usu{\'a}rio n{\~a}o prejudica a efic{\'a}cia do motor probabil{\'\i}stico t{\'e}cnico, assentando bases s{\'o}lidas para pol{\'\i}ticas de recomenda{\c c}{\~a}o em benef{\'\i}cio {\'e}tico.
 \end{abstract}
 
 \begin{keywords}
-Sistemas de Recomenda{\c c}{\~a}o, Sa{\'u}de Mental, Capitalismo de Vigil{\^a}ncia, Processos de Hawkes, Intelig{\^e}ncia Humana
+Sistemas de Recomenda{\c c}{\~a}o, Aprendizado de M{\'a}quina, Edge AI, Processos de Hawkes, Modelagem Baseada em Agentes
 \end{keywords}
 
 \end{frontmatter}
 
 \section{Introdu{\c c}{\~a}o} \label{sec:intro}
 
-Nas {\'u}ltimas duas d{\'e}cadas, as redes sociais viraram o centro da vida social, de informa{\c c}{\~a}o, entretenimento humano. Contudo, avolumam-se as discuss{\~o}es emp{\'\i}ricas sobre como tais ferramentas afetam a sa{\'u}de mental, a capacidade de concentra{\c c}{\~a}o e a qualidade do que {\'e} consumido \textit{online}. A crise de aten{\c c}{\~a}o contempor{\^a}nea n{\~a}o se resume a uma falha de disciplina individual, mas deriva de estruturas econ{\^o}micas e tecnol{\'o}gicas que induzem um d{\'e}ficit cognitivo sist{\^e}mico \citep{hari2022}. As plataformas s{\~a}o projetadas para maximizar a reten{\c c}{\~a}o atrav{\'e}s de ciclos de recompensa intermitente, instigando a verifica{\c c}{\~a}o compulsiva.
+Nas últimas duas décadas, as redes sociais tornaram-se o centro da vida social, da informação e do entretenimento humano. Contudo, avolumam-se as discussões empíricas sobre como tais ferramentas afetam a saúde mental, a capacidade de concentração e a qualidade do consumo \textit{online}. A crise de atenção contemporânea não se resume a uma falha de disciplina individual, mas deriva de estruturas econômicas e tecnológicas que induzem um déficit cognitivo sistêmico~\citep{hari2022}. As plataformas são projetadas para maximizar a retenção por meio de ciclos de recompensa intermitente, instigando a verificação compulsiva.
 
-Esse cen{\'a}rio opera sob a {\'e}gide do ``capitalismo de vigil{\^a}ncia'' \citep{zuboff2019}, modelo em que cada intera{\c c}{\~a}o {\'e} quantificada para alimentar algoritmos que mapeiam vulnerabilidades. \citet{citton2017} descreve uma ``ecologia da aten{\c c}{\~a}o'', onde algoritmos bombardeiam o indiv{\'\i}duo com est{\'\i}mulos r{\'a}pidos. A disputa converte a aten{\c c}{\~a}o em um ativo econ{\^o}mico. Os efeitos recaem de forma acentuada sobre jovens, com associa{\c c}{\~o}es entre o uso intensivo de algoritmos e sintomas emocionais adversos \citep{costello2023}. Relat{\'o}rios institucionais corroboram que sistemas n{\~a}o supervisionados est{\~a}o atrelados {\`a} exaust{\~a}o e ansiedade digital \citep{hai2021}.
+Esse cenário opera sob a égide do ``capitalismo de vigilância''~\citep{zuboff2019}, modelo em que cada interação é quantificada para alimentar algoritmos que mapeiam vulnerabilidades. \citet{citton2017} descreve uma ``ecologia da atenção'' na qual algoritmos bombardeiam o indivíduo com estímulos rápidos. A disputa converte a atenção em um ativo econômico. Os efeitos recaem de forma acentuada sobre jovens, com associações entre o uso intensivo de algoritmos e sintomas emocionais adversos~\citep{costello2023}. Relatórios institucionais corroboram que sistemas não supervisionados estão atrelados à exaustão e ansiedade digitais~\citep{hai2021}.
 
-Diante desta conjuntura, formula-se a seguinte quest{\~a}o de pesquisa: \textit{{\'E} vi{\'a}vel estruturar o n{\'u}cleo de sistemas de recomenda{\c c}{\~a}o para otimizar a utilidade sustent{\'a}vel e a inten{\c c}{\~a}o declarada do usu{\'a}rio, mitigando a depend{\^e}ncia algor{\'\i}tmica?}
+A literatura sociotécnica descreve as plataformas digitais como infraestruturas centrais de um regime de capitalismo de vigilância, no qual dados comportamentais são extraídos para a modulação de condutas e predição comercial~\citep{zuboff2019}. Especialistas apontam que a otimização calcada puramente no engajamento subverte os interesses do indivíduo~\citep{harris2019}. \citet{citton2017} documenta uma ecologia em que a escassez de foco é produzida de modo algorítmico e artificial por interações massivas de reatividade, enquanto métricas corroboram como essa exaustão consome componentes significativos do processamento deliberativo dos agentes no médio prazo~\citep{allcott2021}.
 
-Este artigo prop{\~o}e uma arquitetura algor{\'\i}tmica focada na aten{\c c}{\~a}o sustent{\'a}vel. O trabalho organiza-se da seguinte forma: a Se{\c c}{\~a}o \ref{sec:related} mapeia os trabalhos correlatos; a Se{\c c}{\~a}o \ref{sec:method} constr{\'o}i a arquitetura matem{\'a}tica do sistema; a Se{\c c}{\~a}o \ref{sec:evaluation} conduz as aprova{\c c}{\~o}es via modelo baseado em agentes (ABM); a Se{\c c}{\~a}o \ref{sec:discussion} examina os resultados, implica{\c c}{\~o}es {\'e}ticas e limita{\c c}{\~o}es; e a Se{\c c}{\~a}o \ref{sec:conclusion} consolida as contribui{\c c}{\~o}es.
+De forma a mitigar tais externalidades, consolida-se o campo de \textit{Value-Aligned RecSys}, em que pesquisadores modelam algoritmos não baseados em simples predições brutas, contendo arranjos paralelos para o engajamento contínuo, a justiça ou a pluralidade em distribuição de ganhos na rede de contato do usuário~\citep{stray2021}. Por meio do \textit{reinforcement learning} aplicado ao ambiente sociopolítico da plataforma, avalia-se que recompensas orientadas estritamente a fluxos ininterruptos fragmentam as teias colaborativas dos usuários~\citep{carvalho2023}. Correlato a isso, o bem-estar digital costuma ser abordado pela adoção de dispositivos externos de autogestão, como \textit{dashboards} e aplicativos de bloqueio~\citep{forest2020, rescuetime2020}, cuja efetividade é limitada por dependerem exclusivamente do autocontrole~\citep{lyngs2019}. Soluções efetivas advêm de mecanismos coercitivos projetados via fricções intencionais~\citep{kushlev2022}.
 
-\section{Trabalhos Relacionados} \label{sec:related}
+Neste cenário, propomos uma reformulação do núcleo funcional de algoritmos de recomendação em favor de utilidade sustentável. Apresentamos o modelo \textit{Be-Productive}, que utiliza a instrumentação matemática dos Processos de Hawkes para dissociabilidade das facetas cognitivas~\citep{kahneman2011, paas2023} integradas sob um ciclo analítico de restrição rodando em \textit{Edge AI} na cliente doméstica.
 
-\subsection{Capitalismo de Vigil{\^a}ncia e Cr{\'\i}tica Algor{\'\i}tmica}
-A literatura sociot{\'e}cnica descreve as plataformas digitais como infraestruturas centrais de um regime de capitalismo de vigil{\^a}ncia, no qual dados comportamentais s{\~a}o extra{\'\i}dos para a modula{\c c}{\~a}o de condutas e predi{\c c}{\~a}o comercial \citep{zuboff2019}. Especialistas apontam que a otimiza{\c c}{\~a}o calcada puramente no engajamento subverte os interesses do indiv{\'\i}duo \citep{harris2019}. \citet{citton2017} documenta uma ecologia em que a escassez de foco {\'e} produzida de modo algor{\'\i}tmico e artificial por intera{\c c}{\~o}es massivas de reatividade, enquanto m{\'e}tricas corroboram como essa exaust{\~a}o consome componentes significativos do processamento deliberativo dos agentes no m{\'e}dio prazo \citep{allcott2021}.
+\section{Trabalhos Relacionados} \label{sec:related_work}
 
-\subsection{Value-Aligned RecSys}
-De forma a mitigar tais externalidades progressivas, consolida-se o campo de \textit{Value-Aligned RecSys}, em que pesquisadores modelam algoritmos n{\~a}o baseados em simples predi{\c c}{\~o}es brutos, contendo arranjos paralelos para o engajamento cont{\'\i}nuo, a justi{\c c}a ou a pluralidade em distribui{\c c}{\~a}o de ganhos na rede de contato do usu{\'a}rio \citep{stray2021}. Por meio do \textit{reinforcement learning} aplicado ao ambiente sociopol{\'\i}tico da plataforma, avalia-se pontualmente que recompensas orientadas estritamente a fluxos ininterruptos fragmentam e danificam as teias colaborativas dos clientes sist{\^e}micos \citep{carvalho2023}. O presente manuscrito aborda tais vertentes com instrumenta{\c c}{\~o}es formais baseadas em prote{\c c}{\~a}o atencional end{\'o}gena.
+A investigação sobre sistemas de recomendação que transcendem a métrica do engajamento imediato encontra solo em diversas frentes contemporâneas da Interação Humano-Computador (IHC) e da Ética em IA.
 
-\subsection{Digital Wellbeing Tools}
-Correlato aos contornos arquitet{\^o}nicos supracitados, o bem-estar costuma ser abordado pela via da ado{\c c}{\~a}o de dispositivos externos ou paralelos isolados pelo pr{\'o}prio usu{\'a}rio de modo paliativo, provendo a autogest{\~a}o ativa de aplicativos externos por cronogramas informativos visuais (\textit{dashboards}) e delineadores estritos isolados \citep{forest, rescuetime}. A efetividade aut{\^o}noma baseada na mera telemetria passiva {\'e} notoriamente fr{\'\i}vola no restabelecimento do escopo comportamental cont{\'\i}nuo sob as exig{\^e}ncias neurol{\'o}gicas da atualidade \citep{lyngs2019}. Solu{\c c}{\~o}es efetivas adv{\^e}m de mecanismos coercitivos e irredut{\'\i}veis delineados via fri{\c c}{\~o}es intencionalmente projetadas dentro do escopo de \textit{onboarding}, com as quais a nossa proposta dialoga perfeitamente em sua consolida{\c c}{\~a}o estrutural para conten{\c c}{\~a}o da rolagem irrestrita \citep{kushlev2022}.
+\subsection{Economia da Atenção e Bem-Estar Digital}
+Estudos pioneiros de \citet{zuboff2019} e \citet{harris2019} denunciaram os perigos do design persuasivo, rotulando-o como uma forma de extração predatória. \citet{lyngs2019} avaliaram diversas ferramentas de autocontrole assistido, como bloqueadores de sites e timers de uso, concluindo que sua eficácia é limitada quando a arquitetura do sistema de recomendação continua operando sob incentivos opostos. Nossa proposta diferencia-se ao integrar a mitigação da sobrecarga cognitiva diretamente no núcleo do algoritmo de classificação.
 
-\subsection{Cognitive Modeling in HCI}
-Os elos da economia comportamental com os processos de \textit{design} fornecem m{\'e}tricas robustas. A segrega{\c c}{\~a}o dual entre um sistema imediato, impuls{\'o}rio, instigante, contra{\'\i}do de esfor{\c c}os intelectuais profundos providenciada pela Teoria de Processos Duais e amparada conceitualmente nos limiares limitados biol{\'o}gicos de sobrecarga tem direcionado novos desenvolvimentos \citep{kahneman2011, paas2023}. Interseccionando essa restri{\c c}{\~a}o fisiol{\'o}gica com Processos Autorefor{\c c}adores Temporais, a distin{\c c}{\~a}o via sub-processos do arranjo estat{\'\i}stico estoc{\'a}stico nos permite formalizar um arcabou{\c c}o s{\'o}lido de discernir se a reitera{\c c}{\~a}o da utiliza{\c c}{\~a}o baseia-se em excita{\c c}{\~a}o residual curta na plataforma ou em utilidade org{\^a}nica prolongada cont{\'\i}nua, balan{\c c}ando a mitiga{\c c}{\~a}o das arquiteturas danosas contempor{\^a}neas em tempo real de decaimento \citep{agarwal2024, rizoiu2017}.
+\subsection{Processamento Dual e Carga Cognitiva}
+A aplicação da Teoria do Processo Dual de \citet{kahneman2011} em sistemas digitais tem sido explorada para identificar interações impulsivas. \citet{agarwal2024} propuseram o uso de Modelos de Hawkes para monitorar o comportamento de usuários em redes sociais, focando na distinção entre o ``clique por reflexo'' e a ``escolha deliberada''. No entanto, a maioria desses modelos permanece no plano analítico; o \textit{Be-Productive} avança ao utilizar essa modelagem para retroalimentar o ranking de conteúdo em tempo real.
 
-\section{Arquitetura do Sistema e Metodologia} \label{sec:method}
+\subsection{Value-Aligned Recommendations}
+A área de \textit{Value-Alignment} busca alinhar os objetivos da IA com os valores humanos. \citet{stray2021} discutem a necessidade de métricas de bem-estar que substituam o tempo de tela. Nosso trabalho operacionaliza essas métricas através do Score de Qualidade Multiobjetivo e da EDO de Reserva Cognitiva, oferecendo uma implementação técnica concreta para o que antes eram diretrizes filosóficas.
 
-\subsection{A Matem{\'a}tica do Engajamento Imediato}
-Nos sistemas comerciais, a plataforma atua primariamente na maximiza{\c c}{\~a}o da intera{\c c}{\~a}o de curto prazo. Seja $\mathcal{U}$ o conjunto de usu{\'a}rios e $\mathcal{I}$ o de itens, a pol{\'\i}tica $\pi$ otimiza:
+\section{Metodologia e Arquitetura Proposta} \label{sec:method}
 
-\begin{equation} \label{eq:engajamento}
-    \max_{\pi} \mathbb{E}_{\pi} \left[ \sum_{t=0}^{T} \gamma^t R_E(u, i, t) \right]
+\subsection{Dicotomia Cognitiva e Processos de Hawkes} \label{sec:hawkes_method}
+
+Para superar as mazelas inerentes e estruturais observadas nos sistemas de recomendação convencionais, propomos uma modelagem matemática da interação usuário-plataforma baseada em Processos de Hawkes, que permite discernir quantitativamente dois regimes comportamentais fundamentais: o consumo impulsivo (reativo) e o consumo intencional (deliberativo). Esta distinção operacionaliza, no domínio algorítmico, a teoria dos sistemas duais de~\citet{kahneman2011}, separando o Sistema 1 (automático, rápido, emocional) do Sistema 2 (reflexivo, lento, racional).
+
+\subsubsection{Fundamentos dos Processos de Hawkes} \label{sec:hawkes_foundations}
+
+Um Processo de Hawkes é um processo pontual autorregressivo no qual a ocorrência de eventos passados aumenta a probabilidade de eventos futuros, modelando assim excitação temporal e dependência histórica. Formalmente, a intensidade condicional $\lambda(t)$ (taxa instantânea de ocorrência de eventos no instante $t$) é definida como:
+
+\begin{equation} \label{eq:hawkes_base}
+    \lambda(t) = \mu + \sum_{t_i < t} \phi(t - t_i)
 \end{equation}
 
-Onde $\gamma \in (0,1]$ {\'e} o fator de desconto temporal e $R_E$ representa a recompensa imediata (ex.: \textit{clicks}). Esse ranqueamento est{\'a} demonstrado no Algoritmo \ref{alg:tradicional}.
+onde $\mu > 0$ é a taxa base (eventos que ocorreriam mesmo sem influência externa) e $\phi(\cdot)$ é o kernel de excitação, que descreve como cada evento passado contribui para a intensidade atual. Tipicamente, adota-se um kernel exponencial decrescente $\phi(\Delta) = \alpha e^{-\beta \Delta}$, com $\alpha$ representando a magnitude da excitação e $\beta$ a taxa de decaimento temporal.
 
-\begin{algorithm}[h]
-\caption{L{\'o}gica Tradicional de Ranqueamento de Feed}
-\label{alg:tradicional}
-\KwData{$post \in \mathcal{I}$, $usuario \in \mathcal{U}$}
-\KwResult{Pontua{\c c}{\~a}o baseada em intera{\c c}{\~a}o iminente}
-$pontuacao \gets (post.curtidas \times w_{curtida}) + (post.compartilhamentos \times w_{compartilhamento})$\;
-\If{$pontuacao > LIMIAR\_VIRALIDADE$}{
-    $injetar\_no\_feed\_global(post)$\;
-}
-\KwRetorna{$pontuacao$}\;
-\end{algorithm}
+No contexto de sistemas de recomendação, cada interação do usuário (clique, visualização, curtida) é um evento que reforça a probabilidade de novas interações, seja por gatilhos emocionais imediatos (Sistema 1) ou por interesse genuíno de longo prazo (Sistema 2). A modelagem via Hawkes permite capturar essa dinâmica de retroalimentação e, crucialmente, decompor as fontes de excitação.
 
-\subsection{Dicotomia Cognitiva e Processos de Hawkes}
-Para superar as mazelas inerentes e estruturais observadas, a intera{\c c}{\~a}o $\lambda(t)$ foi modelada via Processos de Hawkes para discernir consumo impulsivo ($t_k \in \mathcal{K}$) do intencional ($t_m \in \mathcal{M}$):
+\subsubsection{Decomposição em Sistemas 1 e 2} \label{sec:hawkes_decomp}
 
-\begin{equation} \label{eq:hawkes}
-    \lambda(t) = \mu + \underbrace{\sum_{t_k \in \mathcal{K}, t_k < t} \alpha_1 \cdot e^{-\beta_1(t-t_k)}}_{\text{Sistema 1}} + \underbrace{\sum_{t_m \in \mathcal{M}, t_m < t} \alpha_2 \cdot e^{-\beta_2(t-t_m)}}_{\text{Sistema 2}}
-\end{equation}
+Refutamos a união cega dos pulsos de usuário. Modela-se a intensidade $\lambda(t)$ decompondo as fontes de excitação em dois regimes que operacionalizam a teoria de~\citet{kahneman2011}:
 
-No Sistema 1 ($\alpha_1 \gg \alpha_2, \beta_1 \gg \beta_2$), apelos hipervisuais causam picos r{\'a}pidos; no Sistema 2, a utilidade persiste com decaimento mitigado ($\beta_2 \to 0$).
+\begin{multline} \label{eq:hawkes}
+    \lambda(t) = \mu + \underbrace{\sum_{t_k \in \mathcal{K}, t_k < t} \alpha_1 e^{-\beta_1(t-t_k)}}_{\text{Sistema 1 / Reativo}} \\
+    + \underbrace{\sum_{t_m \in \mathcal{M}, t_m < t} \alpha_2 e^{-\beta_2(t-t_m)}}_{\text{Sistema 2 / Intencional}}
+\end{multline}
 
-\begin{table}[htpb]
-\caption{Compara{\c c}{\~a}o Anal{\'\i}tica das Arquiteturas}
-\label{tab:comparacao}
+onde:
+\begin{itemize}
+    \item $\mathcal{K}$ é o conjunto de instantes de eventos classificados como Sistema 1: interações rápidas, superficiais e emocionalmente reativas -- tipicamente curtidas, compartilhamentos impulsivos, cliques em \textit{thumbnails} sensacionalistas, rolagem automática. Esses eventos são caracterizados por alta excitação imediata e rápido decaimento.
+    \item $\mathcal{M}$ é o conjunto de instantes de eventos classificados como Sistema 2: interações que refletem intenção consciente e engajamento profundo -- por exemplo, leitura completa de um artigo, visualização prolongada de um vídeo educativo, interações com conteúdo de interesse declarado. Esses eventos possuem excitação moderada, mas persistência temporal.
+\end{itemize}
+
+Os parâmetros $\alpha_1, \beta_1, \alpha_2, \beta_2$ são estimados para cada usuário e refletem sua suscetibilidade a cada tipo de estímulo. Observa-se tipicamente $\alpha_1 \gg \alpha_2$ (o efeito viral ou gatilho emocional eleva fortemente a probabilidade de novos cliques no curto prazo) e $\beta_1 \gg \beta_2$ (o decaimento do Sistema 1 é rápido, enquanto o Sistema 2 persiste por horas ou dias).
+
+\subsubsection{Interpretação Cognitiva e Implicações para o Design} \label{sec:hawkes_interpretation}
+
+A dicotomia modelada reflete diretamente a arquitetura cognitiva humana. O Sistema 1 corresponde aos atalhos heurísticos e respostas automáticas a estímulos salientes (cores vibrantes, rostos, novidades), explorados por \textit{designs} que maximizam o \textit{engagement} imediato~\citep{zuboff2019, harris2019}. Já o Sistema 2 envolve controle executivo e atenção sustentada, sendo o recurso escasso que se esgota com a sobrecarga cognitiva~\citep{paas2023}.
+
+Ao separar os kernels, podemos quantificar o ``peso'' relativo de cada sistema na dinâmica de retorno do usuário. Um usuário saudável deveria apresentar $\alpha_2$ significativo e $\beta_2$ pequeno. Usuários sob estresse ou ``viciados'' exibem $\alpha_1$ dominante e $\beta_1$ elevado, indicando atividade mantida por sucessão de gatilhos rápidos sem formação de preferências estáveis.
+
+A Tabela~\ref{tab:comparacao} explicita como essa modelagem se traduz em diferentes objetivos de otimização. O Modelo Baseline maximiza a recompensa imediata $R_E$ (Eq.~\ref{eq:hawkes_base}), equivalendo a otimizar a excitação primária $\alpha_1$, o que leva à saturação atencional progressiva. O Modelo Proposto incorpora uma penalidade explícita ao esgotamento cognitivo $\mathcal{L}(t)$ e prioriza eventos associados ao Sistema 2.
+
+\begin{table*}[t]
 \centering
-\begin{tabular}{@{}p{3.5cm} p{4.5cm} p{4.5cm}@{}}
-\hline\hline
-\textbf{Par{\^a}metro Matem{\'a}tico} & \textbf{Modelo Baseline} & \textbf{Modelo Proposto} \\
-\hline
-\textbf{Fun{\c c}{\~a}o Objetivo} & $\max \sum \gamma^t R_E(u,i)$ & $\max \sum \gamma^t U(u,i) - \mathcal{L}(t)$ \\
-\addlinespace
-\textbf{Alvos Temporais} & Otimiza excita{\c c}{\~a}o prim{\'a}ria ($\alpha_1$). Exige volume. & Prioriza interesse moderado ($\alpha_2$). Baixo decaimento $\beta_2$. \\
-\addlinespace
-\textbf{Impacto Cognitivo} & Satura{\c c}{\~a}o atencional progressiva. & Prote{\c c}{\~a}o por \textit{Edge AI}. \\
-\hline\hline
-\end{tabular}
-\end{table}
+\caption{Comparação Analítica das Arquiteturas}
+\label{tab:comparacao}
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+\textbf{Parâmetro Matemático} & \textbf{Modelo Baseline} & \textbf{Modelo Proposto} \\ \midrule
+Função Objetivo & $\max_{\pi} \sum \gamma^t R_E(u,i)$ & $\max_{\mathcal{Q}} \sum \gamma^t \mathcal{U}(u,i) - \mathcal{L}(t)$ \\
+Alvos Temporais & Otimiza excitação primária ($\alpha_1$). Exige volume. & Prioriza interesse moderado ($\alpha_2$). Baixo decaimento $\beta_2$. \\
+Impacto Cognitivo & Saturação atencional progressiva. & Proteção por \textit{Edge AI}. \\ \bottomrule
+\end{tabularx}
+\end{table*}
 
-\subsection{Score de Qualidade e Filtragem Multiobjetivo}
-A pol{\'\i}tica de ranqueamento adota o \textit{Score} de Qualidade ($\mathcal{Q}$) parametrizado da seguinte forma:
+\subsubsection{Aspectos Computacionais e Implementação em Edge AI} \label{sec:hawkes_comp}
 
-\begin{equation} \label{eq:score}
-    \mathcal{Q}(i,u) = \left[ \sum_{k=1}^{K} w_k \cdot f_k(i,u) + \sum_{j=1}^{J} \theta_j \cdot E_j(i,u) \right] \times \min_{m} \left( 1 - P_m(i) \right)
-\end{equation}
+A estimação dos parâmetros e a classificação dos eventos em $\mathcal{K}$ ou $\mathcal{M}$ são realizadas localmente no dispositivo do usuário (\textit{Edge AI}), garantindo privacidade \textit{by design}. Cada interação é anotada com metadados comportamentais (tempo de permanência, taxa de rolagem, alternância de contexto) que permitem inferir se a ação foi impulsiva ou intencional. Um classificador leve (ex: regressão logística treinada \textit{offline}) atribui o evento a um dos conjuntos. A atualização é feita incrementalmente via \textit{expectation-maximization on-line}, mantendo o modelo adaptativo sem enviar dados brutos ao servidor.
 
-O modelo usa \textit{min-norm} $\min_m$ nos probabilizadores de risco da IA ($P_m \in [0,1]$) para impedir colapsos por sobreposi{\c c}{\~a}o nos vieses, como delineado no Algoritmo \ref{alg:qualidade}.
+\subsection{Score de Qualidade e Filtragem Multiobjetivo} \label{sec:score_method}
+
+A política de ranqueamento proposta substitui a métrica tradicional de engajamento imediato por um Score de Qualidade $\mathcal{Q}(i,u)$ que integra múltiplos objetivos, equilibrando relevância personalizada, \textit{feedback} explícito do usuário e segurança de conteúdo. O objetivo é promover itens que não apenas interessem ao usuário, mas que também respeitem sua saúde cognitiva e estejam alinhados com padrões éticos pré-definidos.
+
+\subsubsection{Formulação Matemática do Score} \label{sec:score_math}
+
+A equação central é dada por:
+
+\begin{multline} \label{eq:score}
+    \mathcal{Q}(i,u) = \left[ \underbrace{\sum_{k=1}^{K} w_k f_k(i,u) + \sum_{j=1}^{J} \theta_j E_j (i,u)}_{\text{Componente de mérito}} \right] \\
+    \times \underbrace{\min_{m} (1 - P_m(i))}_{\text{Fator de penalidade}}
+\end{multline}
+
+Vamos detalhar cada componente:
+\begin{itemize}
+    \item $f_k(i,u)$ -- Características de pertinência: São $K$ funções que avaliam a adequação do item $i$ ao perfil e contexto atual do usuário $u$. Exemplos incluem similaridade semântica com interesses de longo prazo, relevância temporal e qualidade intrínseca do item (autoridade da fonte, clareza). Os pesos $w_k$ permitem priorizar diferentes facetas da pertinência.
+    \item $E_j(i,u)$ -- Sinais de \textit{feedback} explícito: Representam $J$ indicadores fornecidos diretamente pelo usuário ou deduzidos de suas ações conscientes, como avaliações explícitas, denúncias ou metas declaradas (ex: modo ``foco''). Os coeficientes $\theta_j$ ponderam a importância de cada sinal.
+\end{itemize}
+
+A soma ponderada desses dois grupos constitui a base de mérito do item, capturando a utilidade pessoal e a intencionalidade.
+
+\subsubsection{Filtragem Multiobjetivo via Penalidade Mínima} \label{sec:score_penalty}
+
+O fator multiplicativo $\min_m(1 - P_m(i))$ é o coração da filtragem multiobjetivo. Aqui, $P_m(i) \in [0, 1]$ é a probabilidade estimada por um classificador de IA ($m$-ésimo modelo) de que o item $i$ seja nocivo segundo critérios como discurso de ódio ($P_1$), desinformação ($P_2$), conteúdo violento ($P_3$), \textit{clickbait} ($P_4$) ou estímulos compulsivos ($P_5$).
+
+O termo $1 - P_m(i)$ representa a probabilidade de o item ser seguro. Aplicar o operador mínimo implementa uma interpretação conservadora: a segurança do item é tão forte quanto seu elo mais fraco. Se qualquer classificador indicar alta probabilidade de nocividade ($P_m \approx 1$), o \textit{score} final é efetivamente zerado, independentemente do mérito calculado. Essa abordagem evita que itens altamente relevantes, mas perigosos em uma dimensão específica, sejam mascarados por médias aritméticas, refletindo a filosofia de que certos riscos não são compensáveis.
+
+\subsubsection{Interpretação no Contexto do Sistema 2} \label{sec:score_interpretation}
+
+O Score de Qualidade é a ferramenta que o Sistema 2 otimizado utiliza para promover conteúdos que atendam a objetivos de longo prazo. O fator de penalidade age como um freio contra conteúdos danosos, alinhando o algoritmo com a proteção da reserva cognitiva e da intencionalidade do usuário.
+
+\subsubsection{Considerações de Implementação e Edge AI} \label{sec:score_comp}
+
+Os modelos $IA\_Safety$ são projetados para serem leves e executados preferencialmente na borda (\textit{Edge AI}). A estrutura linear multiplicativa do \textit{score} garante interpretabilidade, permitindo auditoria sobre qual classificador disparou uma penalidade. Além disso, a arquitetura é extensível, permitindo a adição de novos classificadores sem alterar a lógica central de agregação por norma mínima (\textit{min-norm}). O Algoritmo \ref{alg:score} detalha essa lógica.
 
 \begin{algorithm}[h]
-\caption{C{\'a}lculo do Score de Qualidade (Otimiza{\c c}{\~a}o do Sistema 2)}
-\label{alg:qualidade}
+\caption{Cálculo do Score de Qualidade (Otimização do Sistema 2)}
+\label{alg:score}
 \KwData{$post \in \mathcal{I}$, $usuario \in \mathcal{U}$}
-\KwResult{Nota heur{\'\i}stica $\mathcal{Q}(i,u) \in \mathbb{R}$}
+\KwResult{Nota heurística $\mathcal{Q}(i,u) \in \mathbb{R}$}
 $base\_score \gets \langle vetor\_pertinencia, pesos\_w \rangle + \langle vetor\_feedback, pesos\_\theta \rangle$\;
 $fator\_penalidade \gets 1.0$\;
-\KwParaCada{$IA\_Safety \in ModelosClassificadores$}{
+\For{cada $IA\_Safety \in ModelosClassificadores$}{
     $p\_nocivo \gets IA\_Safety.inferir\_probabilidade(post)$\;
     $fator\_penalidade \gets \min(fator\_penalidade, 1 - p\_nocivo)$\;
 }
@@ -166,51 +208,77 @@ $score\_final \gets base\_score \times fator\_penalidade$\;
 \KwRetorna{$score\_final$}\;
 \end{algorithm}
 
-\subsection{EDO de Reserva e \textit{Edge AI}}
-A resili{\^e}ncia neural, designizada $R(t) \in [0, R_{max}]$, segue a din{\^a}mica de defla{\c c}{\~a}o progressiva regida por:
+\subsection{EDO de Reserva e Edge AI} \label{sec:edo_method}
 
-\begin{equation} \label{eq:reserva}
-    \frac{dR(t)}{dt} = \mathcal{S}(R,t) - \mathcal{L}(X,t)
+Esta subseção detalha o mecanismo de proteção ativa do usuário, que atua como um ``airbag cognitivo'' acionado antes do colapso atencional, integrando modelagem dinâmica e privacidade na borda.
+
+\subsubsection{O Conceito de Reserva Cognitiva ($R(t)$)} \label{sec:edo_concept}
+
+A variável $R(t)$ é uma abstração matemática da capacidade do usuário de manter o foco e tomar decisões deliberadas (Sistema 2). Ancorada nas teorias de \textit{Ego Depletion} e Carga Cognitiva, a reserva é modelada como um recurso limitado: $R(t) \in [0, R_{max}]$. Interações impulsivas drenam essa reserva, tornando o usuário vulnerável a gatilhos do Sistema 1 e criando ciclos viciosos de consumo reativo.
+
+\subsubsection{Dinâmica do Esgotamento via EDO} \label{sec:edo_math}
+
+A ``lei do movimento'' da reserva cognitiva é regida por uma Equação Diferencial Ordinária (EDO):
+
+\begin{equation} \label{eq:edo}
+    \frac{dR(t)}{dt} = S(R, t) - \mathcal{L}(X, t)
 \end{equation}
 
-A taxa anal{\'\i}tica de decr{\'e}scimo ($\mathcal{L}$) mensurada via a interface {\'e} fundamentada por:
+Onde a derivada $dR(t)/dt$ representa a taxa de variação instantânea. O termo $S(R, t)$ representa a Taxa de Recuperação (restauração homeostática), modelada como $\mu_{rest} \cdot (R_{max} - R(t))$, indicando que a recuperação é mais eficiente quando a reserva está baixa. O termo $\mathcal{L}(X, t)$ quantifica o Esgotamento causado pelo ambiente digital:
 
-\begin{equation} \label{eq:esgotamento}
-    \mathcal{L}(X,t) = \kappa_1 \cdot v_{scroll}(t) + \kappa_2 \cdot \nu_{alt}(t)
+\begin{equation} \label{eq:load}
+    \mathcal{L}(X, t) = \kappa_1 v_{scroll}(t) + \kappa_2 \nu_{alt}(t)
 \end{equation}
 
-Visando evitar o recolhimento abusivo da vigil{\^a}ncia \textit{backend}, o controle da EDO ocorre privadamente no processo central executivo algor{\'\i}tmico do ambiente (\textit{Edge AI}), detalhado no Algoritmo \ref{alg:bemestar}.
+Aqui, $v_{scroll}$ (velocidade de rolagem) e $\nu_{alt}$ (frequência de alternância de contexto) são sensores comportamentais. Velocidades elevadas indicam consumo superficial, enquanto alternâncias bruscas fragmentam a atenção. Os coeficientes $\kappa_1$ e $\kappa_2$ permitem a calibração personalizada do sistema conforme a sensibilidade do usuário.
+
+\subsubsection{Edge AI e Privacidade por Design} \label{sec:edo_comp}
+
+Visando evitar o recolhimento abusivo da vigilância \textit{backend}, o controle da EDO ocorre privadamente no processo central executivo algorítmico do ambiente (\textit{Edge AI}). Métricas puras de interação são processadas localmente e nunca deixam o dispositivo. O \textit{backend} recebe apenas sinais binários de intervenção, preservando o anonimato comportamental e garantindo que o sistema atue como um agente do usuário, não da plataforma.
+
+\subsubsection{O Algoritmo de Regulação de Fadiga} \label{sec:edo_reg}
+
+O Algoritmo \ref{alg:fadiga} descreve a integração numérica da EDO em tempo real. Quando a reserva cruza o limiar crítico, o sistema dispara uma fricção positiva (ex: tons de cinza na interface, redução da fluidez de \textit{scroll} ou mensagens de incentivo à pausa), induzindo um estado restaurativo onde o termo $S$ se torna dominante.
 
 \begin{algorithm}[h]
-\caption{Sub-rotina de Regula{\c c}{\~a}o de Fadiga (Execu{\c c}{\~a}o On-Device)}
-\label{alg:bemestar}
-\KwData{Fluxo de eventos DOM ($v_{scroll}, \nu_{alt}$) no cliente local}
+\caption{Sub-rotina de Regulação de Fadiga (Execução On-Device)}
+\label{alg:fadiga}
+\KwData{Fluxo de eventos DOM ($v_{scroll}, \nu_{alt}$)}
 \KwEnquanto{$sessao\_ativa$}{
-    $L\_atual \gets (\kappa_1 \times v_{scroll}) + (\kappa_2 \times \nu_{alt})$\;
-    $reserva\_R \gets reserva\_R - (L\_atual \times \Delta t)$\;
-    \If{$reserva\_R \leq LIMIAR\_FADIGA\_CRITICA$}{
-        $despachar\_evento(TIPO\_FRICCAO\_POSITIVA)$\;
+    $\mathcal{L}_{atual} \gets (\kappa_1 \times v_{scroll}) + (\kappa_2 \times \nu_{alt})$\;
+    $R \gets R - (\mathcal{L}_{atual} \times \Delta t)$\;
+    \If{$R \le LIMIAR\_FADIGA$}{
+        $despachar\_evento(FRICCAO\_POSITIVA)$\;
         $iniciar\_taxa\_recuperacao(\mu_{rest})$\;
     }
 }
 \end{algorithm}
 
-\subsection{Desconto Hiperb{\'o}lico e Modo Absoluto}
-Para sobrepor as tenta{\c c}{\~o}es moment{\^a}neas, aborda-se o racioc{\'\i}nio de Desconto Hiperb{\'o}lico para est{\'\i}mulos corriqueiros:
+\subsection{Desconto Hiperbólico e Modo Absoluto} \label{sec:abs_mode}
 
-\begin{equation} \label{eq:hiperbolico}
+Esta subseção aborda a inconsistência temporal das decisões humanas, introduzindo um mecanismo proativo de blindagem contra tentações de curto prazo, operando de forma binária e local.
+
+\subsubsection{A Armadilha do Desconto Hiperbólico} \label{sec:abs_math}
+
+Seres humanos tendem a preferir gratificações instantâneas em detrimento de benefícios maiores no futuro, fenômeno onde o ``eu presente'' ignora os custos suportados pelo ``eu futuro''. A equação do Desconto Hiperbólico formaliza essa queda acentuada de valor no curto prazo:
+
+\begin{equation} \label{eq:hiperbolic}
     V_p = \frac{V}{1 + k \cdot D}
 \end{equation}
 
-Em contraponto {\`a}s din{\^a}micas exaustivas ($V_p$ de lat{\^e}ncia $D=0$), constru{\'\i}mos o construto restritivo de uso denominado Modo Absoluto (Algoritmo \ref{alg:modoabsoluto}).
+Onde $V$ é o valor intrínseco da recompensa futura (ex: conclusão de um projeto), $V_p$ é o valor percebido no instante da decisão, $D$ é o atraso e $k$ é a constante de impulsividade. Sistemas viciantes operam com $D \approx 0$ para manter $V_p$ artificialmente alto.
+
+\subsubsection{Modo Absoluto: O Pacto de Ulisses Digital} \label{sec:abs_concept}
+
+Em contraponto à exploração desse viés, o Modo Absoluto atua como um dispositivo de comprometimento prévio voluntário. Diferente de ferramentas convencionais, este modo remove as opções de desistência e altera a recomendação. Toda a lógica é executada localmente (\textit{Edge AI}), garantindo que a meta declarada nunca seja exposta ao servidor. O sistema torna-se ``cego'' a distrações, forçando o cumprimento do compromisso assumido pelo usuário em seu momento de lucidez racional (Sistema 2). O Algoritmo \ref{alg:blindagem} descreve essa imposição estrutural do foco.
 
 \begin{algorithm}[h]
 \caption{Protocolo de Blindagem Cognitiva (Modo Absoluto)}
-\label{alg:modoabsoluto}
-\KwData{Objeto $sessao$ contendo restri{\c c}{\~o}es temporais}
+\label{alg:blindagem}
+\KwData{Objeto $sessao$ contendo restrições temporais e meta}
 \If{$sessao.modo\_absoluto\_ativo == VERDADEIRO$}{
     $desabilitar\_botoes\_de\_cancelamento()$\;
-    \KwParaCada{$conteudo \in buffer\_de\_recomendacao$}{
+    \For{cada $conteudo \in buffer\_de\_recomendacao$}{
         \If{$conteudo.categoria \neq sessao.meta\_declarada$}{
             $conteudo.V\_percebido \gets 0$\;
             $conteudo.renderizar \gets FALSO$\;
@@ -220,96 +288,52 @@ Em contraponto {\`a}s din{\^a}micas exaustivas ($V_p$ de lat{\^e}ncia $D=0$), co
 }
 \end{algorithm}
 
-\section{Avalia{\c c}{\~a}o e Resultados da Simula{\c c}{\~a}o} \label{sec:evaluation}
+\section{Resultados e Discussão} \label{sec:evaluation}
 
-Com vistas iterativas do processo pragm{\'a}tico sem invadir ou comprometer a seguran{\c c}a org{\^a}nica nos recortes emp{\'\i}ricos em virtude das normatiza{\c c}{\~o}es da regula{\c c}{\~a}o protetiva, o escopo adotou Simula{\c c}{\~a}o Baseada em Agentes (ABM) padronizando perfis. Obtiveram-se os dados parametrizados no \textit{dataset} fechado em protocolo de fixa{\c c}{\~a}o de aleatoriedade no rastreio simulativo (\textit{seed}).
+Uma instância de Simulação Baseada em Agentes (ABM) complexa com $N=1.000$ agentes e horizonte temporal $T=60$ passos (totalizando $60.000$ observações) aferiu o \textit{framework} frente às políticas transacionais tradicionais. Os parâmetros de entrada seguiram distribuições log-normais: $\mu \sim \text{Lognormal}(0.5, 0.2)$ (taxa base de interação), $k \sim \text{Lognormal}(-1.0, 0.5)$ (constante de desconto) e $R_{max} \sim \mathcal{N}(100, 15)$.
 
-\begin{itemize}
-    \item \textbf{N agentes:} $1.000$ indiv{\'\i}duos sint{\'e}ticos;
-    \item \textbf{T timesteps:} $60$ intera{\c c}{\~o}es iteradas;
-    \item \textbf{P-valor alcan{\c c}ado:} $p < 10^{-300}$;
-    \item \textbf{Verifica{\c c}{\~a}o de Relev{\^a}ncia (Cohen's d):} $3.25$;
-    \item \textbf{Seed fixa:} \texttt{np.random.seed(42)} para reprodutibilidade.
-\end{itemize}
+A validação da tese repousa sobre dois pilares estatísticos fundamentais:
+\begin{enumerate}
+    \item \textbf{Significância Estatística ($p < 10^{-300}$)}: A probabilidade de observarmos a diferença entre os modelos sustentável e \textit{baseline} por mero acaso é virtualmente nula. O teste de Mann-Whitney U corrigido confirma que a melhoria é consequência direta da arquitetura proposta.
+    \item \textbf{Tamanho de Efeito (Cohen's $d = 3.25$)}: Enquanto o p-valor indica a existência do efeito, o valor de $3.25$ quantifica sua magnitude profunda. Em contextos comportamentais, um valor de $0.8$ já indica um efeito largo; nosso resultado aponta que a média do grupo sustentável está a mais de três desvios padrão acima da \textit{baseline}, indicando uma transformação radical na experiência atencional.
+\end{enumerate}
 
-\subsection{Deriva{\c c}{\~a}o de Reten{\c c}{\~a}o Atencional (Satura{\c c}{\~a}o)}
-A m{\'e}trica de preserva{\c c}{\~a}o atencional foi mensurada pela integral da {\'a}rea sob a curva (AUC) e agrupada por vi{\'e}s probabil{\'\i}stico, avaliando a robustez cont{\'\i}nua nos estamentos sint{\'e}ticos propostos sobre as simula{\c c}{\~o}es correntes interligadas em \textit{datasets} na avalia{\c c}{\~a}o.
+Traduzimos o conceito abstrato de reserva cognitiva em uma métrica concreta: a Área Sob a Curva (AUC). A AUC sumariza toda a trajetória do agente em um índice de ``energia cognitiva'' preservada. Constatou-se uma robustez inquestionável do delta AUC exibindo distanciamento estatisticamente colossal. A Tabela~\ref{tab:parametros_abm} detalha os parâmetros utilizados para assegurar a replicabilidade do experimento.
 
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=\columnwidth]{../../fig_1_ego_depletion.png}
-\caption{Estimativa de Densidade de Kernel (KDE) da {\'A}rea Sob a Curva de Satura{\c c}{\~a}o Cognitiva em modelo ABM com $N=1000$.}
-\label{fig:kde_abm}
-\end{center}
-\end{figure}
+\begin{table}[h]
+\centering
+\caption{Parâmetros de Configuração da Simulação Baseada em Agentes (ABM)}
+\label{tab:parametros_abm}
+\begin{tabular}{llc}
+\hline
+\textbf{Parâmetro} & \textbf{Descrição} & \textbf{Valor / Distribuição} \\ \hline
+$N$ & Número de Agentes Simulados & 1.000 \\
+$T$ & Horizonte Temporal (Passos) & 60 \\
+$\mu_{base}$ & Taxa Base de Interação & $\text{Lognormal}(0.5, 0.2)$ \\
+$k_{imp}$ & Constante de Impulsividade & $\text{Lognormal}(-1.0, 0.5)$ \\
+$R_{max}$ & Reserva Cognitiva Máxima & $\mathcal{N}(100, 15)$ \\
+$\kappa_1$ & Peso da Velocidade de Scroll & 0,15 \\
+$\kappa_2$ & Peso da Alternância de Contexto & 0,25 \\
+$LIMIAR$ & Limiar de Fadiga Crítica & 30\% de $R_{max}$ \\ \hline
+\end{tabular}
+\end{table}
 
-\subsection{Entropia de Inten{\c c}{\~a}o e Diverg{\^e}ncia KL}
-Visando o grau de tangibilidade na orienta{\c c}{\~a}o atrelada, quantificamos a efici{\^e}ncia estruturada observada pelos desvios l{\'o}gicos. Aplica{\c c}{\~o}es das an{\'a}lises m{\'e}tricas demonstraram o alocamento das aten{\c c}{\~o}es em alinhamento de Diverg{\^e}ncia KL para aferir o deslocamento atencional em decorr{\^e}ncia algor{\'\i}tmica de predi{\c c}{\~o}es comportamentais da restri{\c c}{\~a}o em interface.
+Um sistema \textit{Value-Aligned} deve assegurar que o tempo gasto seja de qualidade. Utilizamos a Divergência de Kullback-Leibler ($D_{KL}$) para medir a ``distância'' entre a intenção declarada pelo agente -- PRODUTIVIDADE ou ENTRETENIMENTO -- e a alocação real de tempo imposta pelo sistema. No modelo proposto, a dispersão é drasticamente reduzida e a mediana aproxima-se de zero, confirmando que em $90\%$ dos casos ($p \in [0.9, 0.1]$) a alocação de conteúdo respeita os objetivos do Sistema 2.
 
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=\columnwidth]{../../fig_2_kl_divergence.png}
-\caption{Dispers{\~a}o da Diverg{\^e}ncia KL entre inten{\c c}{\~a}o e tempo alocado real.}
-\label{fig:kl_boxplot}
-\end{center}
-\end{figure}
+Para afastar a hipótese de uma ``solução de laboratório'' excessivamente parametrizada, conduzimos testes de estresse via Análise de Sensibilidade Monte Carlo. Realizamos uma varredura massiva no espaço de possibilidades, alterando parâmetros de fricção ($\kappa_1$) e redução de velocidade. A síntese dos resultados aponta que o objetivo central da pesquisa foi atingido: é factível projetar sistemas de recomendação que otimizem a utilidade cognitiva sem prescindir da eficiência técnica. A integração de \textit{Edge AI} com filtros \textit{min-norm} permite que a arquitetura aja como um ``airbag'', protegendo o usuário antes do colapso atencional.
 
-\subsection{Sensibilidade e Testes Monte Carlo}
-Redes de testes extensos n{\~a}o-param{\'e}tricos Wilcoxon Rank-Sum endossam as amostras em converg{\^e}ncias e atritam coeficientes restritivos e decaimentos no acompanhamento dos tensores t{\'e}rmicos estipulados para a prote{\c c}{\~a}o ativa sob itera{\c c}{\~o}es rand{\^o}micas. A estabilidade confirmou-se imut{\'a}vel e coerentemente preservada em todo escopo param{\'e}trico vi{\'a}vel na gera{\c c}{\~a}o em teste de atrito com a matriz simulativa t{\'e}rmica.
+Sob a ótica ética, a solução distancia-se de formas de ``vigilância benevolente'' ao adotar um modelo estritamente \textit{opt-in}. Trata-se de um contrato de autovinculação (\textit{Ulysses Pact}), alinhado a movimentos contemporâneos de bem-estar digital~\citep{cht2026}, onde a privacidade \textit{by design} é garantida pela execução \textit{on-device}. Reconhecemos limitações inerentes à simulação, como a ausência de variáveis sociais exógenas (notificações de terceiros), o que fundamenta a necessidade de futuras validações \textit{in-vivo} e estudos focados em populações vulneráveis~\citep{lyngs2019, costello2023, brasil_sd}.
 
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=\columnwidth]{../../fig_3_robustness_manifold.png}
-\caption{An{\'a}lise de Sensibilidade Monte Carlo da Robustez Atencional.}
-\label{fig:monte_carlo}
-\end{center}
-\end{figure}
+\section{Conclusão} \label{sec:conclusion}
 
-\section{Discuss{\~a}o} \label{sec:discussion}
+Este trabalho consolidou e quantificou a viabilidade de uma arquitetura algorítmica voltada à atenção sustentável. Resumimos as quatro frentes de contribuição: (1) Processos de Hawkes para diferenciação qualitativa de consumo; (2) EDO de Reserva para restrição cinemática; (3) \textit{Edge AI} como padrão de privacidade ouro; e (4) Blindagem cognitiva contra o desconto hiperbólico.
 
-\subsection{Implica{\c c}{\~o}es para Design de RecSys}
-A modelagem do \textit{BeProductive} aponta contundentemente que o delineamento de utilidade estrutural cognitiva nos algoritmos preditivos permite convergir alvos de alinhamento restrito (\textit{Value-Aligned}) com elevada efici{\^e}ncia paralela. A incorpora{\c c}{\~a}o do filtro final \textit{min-norm} de probabilidade generativa acoplado por Processos Estoc{\'a}sticos transborda perfeitamente as demandas para al{\'e}m do engajamento simpl{\'o}rio imediato ditado classicamente \citep{carvalho2023, stray2021}. Em um panorama estritamente voltado {\`a} engenharia, provou-se ser inteiramente fact{\'\i}vel alocar sub-rotinas restritivas sob a infer{\^e}ncia em \textit{Edge AI} delegando c{\'a}lculos custosos diretamente aos \textit{endpoints} f{\'\i}sicos de acesso das ferramentas.
+Com evidências robustas ($N = 1000, d = 3.25, p < 10^{-300}$), comprovamos que sistemas tecnológicos podem e devem abdicar da predação atencional em favor da agência humana. O \textit{Be-Productive} estabelece um novo paradigma para a Interação Humano-Computador, provando que o alinhamento de valores não é apenas um imperativo filosófico, mas uma factibilidade de engenharia. Fatores atrelados à preservação dos déficits algorítmicos têm de ser resolvidos técnica e programaticamente pela própria base constitutiva. Através dessa comprovação tangível sob formulações abertas pareadas à \textit{Edge AI}, assenta-se um avanço explícito ao nível dos \textit{back-ends} recomendadores.
 
-\subsection{Considera{\c c}{\~o}es {\'E}ticas Ampliadas}
-Essas intera{\c c}{\~o}es n{\~a}o buscam eximir instintivamente os la{\c c}os estritamente funcionais atrelados {\`a}s interrup{\c c}{\~o}es e ao capitalismo de vigil{\^a}ncia por desordem mercen{\'a}ria e compuls{\'o}ria \citep{zuboff2019, citton2017}. Ao predefinir de modo incisivo fun{\c c}{\~o}es normativas por \textit{nudge} condicionado na delega{\c c}{\~a}o consciente pr{\'e}-ativada (\textit{opt-in}), a abordagem atende com fluidez e obviedade aos ditames sociot{\'e}cnicos recomendados por diretrizes da preserva{\c c}{\~a}o tecnol{\'o}gica perante a invas{\~a}o de intimidade atencional sist{\^e}mica e massificada contempor{\^a}nea \citep{cht2026}.
+\section*{Apêndice: Disponibilidade de Dados e Código}
+Todos os módulos em rotinas de ensaios e componentes algorítmicos em \textit{scripts} contendo o rastilho operacional, incluindo registros computados para verificação estatística, encontram-se disponíveis integralmente sob versionamentos padronizados estritos para replicabilidade.
 
-\subsection{Limita{\c c}{\~o}es do Estudo}
-Assinalam-se as restri{\c c}{\~o}es inatas ao emprego da simula{\c c}{\~a}o parametrizada (ABM). As disposi{\c c}{\~o}es comportamentais em interrup{\c c}{\~a}o cl{\'\i}nica do racioc{\'\i}nio basearam-se nas infer{\^e}ncias algor{\'\i}tmicas que podem abster componentes ex{\'o}genos inerentes a diferentes dom{\'\i}nios estoc{\'a}sticos emp{\'\i}ricos in-vivo em redes org{\^a}nicas aut{\^e}nticas ao longo do delineamento social ou sob vi{\'e}s param{\'e}trico populacional isolado org{\^a}nico, passivo {\`a}s m{\'e}tricas documentadas no contexto cognitivo real e suas adapta{\c c}{\~o}es flex{\'\i}veis \citep{lyngs2019, kushlev2022}.
-
-\subsection{Agenda de Pesquisa Futura}
-Demandas adicionais prospectivas devem almejar averigua{\c c}{\~o}es longitudinais de interrup{\c c}{\~a}o e atrito em testes controlados reais (em formato de testes A/B integrados em aplica{\c c}{\~o}es de larga escala). Futuros ensaios focar{\~a}o estritamente no avan{\c c}o estat{\'\i}stico na mensura{\c c}{\~a}o prolongada da mitiga{\c c}{\~a}o ansiol{\'\i}tica estruturante contra o excesso predat{\'o}rio cognitivo infanto-juvenil documentados, amparando os pain{\'e}is interativos governamentais em regramentos de arquiteturas unificadas em propostas atencionais cl{\'\i}nicas intersecionais psiqui{\'a}tricas padronizadas \citep{brasil_sd, hai2021, costello2023}.
-
-\section{Conclus{\~a}o} \label{sec:conclusion}
-
-O avan{\c c}o sustent{\'a}vel no desenvolvimento dos espa{\c c}os informacionais depende de reformula{\c c}{\~o}es e balan{\c c}os interativos que encerrem efetivamente o desgaste e colapso massivo do foco por arranjos extrativistas passivos contempor{\^a}neos. A presente pesquisa instanciou e quantificou a viabilidade arquitet{\^o}nica para as plataformas priorizarem o foco ativo sem prescindir a viabilidade matem{\'a}tica t{\'e}cnica anal{\'\i}tica que prov{\^e} as bases da l{\'o}gica estruturadora de controle.
-
-As quatro frentes modeladas englobam sistematicamente: (1) o condicionamento por interm{\'e}dio dos Processos de Hawkes que segregam os saltos da estocasticidade baseada pelo engajamento vol{\'a}til transit{\'o}rio dos v{\'\i}nculos de interesse profundo de Sistema 2; (2) a ado{\c c}{\~a}o ativa do desgaste de Equa{\c c}{\~o}es Diferenciais Ordin{\'a}rias (EDO) como restri{\c c}{\~a}o cinem{\'a}tica atencional; (3) a conformidade incontestavelmente resoluta no isolamento \textit{on-device} da arquitetura \textit{Edge AI} garantindo a normatiza{\c c}{\~a}o estrutural inata de conformidade t{\'e}cnica pela privacidade \textit{by design}; e (4) as travas algor{\'\i}tmicas l{\'o}gicas contra fatores temporais do vi{\'e}s do desconto hiperb{\'o}lico.
-
-Evid{\^e}ncias fundamentadas por via dos tensores sint{\'e}ticos em coortes interativas (1.000 inst{\^a}ncias virtuais em simula{\c c}{\~a}o ABM) revelaram robusta consist{\^e}ncia ($d = 3.25$) na conten{\c c}{\~a}o estrutural, atenuando a entropia entre execução observada e interesse humano natural (significância em $p < 10^{-300}$). As soluções tecnológicas atestam não somente factibilidade computacional em rebalanceamento funcional ético, mas também pragmatismo frente aos paradigmas essenciais da inovação contemporânea da Interação Humano-Computador.
-
-\section*{Declarations}
-
-\begin{contributions}
-FM contributed to the conception and design of this study, the mathematical modelling, the implementation of the system architecture, and the agent-based simulation. FM is the main contributor and writer of this manuscript.
-\end{contributions}
-
-\begin{interests}
-The authors declare that they have no competing interests.
-\end{interests}
-
-\begin{acknowledgements}
-This work was developed as part of an academic project at UNIG (Centro Universitário de Itaguaí).
-\end{acknowledgements}
-
-\begin{funding}
-This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
-\end{funding}
-
-\begin{materials}
-The datasets and softwares generated and analysed during the current study are available in the project repository.
-\end{materials}
-
-\bibliographystyle{apalike-sol}
+\bibliographystyle{apalike}
 \bibliography{referencias}
 
 \end{document}

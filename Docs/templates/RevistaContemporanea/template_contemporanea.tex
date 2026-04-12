@@ -1,0 +1,101 @@
+% ---------------------------------------------------------
+% Template LaTeX para a Revista Contemporânea
+% Configurado para XeLaTeX (Uso da fonte Verdana)
+% ---------------------------------------------------------
+\documentclass[12pt,a4paper]{article}
+
+% --- Pacotes de Idioma e Codificação ---
+\usepackage{polyglossia}
+\setmainlanguage{portuguese}
+\setotherlanguages{english,spanish}
+
+% --- Pacotes de Fontes (Requer XeLaTeX/LuaLaTeX) ---
+\usepackage{fontspec}
+\setmainfont{Verdana}
+
+% --- Pacotes de Formatação de Texto ---
+\usepackage[top=3cm, left=3cm, right=2cm, bottom=2cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing % Espaçamento 1.5 no corpo do texto
+
+% --- Pacotes de Elementos Gráficos e Tabelas ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{float}
+
+% --- Configuração de Legendas (Captions) ---
+% Verdana 10, Espaçamento simples, Título ACIMA, Fonte ABAIXO
+\DeclareCaptionFont{tenpt}{\fontsize{10}{12}\selectfont}
+\captionsetup{
+    font={tenpt, bf},
+    labelfont={tenpt, bf},
+    labelsep=period,
+    justification=centering,
+    singlelinecheck=false,
+    skip=10pt
+}
+\newcommand{\source}[1]{
+    \begin{center}
+        \fontsize{10}{12}\selectfont Fonte: #1
+    \end{center}
+}
+
+% --- Pacotes Matemáticos ---
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+% --- Pacote de Citações (ABNT) ---
+\usepackage[style=abnt, backend=biber]{biblatex}
+
+% --- Configuração de Títulos (Headings) ---
+\usepackage{titlesec}
+
+% Nível 1: Introdução (Negrito, Verdana 12, Primeira letra Maiúscula)
+\titleformat{\section}
+  {\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+% Nível 2: 1.1 Referencial Teórico (Não Negrito, Verdana 12)
+\titleformat{\subsection}
+  {\normalfont\large}{\thesubsection}{0.5em}{}
+% Nível 3: 1.1.1 Definição (Negrito)
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}{\thesubsubsection}{0.5em}{}
+
+% --- Comandos Customizados ---
+
+% Metadados do Jornal
+\newcommand{\journalheader}{
+    \noindent \textbf{Contemporânea} \\
+    \textit{Contemporary Journal} \\
+    Vol.X No.X: 01-xx, 202X \\
+    ISSN: 2447-0961 \\
+    \textbf{Artigo}
+}
+
+% Títulos em 3 línguas
+\newcommand{\articletitles}[3]{
+    \begin{center}
+        \fontsize{14}{16}\selectfont \textbf{#1} \\ \vspace{0.3cm}
+        \fontsize{12}{14}\selectfont #2 \\ \vspace{0.3cm}
+        \fontsize{12}{14}\selectfont #3
+    \end{center}
+}
+
+% Bloco de Autor
+\newcommand{\authorinfo}[5]{
+    \noindent \textbf{#1} \\
+    #2 \\
+    Instituição de formação: #3 \\
+    Endereço: #4 \\
+    E-mail: #5 \\ \vspace{0.5cm}
+}
+
+% Bloco de Resumo (Espaçamento Simples)
+\newenvironment{abstractblock}[2]{
+    \begin{singlespace}
+    \noindent \textbf{#1:} #2
+    \end{singlespace}
+}
+
+% ---------------------------------------------------------

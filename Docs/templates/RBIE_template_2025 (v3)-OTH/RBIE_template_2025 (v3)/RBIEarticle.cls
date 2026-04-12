@@ -318,65 +318,16 @@
 %=======================================================================
 \DeclareRobustCommand{\keywords}[1]{%
 	\par
-	\textbf{\keywordsname:\space}%
-}
-
-%=======================================================================
-% Formatacao do abstract
-%=======================================================================
-%\renewenvironment{abstract}{%
-%	\setlength{\@tempdima}{\parindent}%
-%	\setlength{\parindent}{0pt}%
-%	\setlength{\parskip}{0pt}%
-%	\textbf{\abstractname}\par
-%	\begin{itshape}
-%		\fontsize{10}{12}\selectfont%
-%}{%
-%		\par
-%	\end{itshape}
-%	\setlength{\parindent}{\@tempdima}%
-%	\addvspace{24pt}
-%}
-
-%=======================================================================
-% Indicacao de palavras-chave
-%=======================================================================
-%\DeclareRobustCommand{\keywords}[1]{%
-%	\par
-%	\textbf{\keywordsname:\space}%
-%}
-
-%=======================================================================
-% Formatacao dos titulos de secoes
-%=======================================================================
-\DeclareRobustCommand{\section}{%
-	\@startsection{section}{1}{\z@}{-24pt}{12pt}%
-		{\fontsize{14}{17}\selectfont\bfseries}%
-}
-\DeclareRobustCommand{\subsection}{%
-	\@startsection{subsection}{2}{\z@}{-12pt}{6pt}%
-		{\bfseries}%
-}
-\DeclareRobustCommand{\subsubsection}{%
-	\@startsection{subsubsection}{3}{\z@}{-12pt}{6pt}%
-		{\itshape}%
+	\textbf{\keywordsname:\space}#1%
 }
 
 %=======================================================================
 % Formatacao das legendas de figuras, tabelas, etc.
 %=======================================================================
-\setlength{\abovecaptionskip}{6pt}
-\setlength{\belowcaptionskip}{6pt}
-\long\def\@makecaption#1#2{%
-  \vskip\abovecaptionskip
-  \sbox\@tempboxa{{\scriptsize #1: #2.}}%
-  \ifdim \wd\@tempboxa >\hsize
-    {\scriptsize #1: #2.\par}
-  \else
-    \global \@minipagefalse
-    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
-  \fi
-  \vskip\belowcaptionskip}
+\RequirePackage{caption}
+\DeclareCaptionFormat{rbie}{{\scriptsize #1: #2.}}
+\captionsetup{format=rbie,labelsep=none,justification=centering,singlelinecheck=off,font=scriptsize,skip=6pt}
+
 
 %=======================================================================
 % Environment para formatacao de codigo
