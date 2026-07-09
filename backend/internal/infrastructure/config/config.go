@@ -25,7 +25,8 @@ type DatabaseConfig struct {
 }
 
 type RecommenderConfig struct {
-	URL string
+	URL          string
+	SharedSecret string
 }
 
 func Load() (*Config, error) {
@@ -42,7 +43,8 @@ func Load() (*Config, error) {
 			Name:     getEnv("DB_NAME", "be_productive"),
 		},
 		Recommender: RecommenderConfig{
-			URL: getEnv("RECOMMENDER_URL", "http://localhost:8002"),
+			URL:          getEnv("RECOMMENDER_URL", "http://localhost:8002"),
+			SharedSecret: getEnv("RECOMMENDER_SHARED_SECRET", ""),
 		},
 		JWTSecret: getEnv("JWT_SECRET", "be_productive_secret_key_123"),
 	}, nil

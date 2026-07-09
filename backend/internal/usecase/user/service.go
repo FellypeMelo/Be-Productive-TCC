@@ -9,6 +9,7 @@ import (
 
 	"github.com/be-productive/backend/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Repository defines the user storage interface
@@ -50,8 +51,12 @@ func (s *Service) Create(ctx context.Context, nome, email, senha string) (*domai
 		return nil, domain.ErrInvalidInput
 	}
 
-	// Hash password
-	hashedPassword := hashPassword(senha)
+	// Hash password with bcrypt (salted, slow — replaces legacy SHA-256)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(senha), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	hashedPassword := string(hashedBytes)
 
 	user := &domain.User{
 		Nome:                    nome,
@@ -121,7 +126,19 @@ func (s *Service) Login(ctx context.Context, email, senha string) (string, *doma
 		return "", nil, domain.ErrInvalidCredentials
 	}
 
-	if user.SenhaCriptografada != hashPassword(senha) {
+	if isLegacyHash(user.SenhaCriptografada) {
+		// Legacy SHA-256 hash: verify with the old method, then transparently
+		// upgrade the stored hash to bcrypt on successful login.
+		if user.SenhaCriptografada != hashPassword(senha) {
+			return "", nil, domain.ErrInvalidCredentials
+		}
+		if newHash, hashErr := bcrypt.GenerateFromPassword([]byte(senha), bcrypt.DefaultCost); hashErr == nil {
+			user.SenhaCriptografada = string(newHash)
+			user.UpdatedAt = time.Now()
+			_ = s.repo.Update(ctx, user)
+		}
+	} else if err := bcrypt.CompareHashAndPassword([]byte(user.SenhaCriptografada), []byte(senha)); err != nil {
+		// Constant-time bcrypt comparison
 		return "", nil, domain.ErrInvalidCredentials
 	}
 
@@ -134,9 +151,27 @@ func (s *Service) Login(ctx context.Context, email, senha string) (string, *doma
 }
 
 // Helper functions
+
+// hashPassword computes the legacy SHA-256 hash. Retained only to verify (and then
+// upgrade) pre-existing accounts created before the bcrypt migration.
 func hashPassword(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return hex.EncodeToString(hash[:])
+}
+
+// isLegacyHash reports whether a stored hash is a 64-char hex SHA-256 digest
+// (bcrypt hashes start with "$2" and are 60 chars, so they never match).
+func isLegacyHash(hash string) bool {
+	if len(hash) != 64 {
+		return false
+	}
+	for _, c := range hash {
+		isHex := (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+		if !isHex {
+			return false
+		}
+	}
+	return true
 }
 
 type Claims struct {

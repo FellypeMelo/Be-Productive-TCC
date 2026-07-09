@@ -179,6 +179,32 @@ func (r *FocusRepository) LinkSessionGoals(ctx context.Context, sessionID int64,
 	return nil
 }
 
+// GetActiveAbsoluteGoal reports whether the user has an open session (hora_fim IS NULL)
+// in absolute mode, and the category of its linked goal. Used to enforce the Ulysses
+// Pact server-side. Prefers a PRODUTIVIDADE goal when the session links several.
+func (r *FocusRepository) GetActiveAbsoluteGoal(ctx context.Context, userID int64) (bool, string, error) {
+	query := `
+		SELECT COALESCE(m.categoria, '')
+		FROM sessao_de_uso s
+		LEFT JOIN sessao_meta sm ON s.id_sessao = sm.id_sessao
+		LEFT JOIN meta_de_foco m ON sm.id_meta = m.id_meta
+		WHERE s.usuario_associado_id = ?
+		  AND s.hora_fim IS NULL
+		  AND s.modo_absoluto = TRUE
+		ORDER BY (m.categoria = 'PRODUTIVIDADE') DESC, s.id_sessao DESC
+		LIMIT 1
+	`
+	var categoria string
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&categoria)
+	if err == sql.ErrNoRows {
+		return false, "", nil
+	}
+	if err != nil {
+		return false, "", err
+	}
+	return true, categoria, nil
+}
+
 // GetSessionGoals retrieves goals linked to a session
 func (r *FocusRepository) GetSessionGoals(ctx context.Context, sessionID int64) ([]domain.FocusGoal, error) {
 	query := `
