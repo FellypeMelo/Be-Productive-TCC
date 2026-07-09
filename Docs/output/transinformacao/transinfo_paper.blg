@@ -1,9 +1,0 @@
-[0] Config.pm:328> INFO - This is Biber 2.21
-[0] Config.pm:331> INFO - Logfile is 'transinfo_paper.blg'
-[110] biber-MSWIN64:342> INFO - === 
-[145] Biber.pm:421> INFO - Reading 'transinfo_paper.bcf'
-[260] Biber.pm:1002> INFO - Found 7 citekeys in bib section 0
-[280] Biber.pm:4487> INFO - Processing section 0
-[291] Biber.pm:4678> INFO - Looking for bibtex file '../references.bib' for section 0
-[674] Utils.pm:479> ERROR - Cannot find '../references.bib'!
-[675] Biber.pm:137> INFO - ERRORS: 1
