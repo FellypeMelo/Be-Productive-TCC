@@ -1,8 +1,12 @@
 import numpy as np
 
+# np.trapz foi renomeado para np.trapezoid no NumPy 2.0; mantém compatibilidade.
+_trapezoid = getattr(np, "trapezoid", np.trapz)
+
+
 def calculate_auc(r_curve: list, dt: float) -> float:
-    """Implementa cálculo de Integral sob a curva de Ego Depletion com a Regra do Trapézio"""
-    return np.trapz(r_curve, dx=dt)
+    """Integral sob a curva de Ego Depletion (Regra do Trapézio)."""
+    return _trapezoid(r_curve, dx=dt)
 
 def calculate_kl_divergence(p: np.ndarray, q: np.ndarray) -> float:
     """
