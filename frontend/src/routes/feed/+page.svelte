@@ -36,62 +36,133 @@
     const SCROLL_SAMPLE_MS = 200;
     const BLOCK_WAIT_SECONDS = 5;
 
-    // Preserving original mock data for fallback/demo
+    // Nomes de autores para o feed de demonstração (leitura apenas).
+    const AUTHORS: Record<number, string> = {
+        1: "Marina Alves",
+        2: "Rafael Nogueira",
+        3: "Bianca Costa",
+        4: "Téo Ferraz",
+        5: "Helena Prado",
+        6: "Caio Menezes",
+    };
+    function authorName(id: number): string {
+        return AUTHORS[id] ?? `Autor ${id}`;
+    }
+    function formatDate(d: string): string {
+        try {
+            return new Date(d).toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "short",
+            });
+        } catch {
+            return d;
+        }
+    }
+
+    // Feed de demonstração — usado como fallback quando o backend está indisponível.
+    // Conteúdo rico em português para manter o app "vivo" mesmo offline.
     const mockFeed: Content[] = [
         {
             id_conteudo: 1,
-            titulo: "Deep Focus Strategies",
+            titulo: "O mito da multitarefa: por que o foco profundo rende mais",
+            corpo: "Alternar entre tarefas cobra um imposto cognitivo silencioso. Cada troca de contexto deixa um resíduo de atenção na atividade anterior — e a conta chega no fim do dia como cansaço difuso. Este ensaio destrincha a ciência do trabalho profundo e propõe blocos de 90 minutos sem notificações.",
             categoria: "PRODUTIVIDADE",
-            tipo_de_midia: "VIDEO",
+            tipo_de_midia: "TEXTO",
             autor_id: 1,
-            data_publicacao: "2026-02-01",
-            score_de_qualidade: 0.92,
-            corpo: "",
-            tags_relevantes: "",
+            data_publicacao: "2026-02-06",
+            score_de_qualidade: 0.94,
+            tags_relevantes: "foco, atenção, deep work",
+            topics: [
+                { id_topico: 1, nome_topico: "Foco", descricao: "" },
+                { id_topico: 3, nome_topico: "Hábitos", descricao: "" },
+            ],
         },
         {
             id_conteudo: 2,
-            titulo: "Ambient Study Session",
+            titulo: "Ruído marrom: 45 minutos para uma concentração serena",
+            corpo: "Uma paisagem sonora contínua, sem picos que roubam a atenção. Ideal para leitura, estudo ou escrita — o tipo de som que desaparece e deixa só o trabalho.",
             categoria: "PRODUTIVIDADE",
             tipo_de_midia: "AUDIO",
             autor_id: 2,
-            data_publicacao: "2026-02-01",
-            score_de_qualidade: 0.88,
-            corpo: "",
-            tags_relevantes: "",
+            data_publicacao: "2026-02-05",
+            score_de_qualidade: 0.89,
+            tags_relevantes: "som ambiente, concentração",
+            topics: [{ id_topico: 1, nome_topico: "Foco", descricao: "" }],
         },
         {
             id_conteudo: 3,
-            titulo: "Modern Minimalist Design",
+            titulo: "Pomodoro na prática: um dia real de trabalho profundo",
+            corpo: "Acompanhe uma jornada completa dividida em ciclos de 25 minutos, com pausas deliberadas e um ritual de encerramento que protege o descanso.",
+            categoria: "PRODUTIVIDADE",
+            tipo_de_midia: "VIDEO",
+            autor_id: 3,
+            data_publicacao: "2026-02-04",
+            score_de_qualidade: 0.91,
+            tags_relevantes: "pomodoro, rotina, produtividade",
+            topics: [
+                { id_topico: 3, nome_topico: "Hábitos", descricao: "" },
+                { id_topico: 1, nome_topico: "Foco", descricao: "" },
+            ],
+        },
+        {
+            id_conteudo: 4,
+            titulo: "Higiene do sono e desempenho cognitivo",
+            corpo: "Dormir bem não é luxo — é infraestrutura da mente. Veja como luz, temperatura e horários regulares moldam sua clareza mental no dia seguinte.",
+            categoria: "PRODUTIVIDADE",
+            tipo_de_midia: "TEXTO",
+            autor_id: 5,
+            data_publicacao: "2026-02-03",
+            score_de_qualidade: 0.96,
+            tags_relevantes: "sono, saúde, cognição",
+            topics: [{ id_topico: 2, nome_topico: "Bem-estar", descricao: "" }],
+        },
+        {
+            id_conteudo: 5,
+            titulo: "A nova onda do cinema brasileiro",
+            corpo: "Diretores independentes estão reinventando a linguagem visual do país. Um passeio curado por filmes que equilibram lentidão e beleza.",
+            categoria: "ENTRETENIMENTO",
+            tipo_de_midia: "VIDEO",
+            autor_id: 4,
+            data_publicacao: "2026-02-02",
+            score_de_qualidade: 0.83,
+            tags_relevantes: "cinema, cultura, arte",
+            topics: [{ id_topico: 4, nome_topico: "Cultura", descricao: "" }],
+        },
+        {
+            id_conteudo: 6,
+            titulo: "Contos curtos para uma pausa consciente",
+            corpo: "Três narrativas breves, feitas para caber num intervalo de café. Ficção que relaxa sem prender você numa rolagem infinita.",
+            categoria: "ENTRETENIMENTO",
+            tipo_de_midia: "TEXTO",
+            autor_id: 6,
+            data_publicacao: "2026-02-01",
+            score_de_qualidade: 0.8,
+            tags_relevantes: "literatura, contos, pausa",
+            topics: [{ id_topico: 4, nome_topico: "Cultura", descricao: "" }],
+        },
+        {
+            id_conteudo: 7,
+            titulo: "Jazz de fim de tarde: uma seleção calma",
+            corpo: "Standards suaves e improvisos delicados para desacelerar o ritmo. A trilha certa para encerrar o dia sem estímulo em excesso.",
+            categoria: "ENTRETENIMENTO",
+            tipo_de_midia: "AUDIO",
+            autor_id: 2,
+            data_publicacao: "2026-01-31",
+            score_de_qualidade: 0.86,
+            tags_relevantes: "música, jazz, relaxar",
+            topics: [{ id_topico: 2, nome_topico: "Bem-estar", descricao: "" }],
+        },
+        {
+            id_conteudo: 8,
+            titulo: "A arte lenta da cerâmica",
+            corpo: "Um documentário meditativo sobre o tempo, as mãos e o barro. Um convite a valorizar o processo em vez do resultado imediato.",
             categoria: "ENTRETENIMENTO",
             tipo_de_midia: "VIDEO",
             autor_id: 3,
             data_publicacao: "2026-01-30",
-            score_de_qualidade: 0.85,
-            corpo: "",
-            tags_relevantes: "",
-        },
-        {
-            id_conteudo: 4,
-            titulo: "Daily Meditation Guide",
-            categoria: "PRODUTIVIDADE",
-            tipo_de_midia: "VIDEO",
-            autor_id: 1,
-            data_publicacao: "2026-01-29",
-            score_de_qualidade: 0.95,
-            corpo: "",
-            tags_relevantes: "",
-        },
-        {
-            id_conteudo: 5,
-            titulo: "Cinema: The New Wave",
-            categoria: "ENTRETENIMENTO",
-            tipo_de_midia: "VIDEO",
-            autor_id: 4,
-            data_publicacao: "2026-01-28",
-            score_de_qualidade: 0.78,
-            corpo: "",
-            tags_relevantes: "",
+            score_de_qualidade: 0.88,
+            tags_relevantes: "documentário, artesanato, slow",
+            topics: [{ id_topico: 4, nome_topico: "Cultura", descricao: "" }],
         },
     ];
 
@@ -304,122 +375,134 @@
     <title>Feed | Be Productive</title>
 </svelte:head>
 
-<!-- Grayscale filter on high friction -->
-<div class="flex min-h-screen bg-white {frictionLevel === 'high' || frictionLevel === 'block' ? 'feed-grayscale' : ''}">
+<!-- Filtro grayscale aplicado em fricção alta/bloqueio -->
+<div class="flex min-h-screen {frictionLevel === 'high' || frictionLevel === 'block' ? 'feed-grayscale' : ''}">
     <Sidebar />
 
-    <main class="flex-1 ml-64 p-12">
-        <!-- Friction banners -->
+    <main class="flex-1 md:ml-64 pt-14 md:pt-0">
+      <div class="p-5 sm:p-8 lg:p-12 max-w-6xl mx-auto">
+        <!-- Banner de fricção ALTA — nudge suave (paleta warn) -->
         {#if frictionLevel === 'high'}
-            <div class="friction-banner">
-                <p>Você parece cansado. Que tal fazer uma pausa?</p>
-                <button onclick={dismissFriction}>Continuar navegando</button>
+            <div class="mb-8 rounded-2xl border border-warn/25 bg-warn-wash p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 animate-slideUp">
+                <span class="shrink-0 w-10 h-10 rounded-xl bg-warn/12 text-warn flex items-center justify-center" style="background: color-mix(in srgb, var(--color-warn) 12%, transparent);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </span>
+                <div class="flex-1">
+                    <p class="font-semibold text-warn leading-tight">Você parece cansado. Que tal uma pausa?</p>
+                    <p class="text-sm text-warn/80 mt-0.5" style="color: color-mix(in srgb, var(--color-warn) 80%, transparent);">Reduzimos os estímulos visuais para ajudar sua atenção a se recuperar.</p>
+                </div>
+                <button onclick={dismissFriction} class="btn btn-outline !border-warn/40 !text-warn shrink-0 self-start sm:self-auto">
+                    Continuar navegando
+                </button>
             </div>
         {/if}
 
+        <!-- Overlay de BLOQUEIO — gate explícito (paleta danger) -->
         {#if frictionLevel === 'block'}
-            <div class="friction-overlay" role="dialog" aria-modal="true" aria-labelledby="block-title">
-                <h2 id="block-title">Pausa recomendada</h2>
-                <p>Sua reserva cognitiva está baixa. Recomendamos uma pausa de alguns minutos.</p>
-
-                <label class="block-confirm">
-                    <input
-                        type="checkbox"
-                        checked={blockAcknowledged}
-                        onchange={acknowledgeBlock}
-                        disabled={blockAcknowledged}
-                    />
-                    <span>Entendo que ignorar a pausa pode aumentar meu cansaço.</span>
-                </label>
-
-                {#if blockAcknowledged && blockCountdown > 0}
-                    <p class="block-countdown">
-                        Aguarde {blockCountdown}s para refletir…
+            <div
+                class="fixed inset-0 z-[1000] flex items-center justify-center p-5 animate-fadeIn"
+                style="background: color-mix(in srgb, var(--color-ink) 55%, transparent); backdrop-filter: blur(6px);"
+                role="dialog" aria-modal="true" aria-labelledby="block-title"
+            >
+                <div class="card w-full max-w-md p-7 sm:p-9 text-center animate-scaleIn bg-surface">
+                    <span class="mx-auto w-14 h-14 rounded-2xl bg-danger-wash text-danger flex items-center justify-center mb-5">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    </span>
+                    <h2 id="block-title" class="text-xl font-bold">Pausa recomendada</h2>
+                    <p class="text-muted text-sm mt-2 leading-relaxed">
+                        Sua reserva cognitiva está baixa. Recomendamos alguns minutos longe da tela antes de continuar.
                     </p>
-                {/if}
 
-                <button
-                    class="block-proceed"
-                    onclick={proceedPastBlock}
-                    disabled={!blockAcknowledged || blockCountdown > 0}
-                >
-                    {#if !blockAcknowledged}
-                        Marque a caixa para continuar
-                    {:else if blockCountdown > 0}
-                        Aguarde {blockCountdown}s…
-                    {:else}
-                        Continuar mesmo assim
+                    <label class="flex items-start gap-3 text-left mt-6 p-4 rounded-xl bg-danger-wash cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={blockAcknowledged}
+                            onchange={acknowledgeBlock}
+                            disabled={blockAcknowledged}
+                            class="mt-0.5 w-5 h-5 shrink-0 cursor-pointer accent-[var(--color-danger)]"
+                        />
+                        <span class="text-sm text-ink leading-snug">Entendo que ignorar a pausa pode aumentar meu cansaço.</span>
+                    </label>
+
+                    {#if blockAcknowledged && blockCountdown > 0}
+                        <p class="text-sm text-subtle mt-4 tabular-nums">
+                            Aguarde <span class="font-semibold text-danger">{blockCountdown}s</span> para refletir…
+                        </p>
                     {/if}
-                </button>
+
+                    <div class="mt-6 flex flex-col gap-2">
+                        <button
+                            class="btn w-full {(!blockAcknowledged || blockCountdown > 0) ? 'btn-outline' : ''}"
+                            style={(!blockAcknowledged || blockCountdown > 0) ? '' : 'background: var(--color-danger); color: #fff; border-color: var(--color-danger);'}
+                            onclick={proceedPastBlock}
+                            disabled={!blockAcknowledged || blockCountdown > 0}
+                        >
+                            {#if !blockAcknowledged}
+                                Marque a caixa para continuar
+                            {:else if blockCountdown > 0}
+                                Aguarde {blockCountdown}s…
+                            {:else}
+                                Continuar mesmo assim
+                            {/if}
+                        </button>
+                        <p class="eyebrow">respire fundo · beba água · alongue-se</p>
+                    </div>
+                </div>
             </div>
         {/if}
 
-        <!-- Header -->
-        <header class="flex justify-between items-end mb-16">
-            <div>
-                <h1 class="text-4xl font-bold tracking-tighter uppercase">
-                    Your Feed
-                </h1>
-                <p class="text-gray-400 text-sm mt-2">
-                    Curated for your mental balance.
-                </p>
-            </div>
+        <!-- Cabeçalho -->
+        <header class="mb-8 sm:mb-10">
+            <p class="eyebrow mb-2">Seu feed · curadoria ética</p>
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+                <div>
+                    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">
+                        Feito para sua atenção
+                    </h1>
+                    <p class="text-muted text-sm sm:text-base mt-2 max-w-md">
+                        Conteúdo equilibrado entre produtividade e descanso — sem a rolagem infinita.
+                    </p>
+                </div>
 
-            <div class="flex gap-4">
-                <button
-                    onclick={() => toggleCategory(null)}
-                    class="text-xs font-bold uppercase tracking-widest px-4 py-2 border {category ===
-                    null
-                        ? 'bg-black text-white border-black'
-                        : 'border-gray-200 hover:border-black'} transition-colors"
-                >
-                    All
-                </button>
-                <button
-                    onclick={() => toggleCategory("PRODUTIVIDADE")}
-                    class="text-xs font-bold uppercase tracking-widest px-4 py-2 border {category ===
-                    'PRODUTIVIDADE'
-                        ? 'bg-black text-white border-black'
-                        : 'border-gray-200 hover:border-black'} transition-colors"
-                >
-                    Productivity
-                </button>
-                <button
-                    onclick={() => toggleCategory("ENTRETENIMENTO")}
-                    class="text-xs font-bold uppercase tracking-widest px-4 py-2 border {category ===
-                    'ENTRETENIMENTO'
-                        ? 'bg-black text-white border-black'
-                        : 'border-gray-200 hover:border-black'} transition-colors"
-                >
-                    Entertainment
-                </button>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        onclick={() => toggleCategory(null)}
+                        class="chip {category === null ? 'chip-active' : ''}"
+                    >
+                        Tudo
+                    </button>
+                    <button
+                        onclick={() => toggleCategory("PRODUTIVIDADE")}
+                        class="chip {category === 'PRODUTIVIDADE' ? 'chip-active' : ''}"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                        Produtividade
+                    </button>
+                    <button
+                        onclick={() => toggleCategory("ENTRETENIMENTO")}
+                        class="chip {category === 'ENTRETENIMENTO' ? 'chip-active' : ''}"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-full bg-subtle"></span>
+                        Entretenimento
+                    </button>
+                </div>
             </div>
         </header>
 
-        <!-- Topic Browser (Discovery Module) -->
-        <div class="mb-12">
-            <p
-                class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4"
-            >
-                Browse your interests
-            </p>
-            <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <!-- Navegador de tópicos -->
+        <div class="mb-8">
+            <p class="eyebrow mb-3">Explore seus interesses</p>
+            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                 <button
                     onclick={() => toggleTopic(null)}
-                    class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest border border-black transition-all
-                           {selectedTopic === null
-                        ? 'bg-black text-white'
-                        : 'border-gray-200 hover:border-black'}"
+                    class="chip whitespace-nowrap {selectedTopic === null ? 'chip-active' : ''}"
                 >
-                    All For You
+                    Para você
                 </button>
                 {#each topics as topic}
                     <button
                         onclick={() => toggleTopic(topic.id_topico)}
-                        class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest border border-black transition-all whitespace-nowrap
-                               {selectedTopic === topic.id_topico
-                            ? 'bg-black text-white'
-                            : 'border-gray-200 hover:border-black'}"
+                        class="chip whitespace-nowrap {selectedTopic === topic.id_topico ? 'chip-active' : ''}"
                     >
                         {topic.nome_topico}
                     </button>
@@ -427,135 +510,88 @@
             </div>
         </div>
 
-        <!-- Grid -->
+        <!-- Grid de conteúdo -->
         <div
             bind:this={gridRef}
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16"
+            class="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
         >
             {#if isLoading}
                 {#each Array(6) as _}
-                    <div class="space-y-4 animate-pulse">
-                        <div
-                            class="aspect-video bg-gray-100 border border-black/5"
-                        ></div>
-                        <div class="h-4 bg-gray-100 w-3/4"></div>
-                        <div class="h-3 bg-gray-100 w-1/2"></div>
+                    <div class="card p-0 overflow-hidden">
+                        <div class="skeleton aspect-[16/10] rounded-none"></div>
+                        <div class="p-5 space-y-3">
+                            <div class="skeleton h-3 w-24"></div>
+                            <div class="skeleton h-5 w-full"></div>
+                            <div class="skeleton h-5 w-2/3"></div>
+                            <div class="skeleton h-3 w-1/2 mt-1"></div>
+                        </div>
                     </div>
                 {/each}
             {:else}
                 {#each feed as content (content.id_conteudo)}
+                    {@const prod = content.categoria === "PRODUTIVIDADE"}
                     <a
                         href="/content/{content.id_conteudo}"
-                        class="block group"
+                        class="group rounded-[14px] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                     >
-                        <article class="opacity-0">
-                            <div
-                                class="aspect-video border border-black bg-white mb-4 relative overflow-hidden flex items-center justify-center"
-                            >
-                                <div
-                                    class="absolute inset-0 bg-black opacity-0 group-hover:opacity-5 transition-opacity"
-                                ></div>
-
-                                <!-- Content Type Icon (Minimalist) -->
-                                <div
-                                    class="text-black/20 group-hover:text-black transition-colors"
-                                >
+                        <article class="card card-interactive card-reveal p-0 overflow-hidden h-full flex flex-col">
+                            <!-- Mídia -->
+                            <div class="relative aspect-[16/10] flex items-center justify-center overflow-hidden {prod ? 'bg-accent-wash' : 'bg-hairline'}">
+                                <div class="{prod ? 'text-accent' : 'text-subtle'} transition-transform duration-300 group-hover:scale-110">
                                     {#if content.tipo_de_midia === "VIDEO"}
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="48"
-                                            height="48"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            ><polygon
-                                                points="5 3 19 12 5 21 5 3"
-                                            /></svg
-                                        >
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
                                     {:else if content.tipo_de_midia === "AUDIO"}
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="48"
-                                            height="48"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            ><path
-                                                d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                                            /><path
-                                                d="M19 10v2a7 7 0 0 1-14 0v-2"
-                                            /><line
-                                                x1="12"
-                                                y1="19"
-                                                x2="12"
-                                                y2="23"
-                                            /><line
-                                                x1="8"
-                                                y1="23"
-                                                x2="16"
-                                                y2="23"
-                                            /></svg
-                                        >
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
                                     {:else}
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="48"
-                                            height="48"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            ><path
-                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                                            /><polyline
-                                                points="14 2 14 8 20 8"
-                                            /></svg
-                                        >
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
                                     {/if}
                                 </div>
 
-                                <!-- Metadata Badge -->
-                                <div
-                                    class="absolute bottom-2 right-2 bg-black text-white text-[8px] font-bold uppercase px-1 tracking-tighter"
-                                >
-                                    {content.tipo_de_midia}
-                                </div>
+                                <!-- Etiqueta de categoria -->
+                                <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border {prod ? 'bg-accent-wash text-accent-ink border-transparent' : 'bg-surface text-muted border-line'}">
+                                    <span class="w-1.5 h-1.5 rounded-full {prod ? 'bg-accent' : 'bg-subtle'}"></span>
+                                    {prod ? 'Produtividade' : 'Entretenimento'}
+                                </span>
+
+                                <!-- Score de qualidade -->
+                                <span class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold bg-surface text-accent-ink border border-line tabular-nums" title="Score de qualidade">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>
+                                    {Math.round(content.score_de_qualidade * 100)}
+                                </span>
+
+                                <span class="absolute bottom-3 right-3 eyebrow !text-subtle bg-surface/80 rounded px-1.5 py-0.5">{content.tipo_de_midia}</span>
                             </div>
 
-                            <h3
-                                class="font-bold text-lg leading-tight group-hover:underline uppercase tracking-tight"
-                            >
-                                {content.titulo}
-                            </h3>
-                            <div
-                                class="flex items-center gap-2 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest"
-                            >
-                                <span>Author #{content.autor_id}</span>
-                                <span>•</span>
-                                <span
-                                    class={content.categoria === "PRODUTIVIDADE"
-                                        ? "text-black"
-                                        : ""}>{content.categoria}</span
-                                >
-                            </div>
+                            <!-- Corpo -->
+                            <div class="p-5 flex flex-col flex-1">
+                                <h3 class="font-semibold text-[17px] leading-snug tracking-tight text-ink transition-colors group-hover:text-accent-ink line-clamp-2">
+                                    {content.titulo}
+                                </h3>
+                                {#if content.corpo}
+                                    <p class="text-sm text-muted mt-2 leading-relaxed line-clamp-2">
+                                        {content.corpo}
+                                    </p>
+                                {/if}
 
-                            {#if content.topics && content.topics.length > 0}
-                                <div class="flex flex-wrap gap-1 mt-3">
-                                    {#each content.topics as topic}
-                                        <span class="px-1 bg-black text-white text-[8px] font-bold uppercase tracking-tighter">
-                                            {topic.nome_topico}
-                                        </span>
-                                    {/each}
+                                {#if content.topics && content.topics.length > 0}
+                                    <div class="flex flex-wrap gap-1.5 mt-3">
+                                        {#each content.topics.slice(0, 3) as topic}
+                                            <span class="text-[11px] font-medium text-subtle bg-hairline rounded-full px-2 py-0.5">
+                                                {topic.nome_topico}
+                                            </span>
+                                        {/each}
+                                    </div>
+                                {/if}
+
+                                <div class="mt-auto pt-4 flex items-center gap-2 text-xs text-subtle">
+                                    <span class="w-5 h-5 rounded-full bg-ink text-paper flex items-center justify-center text-[9px] font-bold uppercase shrink-0">
+                                        {authorName(content.autor_id).charAt(0)}
+                                    </span>
+                                    <span class="font-medium text-muted truncate">{authorName(content.autor_id)}</span>
+                                    <span class="text-line">·</span>
+                                    <span class="shrink-0">{formatDate(content.data_publicacao)}</span>
                                 </div>
-                            {/if}
+                            </div>
                         </article>
                     </a>
                 {/each}
@@ -563,115 +599,33 @@
         </div>
 
         {#if !isLoading && feed.length === 0}
-            <div class="py-32 text-center border border-dashed border-gray-200">
-                <p
-                    class="text-sm font-bold text-gray-400 uppercase tracking-widest"
-                >
-                    No content available in this section.
-                </p>
+            <div class="py-24 sm:py-32 text-center card border-dashed">
+                <p class="text-4xl mb-4">🍃</p>
+                <p class="font-semibold text-ink">Nada por aqui ainda</p>
+                <p class="text-sm text-muted mt-1">Não há conteúdo nesta seção no momento.</p>
             </div>
         {/if}
+      </div>
     </main>
 </div>
 
 <style>
-    /* Grayscale filter for friction states — reduces visual stimulation */
+    /* Filtro grayscale nos estados de fricção — reduz o estímulo visual */
     .feed-grayscale {
         filter: grayscale(70%);
         transition: filter 0.5s ease;
     }
 
-    /* Friction banner (HIGH friction) */
-    .friction-banner {
-        background: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    /* Revelação suave dos cartões (funciona com ou sem a lib de motion) */
+    .card-reveal {
+        animation: cardReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes cardReveal {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
     }
 
-    .friction-banner p {
-        color: #856404;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .friction-banner button {
-        background: transparent;
-        border: 1px solid #ffc107;
-        border-radius: 4px;
-        padding: 0.25rem 0.75rem;
-        cursor: pointer;
-        font-size: 0.75rem;
-        color: #856404;
-    }
-
-    /* Friction overlay (BLOCK friction) */
-    .friction-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .friction-overlay h2 {
-        margin-bottom: 0.5rem;
-        font-size: 1.5rem;
-    }
-
-    .friction-overlay p {
-        margin-bottom: 1rem;
-        opacity: 0.8;
-    }
-
-    .friction-overlay button {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        color: white;
-        font-size: 0.8rem;
-    }
-
-    /* Explicit-confirm gate on the BLOCK overlay */
-    .block-confirm {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        max-width: 26rem;
-        margin: 0.5rem 0 1rem;
-        font-size: 0.85rem;
-        text-align: left;
-        cursor: pointer;
-    }
-
-    .block-confirm input {
-        margin-top: 0.15rem;
-        cursor: pointer;
-    }
-
-    .block-countdown {
-        font-size: 0.8rem;
-        opacity: 0.7;
-        margin-bottom: 0.75rem;
-    }
-
-    .friction-overlay button.block-proceed:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
+    /* Trilho horizontal sem barra de rolagem visível */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
