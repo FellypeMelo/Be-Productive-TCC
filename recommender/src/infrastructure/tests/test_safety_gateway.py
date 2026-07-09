@@ -41,3 +41,29 @@ def test_all_probabilities_are_bounded():
         assert len(probs) == 5
         for p in probs:
             assert 0.0 <= p.value <= 1.0
+
+
+def test_same_content_id_yields_identical_probabilities():
+    """Deterministic gateway: same content_id -> same probabilities every call.
+
+    This is the property that makes min-norm aggregation reproducible (the old
+    random gateway produced a different vector on every call).
+    """
+    gw = ToxicitySafetyGateway()
+    first = [p.value for p in gw.infer_safety_probabilities(content_id=123)]
+    second = [p.value for p in gw.infer_safety_probabilities(content_id=123)]
+    assert first == second
+
+    # A fresh instance must also agree (no hidden per-instance state).
+    third = [p.value for p in ToxicitySafetyGateway().infer_safety_probabilities(content_id=123)]
+    assert first == third
+
+
+def test_different_content_ids_generally_differ():
+    """Distinct content ids should not all collapse to one probability vector."""
+    gw = ToxicitySafetyGateway()
+    vectors = {
+        tuple(p.value for p in gw.infer_safety_probabilities(content_id=cid))
+        for cid in range(50)
+    }
+    assert len(vectors) > 1

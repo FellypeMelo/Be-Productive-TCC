@@ -10,3 +10,10 @@ scikit-learn>=1.4.0
 scipy>=1.12.0
 mysql-connector-python>=8.0.0
 python-dotenv>=1.0.0
+
+# Plotting (ABM research figures: src/abm/run_simulation.py)
+matplotlib>=3.8
+seaborn>=0.13
+
+# Test dependency
+pytest>=8.0
