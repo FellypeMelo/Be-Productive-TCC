@@ -1,7 +1,8 @@
 // API configuration
+// The frontend talks ONLY to the Go backend. Fatigue inference and all raw behavioral
+// telemetry (v_scroll, v_alt) are handled ON-DEVICE in $lib/fatigue.ts and never leave
+// the browser — there is deliberately no direct Python (:8002) recommender client here.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
-// Python recommender URL — used for real-time telemetry (no JWT needed)
-const RECOMMENDER_URL = import.meta.env.VITE_RECOMMENDER_URL || 'http://localhost:8002';
 
 interface ApiResponse<T> {
     success: boolean;
@@ -177,57 +178,11 @@ export const api = {
         }),
 };
 
-// Direct Python recommender calls (no JWT, real-time telemetry)
-export const recommender = {
-    // Behavioral telemetry: send scroll velocity and context switches
-    recordTelemetry: async (userId: number, vScroll: number, vAlt: number) => {
-        try {
-            await fetch(`${RECOMMENDER_URL}/api/v1/fatigue/telemetry`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    v_scroll: vScroll,
-                    v_alt_context: vAlt,
-                }),
-            });
-        } catch {
-            // Swallow — telemetry is best-effort, must not break app
-        }
-    },
-
-    // Analyze user interaction pattern via Hawkes dual-kernel (Eq.2)
-    analyzeBehavior: async (userId: number, eventIntervals: number[]) => {
-        try {
-            const resp = await fetch(`${RECOMMENDER_URL}/api/v1/behavior/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    event_intervals: eventIntervals,
-                }),
-            });
-            return resp.json();
-        } catch {
-            return null;
-        }
-    },
-
-    // Get Thompson Sampling arm for category guidance
-    getThompsonArm: async (userId: number) => {
-        try {
-            const resp = await fetch(`${RECOMMENDER_URL}/api/v1/recommend/thompson/${userId}`);
-            return resp.json() as Promise<{
-                user_id: number;
-                selected_arm: string;
-                alpha_s2: number;
-                beta_s2: number;
-            }>;
-        } catch {
-            return null;
-        }
-    },
-};
+// NOTE: The former `recommender` object (recordTelemetry / analyzeBehavior /
+// getThompsonArm) posted raw behavioral telemetry directly to the Python service on
+// :8002, bypassing Go. It has been REMOVED: fatigue inference now runs on-device
+// ($lib/fatigue.ts) so v_scroll / v_alt never leave the browser. If a server-assisted
+// signal is ever needed, route it through Go (API_BASE_URL) — not directly to Python.
 
 // Types
 export interface Community {

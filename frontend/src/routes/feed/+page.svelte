@@ -1,9 +1,10 @@
 <script lang="ts">
     import { currentUser, isLoggedIn } from "$lib/stores";
-    import { api, type Content, recommender } from "$lib/api";
+    import { api, type Content } from "$lib/api";
     import { onMount, onDestroy } from "svelte";
     import Sidebar from "$lib/components/Sidebar.svelte";
     import { animate, stagger } from "motion";
+    import { EdgeFatigueEngine, type FrictionLevel } from "$lib/fatigue";
 
     let feed = $state<Content[]>([]);
     let isLoading = $state(true);
@@ -13,14 +14,27 @@
     let topics = $state<any[]>([]);
     let gridRef: HTMLElement;
 
-    // Friction state — driven by Python recommender fatigue policy
-    let frictionLevel = $state<"none" | "mild" | "high" | "block">("none");
+    // Friction state — computed 100% ON-DEVICE by the Edge fatigue engine.
+    // Raw telemetry (v_scroll, v_alt) NEVER leaves the browser.
+    let frictionLevel = $state<FrictionLevel>("none");
 
-    // Behavioral telemetry (scroll velocity + context switches)
-    let telemetryInterval: ReturnType<typeof setInterval> | null = null;
-    let contextSwitchCount = 0;
+    // On-device fatigue inference (Ego-Depletion EDO + Hawkes dual-kernel).
+    const fatigueEngine = new EdgeFatigueEngine();
+    let fatigueInterval: ReturnType<typeof setInterval> | null = null;
     let lastScrollY = 0;
     let lastScrollTime = Date.now();
+    let lastTickTime = Date.now();
+    // Throttle so a scroll gesture (which fires many events) is sampled, not flooded.
+    let lastScrollSampleTime = 0;
+
+    // Explicit-confirm gate for the "block" overlay (no one-click no-op dismissal).
+    let blockAcknowledged = $state(false);
+    let blockCountdown = $state(0);
+    let blockCountdownInterval: ReturnType<typeof setInterval> | null = null;
+
+    const TICK_MS = 1500;
+    const SCROLL_SAMPLE_MS = 200;
+    const BLOCK_WAIT_SECONDS = 5;
 
     // Preserving original mock data for fallback/demo
     const mockFeed: Content[] = [
@@ -85,47 +99,101 @@
         if (!$isLoggedIn) return;
         loadTopics();
         loadFeed();
-        startTelemetry();
+        startFatigueMonitoring();
     });
 
     onDestroy(() => {
-        if (telemetryInterval) {
-            clearInterval(telemetryInterval);
-        }
-        if (typeof document !== 'undefined') {
-            document.removeEventListener("visibilitychange", trackVisibility);
-        }
+        stopFatigueMonitoring();
     });
 
-    function startTelemetry() {
-        if (!$currentUser || typeof document === 'undefined') return;
+    // On-device fatigue monitoring: measure scroll velocity + context switches locally,
+    // feed them into the Edge engine, and derive friction locally. NOTHING is uploaded.
+    function startFatigueMonitoring() {
+        if (typeof window === "undefined" || typeof document === "undefined") return;
 
-        // Track context switches (visibility API)
-        document.addEventListener("visibilitychange", trackVisibility);
+        lastScrollY = window.scrollY || document.documentElement.scrollTop;
+        lastScrollTime = Date.now();
+        lastTickTime = Date.now();
 
-        telemetryInterval = setInterval(async () => {
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        document.addEventListener("visibilitychange", handleVisibility);
+
+        fatigueInterval = setInterval(runFatigueTick, TICK_MS);
+    }
+
+    function stopFatigueMonitoring() {
+        if (fatigueInterval) {
+            clearInterval(fatigueInterval);
+            fatigueInterval = null;
+        }
+        if (blockCountdownInterval) {
+            clearInterval(blockCountdownInterval);
+            blockCountdownInterval = null;
+        }
+        if (typeof window !== "undefined") {
+            window.removeEventListener("scroll", handleScroll);
+        }
+        if (typeof document !== "undefined") {
+            document.removeEventListener("visibilitychange", handleVisibility);
+        }
+    }
+
+    // Sample scroll movement locally and hand raw deltas to the on-device engine only.
+    function handleScroll() {
+        try {
             const now = Date.now();
+            if (now - lastScrollSampleTime < SCROLL_SAMPLE_MS) return;
+
+            const currentScrollY =
+                window.scrollY || document.documentElement.scrollTop;
             const dt = (now - lastScrollTime) / 1000;
-            if (dt <= 0) return;
+            const delta = currentScrollY - lastScrollY;
 
-            const currentScrollY = window.scrollY || document.documentElement.scrollTop;
-            const vScroll = Math.abs(currentScrollY - lastScrollY) / dt;
-
-            await recommender.recordTelemetry(
-                $currentUser.id_usuario,
-                vScroll,
-                contextSwitchCount,
-            ).catch(() => {});
+            fatigueEngine.recordScroll(delta, dt);
 
             lastScrollY = currentScrollY;
             lastScrollTime = now;
-            contextSwitchCount = 0;
-        }, 5000);
+            lastScrollSampleTime = now;
+        } catch {
+            // FAIL CLOSED — never drop below protective friction.
+            escalateFrictionOnError();
+        }
     }
 
-    function trackVisibility() {
-        if (typeof document !== 'undefined' && document.hidden) {
-            contextSwitchCount++;
+    function handleVisibility() {
+        try {
+            if (typeof document !== "undefined" && document.hidden) {
+                fatigueEngine.recordContextSwitch();
+            }
+        } catch {
+            escalateFrictionOnError();
+        }
+    }
+
+    function runFatigueTick() {
+        try {
+            const now = Date.now();
+            const dt = (now - lastTickTime) / 1000;
+            lastTickTime = now;
+
+            const level = fatigueEngine.tick(dt);
+            frictionLevel = level;
+
+            if (level !== "block") {
+                // User is no longer blocked — clear any pending acknowledgement gate.
+                resetBlockGate();
+            }
+        } catch {
+            escalateFrictionOnError();
+        }
+    }
+
+    // Protective fallback: if anything in the fatigue path errors, default to at least
+    // "mild" friction. We never silently drop to "none".
+    function escalateFrictionOnError() {
+        const order: FrictionLevel[] = ["none", "mild", "high", "block"];
+        if (order.indexOf(frictionLevel) < order.indexOf("mild")) {
+            frictionLevel = "mild";
         }
     }
 
@@ -155,7 +223,8 @@
             );
 
             feed = result.items;
-            frictionLevel = result.friction_level || "none";
+            // NOTE: friction is NOT read from the server anymore — it is computed
+            // entirely on-device by the Edge fatigue engine (see runFatigueTick).
 
             // Animations
             setTimeout(() => {
@@ -172,7 +241,7 @@
             }, 50);
         } catch (err) {
             feed = mockFeed;
-            frictionLevel = "none";
+            // Do not reset friction here — it is owned by the on-device engine.
         } finally {
             isLoading = false;
         }
@@ -188,8 +257,46 @@
         loadFeed();
     }
 
+    // HIGH-friction banner: a soft nudge; dismissing just hides the banner locally.
+    // The engine keeps running, so if fatigue persists the banner returns on the next tick.
     function dismissFriction() {
-        frictionLevel = "none";
+        frictionLevel = "mild";
+    }
+
+    // BLOCK overlay: NOT a one-click no-op. The user must (a) tick the acknowledgement
+    // checkbox AND (b) wait out a short reflective countdown before proceeding.
+    function acknowledgeBlock() {
+        blockAcknowledged = true;
+        startBlockCountdown();
+    }
+
+    function startBlockCountdown() {
+        if (blockCountdownInterval) return;
+        blockCountdown = BLOCK_WAIT_SECONDS;
+        blockCountdownInterval = setInterval(() => {
+            blockCountdown = Math.max(0, blockCountdown - 1);
+            if (blockCountdown <= 0 && blockCountdownInterval) {
+                clearInterval(blockCountdownInterval);
+                blockCountdownInterval = null;
+            }
+        }, 1000);
+    }
+
+    function resetBlockGate() {
+        blockAcknowledged = false;
+        blockCountdown = 0;
+        if (blockCountdownInterval) {
+            clearInterval(blockCountdownInterval);
+            blockCountdownInterval = null;
+        }
+    }
+
+    // Proceed only after the explicit confirm step is satisfied.
+    function proceedPastBlock() {
+        if (!blockAcknowledged || blockCountdown > 0) return;
+        resetBlockGate();
+        // Drop to "high" (still protective/grayscale) rather than a clean "none".
+        frictionLevel = "high";
     }
 </script>
 
@@ -211,10 +318,39 @@
         {/if}
 
         {#if frictionLevel === 'block'}
-            <div class="friction-overlay">
-                <h2>Pausa recomendada</h2>
-                <p>Sua reserva cognitiva está baixa. Volte em alguns minutos.</p>
-                <button onclick={dismissFriction}>Entendi, continuar mesmo assim</button>
+            <div class="friction-overlay" role="dialog" aria-modal="true" aria-labelledby="block-title">
+                <h2 id="block-title">Pausa recomendada</h2>
+                <p>Sua reserva cognitiva está baixa. Recomendamos uma pausa de alguns minutos.</p>
+
+                <label class="block-confirm">
+                    <input
+                        type="checkbox"
+                        checked={blockAcknowledged}
+                        onchange={acknowledgeBlock}
+                        disabled={blockAcknowledged}
+                    />
+                    <span>Entendo que ignorar a pausa pode aumentar meu cansaço.</span>
+                </label>
+
+                {#if blockAcknowledged && blockCountdown > 0}
+                    <p class="block-countdown">
+                        Aguarde {blockCountdown}s para refletir…
+                    </p>
+                {/if}
+
+                <button
+                    class="block-proceed"
+                    onclick={proceedPastBlock}
+                    disabled={!blockAcknowledged || blockCountdown > 0}
+                >
+                    {#if !blockAcknowledged}
+                        Marque a caixa para continuar
+                    {:else if blockCountdown > 0}
+                        Aguarde {blockCountdown}s…
+                    {:else}
+                        Continuar mesmo assim
+                    {/if}
+                </button>
             </div>
         {/if}
 
@@ -509,5 +645,33 @@
         cursor: pointer;
         color: white;
         font-size: 0.8rem;
+    }
+
+    /* Explicit-confirm gate on the BLOCK overlay */
+    .block-confirm {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        max-width: 26rem;
+        margin: 0.5rem 0 1rem;
+        font-size: 0.85rem;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .block-confirm input {
+        margin-top: 0.15rem;
+        cursor: pointer;
+    }
+
+    .block-countdown {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 0.75rem;
+    }
+
+    .friction-overlay button.block-proceed:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
     }
 </style>
