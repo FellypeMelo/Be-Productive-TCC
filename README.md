@@ -189,6 +189,7 @@ VITE_API_URL=http://localhost:8080/api/v1
 | [`Docs/REPRODUCIBILITY.md`](Docs/REPRODUCIBILITY.md) | Como reproduzir o experimento (d = 3.25), ablação e figuras |
 | [`Docs/PAPER_CODE_TRUTH_MAP.md`](Docs/PAPER_CODE_TRUTH_MAP.md) | Rastreabilidade afirmação-do-artigo ↔ ponto-do-código |
 | [`Docs/IMPACT.md`](Docs/IMPACT.md) | Fins acadêmicos e aplicações interdisciplinares |
+| [`Docs/ROADMAP.md`](Docs/ROADMAP.md) | Plano de evolução em fases, alinhado à visão do artigo |
 | [`Docs/SECURITY.md`](Docs/SECURITY.md) | Postura de segurança e privacidade |
 | Por camada | [`backend/README.md`](backend/README.md) · [`recommender/README.md`](recommender/README.md) · [`frontend/README.md`](frontend/README.md) |
 
