@@ -56,75 +56,74 @@
     <title>Communities | Be Productive</title>
 </svelte:head>
 
-<div class="flex min-h-screen bg-white text-black">
+<div class="flex min-h-screen">
     <Sidebar />
 
-    <main class="ml-64 flex-1 p-12">
-        <header class="mb-16">
-            <h1 class="text-4xl font-bold tracking-tighter uppercase">
-                Discovery
-            </h1>
-            <p class="text-gray-400 text-sm mt-2">
-                Find and join communities tailored to your interests.
+    <main class="flex-1 md:ml-64 pt-14 md:pt-0">
+      <div class="p-5 sm:p-8 lg:p-12 max-w-6xl mx-auto">
+        <header class="mb-8 sm:mb-10">
+            <p class="eyebrow mb-2">Descobrir</p>
+            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Comunidades</h1>
+            <p class="text-muted text-sm sm:text-base mt-2 max-w-md">
+                Encontre grupos alinhados aos seus interesses e cresça em boa companhia.
             </p>
         </header>
 
         {#if isLoading}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                 {#each Array(6) as _}
-                    <div
-                        class="h-64 border border-gray-100 animate-pulse bg-gray-50"
-                    ></div>
+                    <div class="card p-6 space-y-4">
+                        <div class="skeleton w-11 h-11 rounded-xl"></div>
+                        <div class="skeleton h-5 w-2/3"></div>
+                        <div class="skeleton h-3 w-full"></div>
+                        <div class="skeleton h-3 w-4/5"></div>
+                        <div class="skeleton h-10 w-full rounded-lg mt-2"></div>
+                    </div>
                 {/each}
             </div>
         {:else if communities.length === 0}
-            <div
-                class="col-span-full py-32 text-center border border-dashed border-gray-200"
-            >
-                <p
-                    class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
-                >
-                    No communities found. Create one to get started.
-                </p>
+            <div class="py-24 sm:py-32 text-center card border-dashed">
+                <p class="text-4xl mb-4">🌱</p>
+                <p class="font-semibold text-ink">Nenhuma comunidade ainda</p>
+                <p class="text-sm text-muted mt-1">Crie a primeira e comece a construir.</p>
             </div>
         {:else}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                 {#each communities as community (community.id_comunidade)}
-                    <div
-                        class="border border-black p-8 flex flex-col justify-between group hover:bg-black hover:text-white transition-all"
-                    >
-                        <div>
-                            <div
-                                class="text-[10px] font-bold uppercase tracking-widest py-1 px-2 border border-current inline-block mb-6"
-                            >
-                                Community
-                            </div>
-                            <h3
-                                class="text-2xl font-bold tracking-tighter mb-4"
-                            >
-                                {community.nome_comunidade}
-                            </h3>
-                            <p class="text-sm opacity-60 line-clamp-3 mb-8">
-                                {community.regras_de_moderacao ||
-                                    "A space for focused collaboration and shared growth."}
-                            </p>
+                    {@const joined = myCommunityIds.has(community.id_comunidade)}
+                    <div class="card card-interactive p-6 flex flex-col animate-fadeIn">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <span class="w-11 h-11 rounded-xl bg-accent-wash text-accent-ink flex items-center justify-center font-bold uppercase shrink-0">
+                                {community.nome_comunidade?.charAt(0) ?? "#"}
+                            </span>
+                            {#if joined}
+                                <span class="chip chip-accent">Membro</span>
+                            {/if}
                         </div>
+                        <h3 class="text-lg font-semibold tracking-tight text-ink">
+                            {community.nome_comunidade}
+                        </h3>
+                        <p class="text-sm text-muted leading-relaxed line-clamp-3 mt-2 flex-1">
+                            {community.regras_de_moderacao ||
+                                "Um espaço para colaboração focada e crescimento compartilhado."}
+                        </p>
 
                         <button
-                            class="w-full py-4 text-xs font-bold uppercase tracking-widest border border-current transition-colors
-                                    {myCommunityIds.has(community.id_comunidade)
-                                ? 'bg-black text-white group-hover:bg-white group-hover:text-black border-transparent'
-                                : 'hover:bg-black hover:text-white group-hover:bg-white group-hover:text-black'}"
-                            onclick={() =>
-                                toggleCommunity(community.id_comunidade)}
+                            class="btn w-full mt-5 {joined ? 'btn-outline' : 'btn-accent'}"
+                            onclick={() => toggleCommunity(community.id_comunidade)}
                         >
-                            {myCommunityIds.has(community.id_comunidade)
-                                ? "Joined"
-                                : "+ Join"}
+                            {#if joined}
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Participando
+                            {:else}
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Participar
+                            {/if}
                         </button>
                     </div>
                 {/each}
             </div>
         {/if}
+      </div>
     </main>
 </div>

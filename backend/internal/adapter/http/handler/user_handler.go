@@ -39,12 +39,10 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, user)
 }
 
-// GetByID retrieves a user by ID
+// GetByID retrieves the authenticated user (identity derived from the JWT, not the path)
 func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid user ID")
+	id, ok := currentUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -57,12 +55,10 @@ func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, user)
 }
 
-// Update modifies user information
+// Update modifies user information (identity derived from the JWT, not the path)
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid user ID")
+	id, ok := currentUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -84,12 +80,10 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, user)
 }
 
-// SelectTopics handles topic selection during onboarding
+// SelectTopics handles topic selection during onboarding (identity from the JWT)
 func (h *UserHandler) SelectTopics(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid user ID")
+	id, ok := currentUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -108,7 +102,7 @@ func (h *UserHandler) SelectTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.SelectTopics(r.Context(), id, req.TopicIDs)
+	err := h.service.SelectTopics(r.Context(), id, req.TopicIDs)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -117,12 +111,10 @@ func (h *UserHandler) SelectTopics(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]bool{"success": true})
 }
 
-// GetTopics retrieves user's topics
+// GetTopics retrieves the authenticated user's topics (identity from the JWT)
 func (h *UserHandler) GetTopics(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid user ID")
+	id, ok := currentUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -166,9 +158,8 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 // GetSettings retrieves user configuration (UC17)
 func (h *UserHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("user_id").(int64)
+	userID, ok := currentUserID(w, r)
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "user_id not found in token")
 		return
 	}
 	settings, err := h.service.GetSettings(r.Context(), userID)
@@ -181,9 +172,8 @@ func (h *UserHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 
 // UpdateSettings updates user configuration (UC17)
 func (h *UserHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("user_id").(int64)
+	userID, ok := currentUserID(w, r)
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "user_id not found in token")
 		return
 	}
 	var settings domain.UserSettings
@@ -201,6 +191,45 @@ func (h *UserHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 // Helper functions
+
+// userIDFromContext reads the authenticated user id injected by AuthMiddleware.
+func userIDFromContext(r *http.Request) (int64, bool) {
+	uid, ok := r.Context().Value("user_id").(int64)
+	return uid, ok
+}
+
+// authUserID returns the authenticated user id, writing a 401 response if absent.
+func authUserID(w http.ResponseWriter, r *http.Request) (int64, bool) {
+	uid, ok := userIDFromContext(r)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "user_id not found in token")
+		return 0, false
+	}
+	return uid, true
+}
+
+// currentUserID returns the authenticated user id for "current user" routes. If the
+// request carries an {id} path value that differs from the token, it responds 403 and
+// returns ok=false, preventing horizontal privilege escalation (IDOR).
+func currentUserID(w http.ResponseWriter, r *http.Request) (int64, bool) {
+	authID, ok := authUserID(w, r)
+	if !ok {
+		return 0, false
+	}
+	if idStr := r.PathValue("id"); idStr != "" {
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			respondError(w, http.StatusBadRequest, "invalid user ID")
+			return 0, false
+		}
+		if id != authID {
+			respondError(w, http.StatusForbidden, "cannot access another user's resource")
+			return 0, false
+		}
+	}
+	return authID, true
+}
+
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

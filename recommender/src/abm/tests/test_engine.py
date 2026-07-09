@@ -58,7 +58,8 @@ def test_engine_uses_hawkes_for_s1_s2_classification():
         for agent_ratios in ratios:
             assert len(agent_ratios) == 4, "Um ratio por timestep"
             for r in agent_ratios:
-                assert r > 0, "Ratio lambda_s1/lambda_s2 deve ser positivo"
+                # 0 é válido: passos iniciais sem eventos do Sistema 1 dão λ_s1 = 0.
+                assert r >= 0, "Ratio lambda_s1/lambda_s2 deve ser não-negativo"
 
 def test_integration_sustainable_aligns_with_declared_intent():
     """

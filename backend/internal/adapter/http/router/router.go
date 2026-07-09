@@ -25,7 +25,12 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 
 	// Services
 	userService := user.NewService(userRepo, cfg.JWTSecret)
-	contentService := content.NewService(contentRepo, cfg.Recommender.URL)
+	contentService := content.NewService(
+		contentRepo,
+		cfg.Recommender.URL,
+		content.WithSharedSecret(cfg.Recommender.SharedSecret),
+		content.WithFocusGateway(focusRepo),
+	)
 	focusService := focus.NewService(focusRepo)
 	communityService := community.NewService(communityRepo)
 

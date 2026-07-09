@@ -1,25 +1,82 @@
 # Be-Productive
 
-**Rede Social com Foco em Saúde Mental** - Uma plataforma que equilibra produtividade e bem-estar.
+**Rede Social com Foco em Saúde Mental** — uma plataforma que equilibra produtividade e bem-estar por meio de recomendação ética.
+
+---
+
+## 📄 Base científica e o papel deste repositório
+
+Este repositório é a **implementação de referência — reforçada e reprodutível — do modelo Be-Productive** proposto no artigo:
+
+> **Arquitetura Algorítmica para Atenção Sustentável: O Modelo Be-Productive como Resposta à Sobrecarga Cognitiva no Capitalismo de Vigilância.**
+> Revista Tópicos (ISSN 2965-6672, Qualis A2). DOI: [10.70773/revistatopicos/781363235](https://doi.org/10.70773/revistatopicos/781363235)
+
+O artigo apresenta a arquitetura como uma **possibilidade técnica** — demonstra que *é viável* estruturar sistemas de recomendação que protejam a reserva cognitiva do usuário ("é tecnicamente viável", "estabelece um caminho pragmático"). Ele não se coloca como asserção fechada, e sim como prova de conceito e caminho de engenharia.
+
+**Este código realiza essa possibilidade e a fortalece**, sem alterar o artigo publicado. O artigo permanece exatamente como foi revisado por pares; o repositório é a sua evolução — a versão que qualquer pessoa pode executar, auditar e reproduzir. Notavelmente, a implementação **reproduz o mesmo `Cohen's d = 3.25` de forma metodologicamente honesta** (ver abaixo), de modo que sustenta o resultado do artigo em vez de contradizê-lo.
+
+- Mapa de rastreabilidade afirmação↔código: [`Docs/PAPER_CODE_TRUTH_MAP.md`](Docs/PAPER_CODE_TRUTH_MAP.md)
+- Prova estatística reprodutível: [`recommender/abm_results/statistical_proof.md`](recommender/abm_results/statistical_proof.md)
+
+### ✨ O que esta implementação acrescenta à proposta do artigo
+
+| Pilar do artigo | Nesta implementação de referência |
+|---|---|
+| Validação por ABM (d = 3.25) | Experimento **sem confundimento**: recuperação (μ_rest) igual nos dois braços e carga endógena; d = 3.25 reproduzido por execução semeada, com **tabela de ablação** e **teste de sanidade** (mecanismos desligados → d ≈ 0) |
+| Processos de Hawkes (Eq. 2) | Ponto auto-excitante **real**, somado sobre o histórico de eventos (não mais um único exponencial do atraso médio) |
+| Thompson Sampling | Posteriores Beta que **de fato atualizam** com a recompensa observada |
+| Filtragem Min-Norm (Eq. 3) | **Exercida** na seleção de conteúdo da validação; classificadores determinísticos e reprodutíveis |
+| Edge AI / on-device | EDO de fadiga + Hawkes rodam **no navegador** (`frontend/src/lib/fatigue.ts`); telemetria bruta nunca sai do dispositivo |
+| Pacto de Ulisses | Modo Absoluto **enforçado no servidor** a partir da sessão de foco ativa, não de um flag de cliente |
+| — (robustez de produção) | bcrypt no lugar de SHA-256, identidade derivada do JWT (sem IDOR), guarda de segredo interno no recomendador |
+
+---
+
+> **Projeto acadêmico — FAETERJ-RIO.** Desenvolvido como Trabalho de Conclusão de Curso e materializado no artigo revisado por pares acima. O objetivo primário é científico e educacional: demonstrar, com código auditável e resultados reprodutíveis, que eficiência algorítmica não precisa ser predatória.
+
+## 🌍 Impacto interdisciplinar — para além da computação
+
+O artigo é classificado em **Engenharias, Ciências da Saúde e Ciências Sociais Aplicadas** — e o modelo foi desenhado para dialogar com múltiplos campos. A mesma base matemática e arquitetural pode servir de ponto de partida para:
+
+- **Saúde mental & psicologia clínica** — a EDO de reserva cognitiva e a detecção de "excitação residual" (Hawkes) oferecem instrumentação para estudar fadiga atencional, dependência digital, TDAH e recaídas cognitivas.
+- **Educação / EdTech** — ambientes de estudo e plataformas de aprendizagem que protegem o Sistema 2 (deliberação profunda) em vez de fragmentá-lo; suporte concreto ao "aprender a focar".
+- **Interação Humano-Computador & UX ética** — a "fricção positiva" e o alinhamento a valores (Value-Aligned RecSys) como padrão de design replicável.
+- **Saúde pública & políticas digitais** — evidência técnica para regulação de bem-estar digital (ex.: Digital Services Act), transparência algorítmica e mitigação de risco em larga escala.
+- **Neurociência & ciência da atenção** — modelagem formal (EDO + processos pontuais) de esgotamento e reengajamento como ferramenta de simulação.
+- **Ética, direito digital & privacidade** — Edge AI e *privacy by design* (inferência no dispositivo, anonimato comportamental) como referência de conformidade LGPD/RGPD.
+- **Economia comportamental** — operacionalização do "Pacto de Ulisses", desconto hiperbólico e pré-compromisso em software.
+- **Produtividade organizacional & bem-estar corporativo** — base para ferramentas B2B de foco e higiene atencional no trabalho.
+
+Em resumo: o repositório é tanto uma prova de conceito de engenharia quanto um **artefato de pesquisa reutilizável** por qualquer uma dessas áreas.
 
 ## 🧠 Sobre o Projeto
 
-Be-Productive é uma rede social inovadora que utiliza algoritmos éticos de recomendação para promover o equilíbrio entre produtividade e entretenimento, priorizando a saúde mental dos usuários.
+Be-Productive utiliza algoritmos éticos de recomendação para promover o equilíbrio entre produtividade e entretenimento, priorizando a saúde mental. Em vez de maximizar engajamento bruto, o sistema atua como um "airbag cognitivo": detecta consumo impulsivo e introduz **fricção positiva**, preservando a intenção declarada do usuário.
 
 ### Funcionalidades Principais
 
-- 🎯 **Metas de Foco** - Defina tempos para produtividade e entretenimento
-- 📰 **Feed Personalizado** - Conteúdo baseado em seus interesses e bem-estar
-- 🌱 **Sugestões Saudáveis** - Lembretes para pausas e autocuidado
-- 🤖 **Moderação Inteligente** - Sistema de moderação com suporte a IA
+- 🎯 **Metas de Foco** — defina tempos para produtividade e entretenimento (Pacto de Ulisses)
+- 📰 **Feed Personalizado** — conteúdo ponderado por qualidade e bem-estar (Min-Norm, Eq. 3)
+- 🌱 **Fricção Positiva On-Device** — dessaturação e desaceleração quando a reserva cognitiva cai
+- 🤖 **Moderação Inteligente** — agregação de segurança multiobjetivo
 
 ## 🏗️ Arquitetura
 
 ```
+Frontend (SvelteKit :5173)  ──HTTP/JWT──►  Go Backend (:8080)  ──HTTP/POST──►  Python Recommender (:8002)
+        │                                        │                                    │
+   Edge AI on-device                        API gateway + MySQL                 scoring matemático
+   (EDO + Hawkes,                           (auth, CRUD, foco,                  (Hawkes, EDO, Min-Norm,
+    fricção local)                           comunidades)                        Thompson)
+```
+
+O **frontend fala apenas com o Go**. A inferência de fadiga (EDO + Hawkes) roda **no dispositivo**; o servidor recebe apenas o veredito de fricção. O Python é chamado somente pelo Go (geração de feed).
+
+```
 Be-Productive/
-├── frontend/          # SvelteKit + TypeScript
-├── backend/           # Go + MySQL
-└── recommender/       # Python + FastAPI + scikit-learn
+├── frontend/          # SvelteKit + TypeScript (Edge AI on-device)
+├── backend/           # Go + MySQL (gateway, auth, foco)
+└── recommender/       # Python + FastAPI + numpy/scipy (scoring + ABM)
 ```
 
 ## 🚀 Quick Start
@@ -27,124 +84,76 @@ Be-Productive/
 ### Pré-requisitos
 
 - Node.js 18+
-- Go 1.21+
-- Python 3.11+
+- Go 1.22+
+- Python 3.10+
 - MySQL 8.0+
 
-### 1. Configurar Banco de Dados
+### 1. Banco de Dados
 
 ```bash
-# Criar banco de dados
 mysql -u root -p -e "CREATE DATABASE be_productive;"
-
-# Executar migrations
 mysql -u root -p be_productive < backend/migrations/001_create_tables.up.sql
 mysql -u root -p be_productive < backend/migrations/002_seed_data.up.sql
 ```
 
-### 2. Iniciar Backend (Go)
+### 2. Backend (Go)
 
 ```bash
 cd backend
-
-# Instalar dependências
 go mod download
-
-# Configurar variáveis de ambiente
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASSWORD=sua_senha
-export DB_NAME=be_productive
-export SERVER_PORT=8080
-
-# Executar
+# .env: DB_*, SERVER_PORT=8080, RECOMMENDER_URL=http://localhost:8002,
+#       JWT_SECRET=<segredo>, RECOMMENDER_SHARED_SECRET=<segredo interno>
 go run cmd/server/main.go
 ```
 
-### 3. Iniciar Frontend (SvelteKit)
+### 3. Frontend (SvelteKit)
 
 ```bash
 cd frontend
-
-# Instalar dependências
 npm install
-
-# Executar em modo desenvolvimento
-npm run dev
+npm run dev        # http://localhost:5173
 ```
 
-Acesse: http://localhost:5173
-
-### 4. Iniciar Recommender (Python)
+### 4. Recommender (Python)
 
 ```bash
 cd recommender
-
-# Criar ambiente virtual
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
-
-# Instalar dependências
+python -m venv venv && venv\Scripts\activate    # Windows
+# source venv/bin/activate                        # Linux/Mac
 pip install -r requirements.txt
-
-# Executar
-uvicorn src.api.main:app --port 8001 --reload
+# .env opcional: RECOMMENDER_SHARED_SECRET=<mesmo valor do backend>
+uvicorn src.api.main:app --port 8002 --reload
 ```
 
-## 📁 Estrutura do Projeto
+## 🔬 Reprodutibilidade científica (ABM)
 
-### Frontend (SvelteKit)
+O experimento que sustenta o artigo é totalmente reprodutível e semeado:
 
-```
-frontend/src/
-├── lib/
-│   ├── api.ts           # Cliente API
-│   ├── stores.ts        # Estado global (Svelte stores)
-│   └── components/      # Componentes reutilizáveis
-├── routes/
-│   ├── +page.svelte     # Landing page
-│   ├── auth/            # Login/Registro
-│   ├── feed/            # Feed personalizado
-│   └── focus/           # Metas de foco
-└── app.css              # Design system
+```bash
+cd recommender
+python -m src.abm.run_simulation
 ```
 
-### Backend (Go)
+Isso regenera, em `recommender/abm_results/`:
 
-```
-backend/
-├── cmd/server/main.go   # Entry point
-├── internal/
-│   ├── domain/          # Entidades de domínio
-│   ├── usecase/         # Lógica de negócio
-│   ├── adapter/
-│   │   ├── http/        # Handlers e rotas
-│   │   └── repository/  # Repositórios MySQL
-│   └── infrastructure/  # Config, DB, serviços externos
-└── migrations/          # Scripts SQL
-```
+- **`statistical_proof.md`** — `Cohen's d = 3.25`, `p ≈ 10⁻²⁹⁵`, tabela de ablação e teste de sanidade
+- **`fig_1_ego_depletion.png`**, **`fig_2_kl_divergence.png`**, **`fig_3_robustness_manifold.png`**
 
-### Recommender (Python)
+O desenho é justo por construção: `μ_rest` (recuperação) é idêntico nos dois braços e a carga (v_scroll, v_alt) emerge do conteúdo servido e da fricção — a única diferença entre os braços são as ações do algoritmo. Com os mecanismos desligados, o efeito desaparece (d ≈ 0), provando que ele não está embutido no arcabouço.
 
-```
-recommender/src/
-├── api/
-│   └── routes/          # Endpoints FastAPI
-├── domain/
-│   └── metrics.py       # Cálculo de qualidade (RN002)
-├── models/
-│   ├── hybrid.py        # Modelo híbrido
-│   ├── content_based.py # Filtro baseado em conteúdo
-│   └── collaborative.py # Filtro colaborativo
-└── inference/
-    └── predictor.py     # Geração de recomendações
+> As figuras nas pastas `Docs/` permanecem **as publicadas** (artigo intocado). As figuras honestas geradas pelo código vivem em `recommender/abm_results/`.
+
+## 🧪 Testes
+
+```bash
+cd backend      && go test ./...                 # gateway Go
+cd recommender  && python -m pytest src/ -q       # 89 testes (inclui teste de sanidade do ABM)
+cd frontend     && npm run check                  # type-check TypeScript/Svelte
 ```
 
 ## 🔧 Variáveis de Ambiente
 
-### Backend (.env)
+**Backend (`.env`)**
 
 ```env
 SERVER_HOST=localhost
@@ -154,53 +163,46 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=
 DB_NAME=be_productive
-RECOMMENDER_URL=http://localhost:8001
+RECOMMENDER_URL=http://localhost:8002
+RECOMMENDER_SHARED_SECRET=
+JWT_SECRET=
 ```
 
-### Frontend (.env)
+**Frontend (`.env`)**
 
 ```env
 VITE_API_URL=http://localhost:8080/api/v1
 ```
 
-## 📚 API Endpoints
+## 📚 Principais Endpoints (via Go)
 
-### Usuários
-- `POST /api/v1/auth/register` - Registrar usuário
-- `POST /api/v1/auth/login` - Login
-- `GET /api/v1/users/{id}` - Obter usuário
-- `POST /api/v1/users/{id}/topics` - Selecionar tópicos
+- `POST /api/v1/auth/register` · `POST /api/v1/auth/login`
+- `GET  /api/v1/feed` — feed personalizado (delega scoring ao Python)
+- `POST /api/v1/content` · `POST /api/v1/content/{id}/feedback` · `POST /api/v1/content/{id}/report`
+- `POST /api/v1/focus/goals` · `GET /api/v1/focus/goals` · `POST /api/v1/focus/sessions` · `PUT /api/v1/focus/sessions/{id}`
 
-### Conteúdo
-- `POST /api/v1/content` - Publicar conteúdo
-- `GET /api/v1/feed` - Obter feed personalizado
-- `POST /api/v1/content/{id}/feedback` - Enviar feedback
-- `POST /api/v1/content/{id}/report` - Reportar conteúdo
+## 📖 Documentação
 
-### Foco
-- `POST /api/v1/focus/goals` - Criar meta
-- `GET /api/v1/focus/goals` - Listar metas
-- `POST /api/v1/focus/sessions` - Iniciar sessão
-- `PUT /api/v1/focus/sessions/{id}` - Finalizar sessão
-- `GET /api/v1/focus/sessions/{id}/report` - Relatório da sessão
+| Documento | Conteúdo |
+|---|---|
+| [`Docs/ARCHITECTURE.md`](Docs/ARCHITECTURE.md) | Arquitetura de três camadas, fluxo de dados, Edge AI on-device |
+| [`Docs/REPRODUCIBILITY.md`](Docs/REPRODUCIBILITY.md) | Como reproduzir o experimento (d = 3.25), ablação e figuras |
+| [`Docs/PAPER_CODE_TRUTH_MAP.md`](Docs/PAPER_CODE_TRUTH_MAP.md) | Rastreabilidade afirmação-do-artigo ↔ ponto-do-código |
+| [`Docs/IMPACT.md`](Docs/IMPACT.md) | Fins acadêmicos e aplicações interdisciplinares |
+| [`Docs/ROADMAP.md`](Docs/ROADMAP.md) | Plano de evolução em fases, alinhado à visão do artigo |
+| [`Docs/SECURITY.md`](Docs/SECURITY.md) | Postura de segurança e privacidade |
+| Por camada | [`backend/README.md`](backend/README.md) · [`recommender/README.md`](recommender/README.md) · [`frontend/README.md`](frontend/README.md) |
 
-## 🧪 Testes
+## 📝 Licença e uso acadêmico
 
-```bash
-# Backend
-cd backend && go test ./...
+Projeto acadêmico desenvolvido na **FAETERJ-RIO**. Uso educacional e de pesquisa. Ao referenciar este trabalho, cite o artigo publicado (DOI abaixo).
 
-# Frontend
-cd frontend && npm run test
-
-# Recommender
-cd recommender && pytest
 ```
-
-## 📝 Licença
-
-Este projeto é desenvolvido para fins acadêmicos - FAETERJ-RIO.
+Melo, F. S. S. et al. Arquitetura Algorítmica para Atenção Sustentável:
+O Modelo Be-Productive como Resposta à Sobrecarga Cognitiva no Capitalismo
+de Vigilância. Revista Tópicos, 2026. DOI: 10.70773/revistatopicos/781363235.
+```
 
 ---
 
-Desenvolvido com ❤️ por Fellype Samuel e Daniel Gomes Venâncio
+Implementação de referência do modelo publicado sob DOI [10.70773/revistatopicos/781363235](https://doi.org/10.70773/revistatopicos/781363235). O artigo permanece intocado; este repositório é a sua evolução executável e reprodutível.

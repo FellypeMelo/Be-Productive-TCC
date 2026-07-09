@@ -16,13 +16,17 @@ func NewFocusHandler(service *focus.Service) *FocusHandler {
 	return &FocusHandler{service: service}
 }
 
-// CreateGoal creates a new focus goal (RF009)
+// CreateGoal creates a new focus goal (RF009). Owner derived from the JWT.
 func (h *FocusHandler) CreateGoal(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+
 	var req struct {
-		UserID              int64 `json:"user_id"`
-		TempoProdutividade  int   `json:"tempo_produtividade"`  // minutes
-		TempoEntretenimento int   `json:"tempo_entretenimento"` // minutes
-		ModoAbsoluto        bool  `json:"modo_absoluto"`        // RF010
+		TempoProdutividade  int  `json:"tempo_produtividade"`  // minutes
+		TempoEntretenimento int  `json:"tempo_entretenimento"` // minutes
+		ModoAbsoluto        bool `json:"modo_absoluto"`        // RF010
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -37,7 +41,7 @@ func (h *FocusHandler) CreateGoal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	goals, err := h.service.CreateGoal(r.Context(), focus.CreateGoalInput{
-		UserID:              req.UserID,
+		UserID:              userID,
 		TempoProdutividade:  req.TempoProdutividade,
 		TempoEntretenimento: req.TempoEntretenimento,
 		ModoAbsoluto:        req.ModoAbsoluto,
@@ -50,12 +54,10 @@ func (h *FocusHandler) CreateGoal(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, goals)
 }
 
-// ListGoals lists user's focus goals
+// ListGoals lists the authenticated user's focus goals (owner from the JWT)
 func (h *FocusHandler) ListGoals(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.URL.Query().Get("user_id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid user_id")
+	userID, ok := authUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -68,12 +70,10 @@ func (h *FocusHandler) ListGoals(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, goals)
 }
 
-// ListSessions lists focus sessions
+// ListSessions lists the authenticated user's focus sessions (owner from the JWT)
 func (h *FocusHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.URL.Query().Get("user_id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid user_id")
+	userID, ok := authUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -106,10 +106,14 @@ func (h *FocusHandler) GetSessionGoals(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, goals)
 }
 
-// StartSession starts a focus session (RF011)
+// StartSession starts a focus session (RF011). Owner derived from the JWT.
 func (h *FocusHandler) StartSession(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+
 	var req struct {
-		UserID       int64   `json:"user_id"`
 		GoalIDs      []int64 `json:"goal_ids"`
 		ModoAbsoluto bool    `json:"modo_absoluto"`
 	}
@@ -119,7 +123,7 @@ func (h *FocusHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.service.StartSession(r.Context(), req.UserID, req.GoalIDs, req.ModoAbsoluto)
+	session, err := h.service.StartSession(r.Context(), userID, req.GoalIDs, req.ModoAbsoluto)
 	if err != nil {
 		handleError(w, err)
 		return

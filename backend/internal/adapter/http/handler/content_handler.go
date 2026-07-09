@@ -17,14 +17,18 @@ func NewContentHandler(service *content.Service) *ContentHandler {
 	return &ContentHandler{service: service}
 }
 
-// Create handles content publication
+// Create handles content publication (author derived from the JWT, not the body)
 func (h *ContentHandler) Create(w http.ResponseWriter, r *http.Request) {
+	authorID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+
 	var req struct {
 		Titulo      string  `json:"titulo"`
 		Corpo       string  `json:"corpo"`
 		TipoDeMidia string  `json:"tipo_de_midia"`
 		Categoria   string  `json:"categoria"`
-		AutorID     int64   `json:"autor_id"`
 		TopicIDs    []int64 `json:"topic_ids"`
 		Tags        string  `json:"tags"`
 	}
@@ -52,7 +56,7 @@ func (h *ContentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Corpo:       req.Corpo,
 		TipoDeMidia: domain.ContentType(req.TipoDeMidia),
 		Categoria:   domain.ContentCategory(req.Categoria),
-		AutorID:     req.AutorID,
+		AutorID:     authorID,
 		TopicIDs:    req.TopicIDs,
 		Tags:        req.Tags,
 	})
@@ -136,8 +140,13 @@ func extractContentIDs(contents []domain.Content) []int64 {
 	return ids
 }
 
-// SubmitFeedback handles user feedback on content (RF015)
+// SubmitFeedback handles user feedback on content (RF015). Author from the JWT.
 func (h *ContentHandler) SubmitFeedback(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -146,8 +155,7 @@ func (h *ContentHandler) SubmitFeedback(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var req struct {
-		UserID int64  `json:"user_id"`
-		Type   string `json:"type"` // "util", "nao_relevante", "relaxante"
+		Type string `json:"type"` // "util", "nao_relevante", "relaxante"
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -155,7 +163,7 @@ func (h *ContentHandler) SubmitFeedback(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.service.SubmitFeedback(r.Context(), id, req.UserID, req.Type)
+	err = h.service.SubmitFeedback(r.Context(), id, userID, req.Type)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -164,8 +172,13 @@ func (h *ContentHandler) SubmitFeedback(w http.ResponseWriter, r *http.Request) 
 	respondJSON(w, http.StatusOK, map[string]bool{"success": true})
 }
 
-// Report handles content reports (RF007)
+// Report handles content reports (RF007). Reporter derived from the JWT.
 func (h *ContentHandler) Report(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -174,7 +187,6 @@ func (h *ContentHandler) Report(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		UserID   int64  `json:"user_id"`
 		Motivo   string `json:"motivo"`
 		Detalhes string `json:"detalhes"`
 	}
@@ -184,7 +196,7 @@ func (h *ContentHandler) Report(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Report(r.Context(), id, req.UserID, req.Motivo, req.Detalhes)
+	err = h.service.Report(r.Context(), id, userID, req.Motivo, req.Detalhes)
 	if err != nil {
 		handleError(w, err)
 		return

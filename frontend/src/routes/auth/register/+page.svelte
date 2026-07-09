@@ -52,141 +52,100 @@
 </script>
 
 <svelte:head>
-    <title>Create Account | Be Productive</title>
+    <title>Criar conta | Be Productive</title>
 </svelte:head>
 
-<main
-    class="min-h-screen bg-white flex items-center justify-center p-6 selection:bg-black selection:text-white"
->
-    <div
-        bind:this={cardRef}
-        class="w-full max-w-sm border border-black p-10 opacity-0"
-    >
-        <header class="mb-10 text-center">
-            <a
-                href="/"
-                class="inline-block mb-8 hover:scale-110 transition-transform"
-                aria-label="Home"
-            >
-                <div
-                    class="w-12 h-12 bg-black flex items-center justify-center text-white"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        ><circle cx="12" cy="12" r="10" /><path
-                            d="M12 6v6l4 2"
-                        /></svg
-                    >
-                </div>
-            </a>
-            <h1 class="text-2xl font-bold uppercase tracking-tighter">
-                Register
-            </h1>
-            <p
-                class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2"
-            >
-                Join the minimalist community
-            </p>
-        </header>
-
-        <form onsubmit={handleRegister} class="space-y-4">
-            {#if error}
-                <div
-                    class="border border-black p-3 text-[10px] font-bold uppercase text-black bg-gray-50"
-                >
-                    {error}
-                </div>
-            {/if}
-
-            <div class="space-y-1">
-                <label
-                    for="nome"
-                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
-                    >Full Name</label
-                >
-                <input
-                    type="text"
-                    id="nome"
-                    class="w-full border border-black p-3 text-sm focus:outline-none focus:bg-gray-50 transition-colors"
-                    placeholder="John Doe"
-                    bind:value={nome}
-                    required
-                />
-            </div>
-
-            <div class="space-y-1">
-                <label
-                    for="email"
-                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
-                    >Email Address</label
-                >
-                <input
-                    type="email"
-                    id="email"
-                    class="w-full border border-black p-3 text-sm focus:outline-none focus:bg-gray-50 transition-colors"
-                    placeholder="email@example.com"
-                    bind:value={email}
-                    required
-                />
-            </div>
-
-            <div class="space-y-1">
-                <label
-                    for="senha"
-                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
-                    >Password</label
-                >
-                <input
-                    type="password"
-                    id="senha"
-                    class="w-full border border-black p-3 text-sm focus:outline-none focus:bg-gray-50 transition-colors"
-                    placeholder="••••••••"
-                    bind:value={senha}
-                    required
-                    minlength="8"
-                />
-            </div>
-
-            <div class="space-y-1">
-                <label
-                    for="confirmarSenha"
-                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
-                    >Confirm Password</label
-                >
-                <input
-                    type="password"
-                    id="confirmarSenha"
-                    class="w-full border border-black p-3 text-sm focus:outline-none focus:bg-gray-50 transition-colors"
-                    placeholder="••••••••"
-                    bind:value={confirmarSenha}
-                    required
-                />
-            </div>
-
-            <button
-                type="submit"
-                class="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 mt-4"
-                disabled={isLoading}
-            >
-                {isLoading ? "Creating..." : "Create Account"}
-            </button>
-        </form>
-
-        <div
-            class="mt-10 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400"
+<main class="min-h-screen bg-paper flex items-center justify-center p-5 sm:p-6">
+    <div bind:this={cardRef} class="w-full max-w-sm opacity-0">
+        <a
+            href="/"
+            class="flex items-center justify-center gap-2.5 mb-8 group"
+            aria-label="Início"
         >
-            Already have an account? <a
-                href="/auth/login"
-                class="text-black hover:underline">Login</a
+            <span
+                class="w-10 h-10 rounded-xl bg-ink text-paper flex items-center justify-center transition-transform group-hover:scale-105 group-hover:rotate-3"
             >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+            </span>
+            <span class="font-bold tracking-tight text-lg leading-none">Be Productive</span>
+        </a>
+
+        <div class="card p-7 sm:p-8">
+            <header class="mb-7 text-center">
+                <p class="eyebrow mb-2">Comece agora</p>
+                <h1 class="text-2xl font-bold tracking-tight">Crie sua conta</h1>
+                <p class="text-sm text-muted mt-1.5">
+                    Uma rede que respeita a sua atenção.
+                </p>
+            </header>
+
+            <form onsubmit={handleRegister} class="space-y-4">
+                {#if error}
+                    <div
+                        class="rounded-lg bg-danger-wash border border-danger/20 px-3.5 py-2.5 text-sm font-medium text-danger animate-fadeIn"
+                    >
+                        {error}
+                    </div>
+                {/if}
+
+                <div class="space-y-1.5">
+                    <label for="nome" class="block text-sm font-medium text-ink">Nome completo</label>
+                    <input
+                        type="text"
+                        id="nome"
+                        class="input"
+                        placeholder="Seu nome"
+                        bind:value={nome}
+                        required
+                    />
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="email" class="block text-sm font-medium text-ink">E-mail</label>
+                    <input
+                        type="email"
+                        id="email"
+                        class="input"
+                        placeholder="voce@exemplo.com"
+                        bind:value={email}
+                        required
+                    />
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="senha" class="block text-sm font-medium text-ink">Senha</label>
+                    <input
+                        type="password"
+                        id="senha"
+                        class="input"
+                        placeholder="Mínimo de 8 caracteres"
+                        bind:value={senha}
+                        required
+                        minlength="8"
+                    />
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="confirmarSenha" class="block text-sm font-medium text-ink">Confirmar senha</label>
+                    <input
+                        type="password"
+                        id="confirmarSenha"
+                        class="input"
+                        placeholder="••••••••"
+                        bind:value={confirmarSenha}
+                        required
+                    />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full !py-3 mt-2" disabled={isLoading}>
+                    {isLoading ? "Criando..." : "Criar conta"}
+                </button>
+            </form>
         </div>
+
+        <p class="mt-6 text-center text-sm text-muted">
+            Já tem uma conta?
+            <a href="/auth/login" class="font-semibold text-accent-ink hover:underline">Entrar</a>
+        </p>
     </div>
 </main>

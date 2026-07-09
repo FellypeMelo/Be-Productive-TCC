@@ -40,22 +40,49 @@ type FeedResult struct {
 	FrictionLevel string
 }
 
+// FocusGateway exposes the user's server-side focus state used to enforce the
+// Ulysses Pact (Absolute Mode) without trusting client-supplied flags.
+type FocusGateway interface {
+	// GetActiveAbsoluteGoal reports whether the user currently has an active focus
+	// session in absolute mode, and the category of its linked goal (may be empty).
+	GetActiveAbsoluteGoal(ctx context.Context, userID int64) (bool, string, error)
+}
+
 // Service handles content business logic
 type Service struct {
 	repo           Repository
 	recommenderURL string
+	sharedSecret   string
+	focus          FocusGateway
 	httpClient     *http.Client
 }
 
+// Option configures optional Service dependencies.
+type Option func(*Service)
+
+// WithSharedSecret sets the X-Internal-Auth secret sent to the recommender.
+func WithSharedSecret(secret string) Option {
+	return func(s *Service) { s.sharedSecret = secret }
+}
+
+// WithFocusGateway wires the focus state provider used to enforce Absolute Mode.
+func WithFocusGateway(focus FocusGateway) Option {
+	return func(s *Service) { s.focus = focus }
+}
+
 // NewService creates a new content service
-func NewService(repo Repository, recommenderURL string) *Service {
-	return &Service{
+func NewService(repo Repository, recommenderURL string, opts ...Option) *Service {
+	s := &Service{
 		repo:           repo,
 		recommenderURL: recommenderURL,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 // Create publishes new content (RF005, RF006)
@@ -86,6 +113,18 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*domain.Content, error
 // GetFeed returns personalized feed (RF011, RF014)
 // Optionally accepts absoluteModeActive and declaredGoal to activate the recommender's Absolute Mode filter (Eq.2 + Algorithm 4).
 func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) (*FeedResult, error) {
+	// Enforce the Ulysses Pact server-side: an active absolute-mode focus session
+	// overrides any client-supplied absolute_mode_active / declared_goal. Client
+	// query params remain only as a no-auth fallback for anonymous/testing use.
+	if s.focus != nil && userID > 0 {
+		if active, goal, ferr := s.focus.GetActiveAbsoluteGoal(ctx, userID); ferr == nil && active {
+			absoluteModeActive = true
+			if goal != "" {
+				declaredGoal = goal
+			}
+		}
+	}
+
 	// 1. Try to get recommendations from external service
 	contentIDs, scores, frictionLevel, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal)
 	if err != nil || len(contentIDs) == 0 {
@@ -162,6 +201,9 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 		return nil, nil, "none", err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if s.sharedSecret != "" {
+		req.Header.Set("X-Internal-Auth", s.sharedSecret)
+	}
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {

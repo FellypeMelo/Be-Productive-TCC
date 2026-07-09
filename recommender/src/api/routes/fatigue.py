@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from src.application.fatigue_use_case import FatigueUseCase
-from src.infrastructure.behavioral_trajectory_repo import BehavioralTrajectoryRepository
+from src.api.deps import trajectory_repo, get_fatigue_use_case
 from src.domain.value_objects import FrictionLevel
 
 router = APIRouter()
@@ -34,12 +34,9 @@ class EdgeParamsRequest(BaseModel):
     k2: float
     r_max: float = 100.0
 
-# --- DI ---
+# --- DI (singleton compartilhado com o roteador de recomendação) ---
 
-_trajectory_repo = BehavioralTrajectoryRepository()
-
-def get_fatigue_use_case():
-    return FatigueUseCase(_trajectory_repo)
+_trajectory_repo = trajectory_repo
 
 # --- Endpoints ---
 

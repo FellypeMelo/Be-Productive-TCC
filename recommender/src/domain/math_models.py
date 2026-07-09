@@ -36,8 +36,52 @@ def calculate_ego_depletion(
 
 
 def calculate_hawkes_activation(alpha: float, beta: float, time_delta: float) -> float:
-    """Implementa a variação do processo auto-excitante de Hawkes (Eq 2)."""
+    """Contribuição de UM evento passado ao kernel de Hawkes: alpha*exp(-beta*dt).
+
+    Primitivo de baixo nível (a excitação decorrente de um único evento a `time_delta`
+    unidades no passado). A intensidade completa (Eq. 2) soma isto sobre o histórico —
+    ver `hawkes_intensity`.
+    """
     return alpha * math.exp(-beta * time_delta)
+
+
+def hawkes_intensity(
+    t: float,
+    events_s1: List[float],
+    events_s2: List[float],
+    mu: float,
+    alpha1: float,
+    beta1: float,
+    alpha2: float,
+    beta2: float,
+) -> dict:
+    """Intensidade instantânea do processo de Hawkes bi-kernel (Eq. 2 do artigo).
+
+        λ(t) = μ + Σ_{t_k∈𝒦, t_k<t} α₁·e^{−β₁(t−t_k)}
+                 + Σ_{t_m∈ℳ, t_m<t} α₂·e^{−β₂(t−t_m)}
+
+    - 𝒦 (events_s1): eventos de consumo rápido/impulsivo (Sistema 1) — salto forte (α₁),
+      decaimento rápido (β₁ grande).
+    - ℳ (events_s2): engajamento profundo/intencional (Sistema 2) — salto moderado (α₂),
+      traço persistente (β₂ → 0).
+
+    Retorna a intensidade total, as duas parcelas e a razão λ_s1/λ_s2 (>1 ⇒ estado
+    dominado pelo Sistema 1, sinal de excitação residual / risco de doom-scroll).
+    """
+    lambda_s1 = sum(
+        alpha1 * math.exp(-beta1 * (t - tk)) for tk in events_s1 if tk < t
+    )
+    lambda_s2 = sum(
+        alpha2 * math.exp(-beta2 * (t - tm)) for tm in events_s2 if tm < t
+    )
+    total = mu + lambda_s1 + lambda_s2
+    ratio = lambda_s1 / lambda_s2 if lambda_s2 > 1e-12 else float("inf") if lambda_s1 > 0 else 0.0
+    return {
+        "lambda_total": total,
+        "lambda_s1": lambda_s1,
+        "lambda_s2": lambda_s2,
+        "ratio": ratio,
+    }
 
 
 def thompson_sampling_choice(

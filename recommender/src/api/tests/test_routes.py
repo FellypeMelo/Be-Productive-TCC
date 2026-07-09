@@ -66,3 +66,49 @@ def test_fatigue_telemetry_accepts_valid():
         "user_id": 1, "v_scroll": 50.0, "v_alt_context": 2.0
     })
     assert resp.status_code in (200, 500)
+
+
+# --- Internal-auth guard (shared secret) ---
+
+def test_internal_endpoints_open_when_secret_unset(monkeypatch):
+    """Dev mode (no secret) leaves internal endpoints reachable without a header."""
+    monkeypatch.delenv("RECOMMENDER_SHARED_SECRET", raising=False)
+    resp = client.post("/api/v1/behavior/hyperbolic-discount", json={
+        "user_id": 1, "value": 100.0, "k": 0.5, "delay": 0.0
+    })
+    assert resp.status_code == 200
+
+
+def test_internal_endpoint_rejects_missing_header_when_secret_set(monkeypatch):
+    monkeypatch.setenv("RECOMMENDER_SHARED_SECRET", "s3cr3t")
+    resp = client.post("/api/v1/behavior/hyperbolic-discount", json={
+        "user_id": 1, "value": 100.0, "k": 0.5, "delay": 0.0
+    })
+    assert resp.status_code == 401
+
+
+def test_internal_endpoint_rejects_wrong_header_when_secret_set(monkeypatch):
+    monkeypatch.setenv("RECOMMENDER_SHARED_SECRET", "s3cr3t")
+    resp = client.post(
+        "/api/v1/behavior/hyperbolic-discount",
+        json={"user_id": 1, "value": 100.0, "k": 0.5, "delay": 0.0},
+        headers={"X-Internal-Auth": "wrong"},
+    )
+    assert resp.status_code == 401
+
+
+def test_internal_endpoint_accepts_correct_header_when_secret_set(monkeypatch):
+    monkeypatch.setenv("RECOMMENDER_SHARED_SECRET", "s3cr3t")
+    resp = client.post(
+        "/api/v1/behavior/hyperbolic-discount",
+        json={"user_id": 1, "value": 100.0, "k": 0.5, "delay": 0.0},
+        headers={"X-Internal-Auth": "s3cr3t"},
+    )
+    assert resp.status_code == 200
+
+
+def test_health_stays_public_even_with_secret_set(monkeypatch):
+    monkeypatch.setenv("RECOMMENDER_SHARED_SECRET", "s3cr3t")
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "healthy"

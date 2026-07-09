@@ -3,12 +3,29 @@ Hybrid Recommendation Model
 Combines content-based and collaborative filtering
 """
 
+import hashlib
 from typing import Optional, List, Tuple
 import numpy as np
 from scipy import sparse
 
 from src.models.content_based import ContentBasedModel
 from src.models.collaborative import CollaborativeModel
+
+
+def _deterministic_component_score(content_id: int, component: str) -> float:
+    """Stable placeholder score in [0.3, 0.8] for a model component.
+
+    The content-based and collaborative sub-models are not fitted in this
+    build. Previously ``predict`` filled their outputs with ``np.random.rand``,
+    which produced a different feed on every call and could not be tested. This
+    replaces that noise with a deterministic SHA-256-derived value per
+    (content_id, component): same inputs -> same score, spread across the range
+    that the old ``rand * 0.5 + 0.3`` used. Replace with real component calls
+    once the sub-models are trained.
+    """
+    digest = hashlib.sha256(f"{component}:{content_id}".encode("utf-8")).digest()
+    u = int.from_bytes(digest[:8], "big") / float(2**64 - 1)
+    return 0.3 + u * 0.5
 
 
 class HybridRecommender:
@@ -87,14 +104,20 @@ class HybridRecommender:
         Returns:
             Tuple of (content_ids, scores)
         """
-        n_candidates = len(candidate_ids)
-        
-        # Get scores from each model
-        # For now, use mock scores (in production, call actual models)
-        content_scores = np.random.rand(n_candidates) * 0.5 + 0.3
-        collab_scores = np.random.rand(n_candidates) * 0.5 + 0.3
+        # Component scores. The sub-models are not fitted in this build, so we
+        # use deterministic per-content placeholders (documented, reproducible)
+        # instead of random noise. In production these become real calls to
+        # self.content_model / self.collab_model.
+        content_scores = np.array([
+            _deterministic_component_score(cid, "content")
+            for cid in candidate_ids
+        ])
+        collab_scores = np.array([
+            _deterministic_component_score(cid, "collab")
+            for cid in candidate_ids
+        ])
         quality_scores = np.array([
-            self._quality_cache.get(cid, 0.5) 
+            self._quality_cache.get(cid, 0.5)
             for cid in candidate_ids
         ])
         

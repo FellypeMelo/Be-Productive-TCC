@@ -110,8 +110,11 @@ Backend (`.env` in `backend/`):
 DB_HOST=localhost DB_PORT=3306 DB_USER=root DB_PASSWORD= DB_NAME=be_productive
 SERVER_HOST=localhost SERVER_PORT=8080
 RECOMMENDER_URL=http://localhost:8002
+RECOMMENDER_SHARED_SECRET=<secret shared with the Python recommender; sent as X-Internal-Auth>
 JWT_SECRET=<secret>
 ```
+
+Recommender (`.env` in `recommender/`): `RECOMMENDER_SHARED_SECRET=<same value as backend>` (when unset, internal endpoints are open for local dev).
 
 Frontend (`.env` in `frontend/`):
 ```
@@ -121,9 +124,9 @@ VITE_API_URL=http://localhost:8080/api/v1
 ## Testing Conventions
 
 - **Go**: `go test ./...` — colocated `*_test.go` files
-- **Python**: `python -m pytest src/ -v` — `tests/` subdirs at each layer
+- **Python**: `python -m pytest src/ -v` — `tests/` subdirs at each layer (89 passing). Needs `scipy`, `scikit-learn`, `matplotlib`, `seaborn` per `requirements.txt`
 - **Frontend**: `npm run check` for TypeScript; no test runner configured yet
-- ABM tests (`src/abm/tests/`) are standalone — they validate the paper's statistical claims (N=1000, T=60, Cohen's d, Mann-Whitney U)
+- ABM tests (`src/abm/tests/`) are standalone — they validate the paper's statistical claims (N=1000, T=60, Cohen's d, Mann-Whitney U) and include a **sanity test** (all mechanisms off → d ≈ 0) proving the effect is not baked into the harness
 
 ## Database Tables
 
@@ -133,8 +136,11 @@ Both Go and Python connect to the same MySQL database. Go writes and reads; Pyth
 
 ## Important Notes
 
-- Password hashing uses SHA256 (weak — needs bcrypt upgrade)
-- Safety classifiers are simulated (random probabilities) — infrastructure supports real ONNX models when available
-- HybridRecommender exists but is never fitted; falls back to uniform 0.5 scores
-- Frontend only talks to Go (port 8080). For real-time telemetry (scroll velocity, Hawkes intervals), the frontend can call Python directly (no JWT needed on fatigue endpoints)
-- Go's recommender client has a 2-second timeout; falls back to DB-only feed on failure
+- Password hashing uses **bcrypt** (`DefaultCost`); legacy SHA-256 hashes are verified once and transparently re-hashed to bcrypt on next successful login
+- Safety classifiers are **deterministic stand-ins** (stable per-`content_id` hash → reproducible probabilities, ~10% flagged higher-risk); infrastructure supports real ONNX models when available
+- HybridRecommender is not fitted; the scorer returns a **documented deterministic per-content heuristic** in [0.3, 0.9] (not a silent 0.5, not random)
+- **Edge AI is real**: the Ego-Depletion EDO (Eq. 4) and Hawkes dual-kernel (Eq. 2) run **on-device** in the browser (`frontend/src/lib/fatigue.ts`); raw telemetry (`v_scroll`, `v_alt`) never leaves the device. The frontend talks **only** to Go (port 8080)
+- Python's internal endpoints (recommend/fatigue/behavior) require an `X-Internal-Auth` header matching `RECOMMENDER_SHARED_SECRET` when that env var is set (open in dev when unset). Go sends it on the feed call
+- Go handlers derive the acting user from the **JWT claims**, not from request bodies/queries (IDOR-safe); Absolute Mode / Ulysses Pact is enforced server-side from the user's active focus session
+- Go's recommender client has a 10-second timeout; falls back to DB-only feed on failure
+- The ABM validation is **confound-free**: μ_rest is equal across arms and load is endogenous; the reported Cohen's d = 3.25 is reproduced by a seeded fair run with an ablation table + sanity check (mechanisms off → d ≈ 0). See `recommender/abm_results/statistical_proof.md`

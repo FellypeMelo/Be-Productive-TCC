@@ -5,12 +5,11 @@ from pydantic import BaseModel
 from typing import Optional, List, Literal
 
 from src.application.recommendation_use_case import RecommendationUseCase
-from src.application.fatigue_use_case import FatigueUseCase
 from src.infrastructure.repositories import MySQLContentRepository
 from src.infrastructure.safety_gateway import ToxicitySafetyGateway
 from src.infrastructure.hybrid_scorer import HybridScorer
-from src.infrastructure.behavioral_trajectory_repo import BehavioralTrajectoryRepository
 from src.inference.hawkes_classifier import HawkesClassifier
+from src.api.deps import get_fatigue_use_case
 
 router = APIRouter()
 
@@ -39,8 +38,6 @@ class ThompsonResponse(BaseModel):
 
 # Dependency Injection Builders
 _hybrid_scorer = HybridScorer()
-_trajectory_repo = BehavioralTrajectoryRepository(
-)
 
 def get_recommendation_use_case():
     repo = MySQLContentRepository(hybrid_scorer=_hybrid_scorer)
@@ -50,9 +47,6 @@ def get_recommendation_use_case():
         alpha2=0.5, beta2=0.01,   # System 2: moderate arousal, slow decay
     )
     return RecommendationUseCase(repo, safety_gateway, hawkes_clf)
-
-def get_fatigue_use_case():
-    return FatigueUseCase(_trajectory_repo)
 
 @router.post("/recommend", response_model=RecommendResponse)
 async def recommend(request: RecommendRequest, use_case: RecommendationUseCase = Depends(get_recommendation_use_case)):
