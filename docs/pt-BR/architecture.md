@@ -51,4 +51,4 @@ Todos os demais endpoints (auth, CRUD de conteúdo, foco, comunidades, settings,
 
 Ambos os backends seguem dependências apontando para dentro: `domain` nunca importa `infrastructure`/`http`. `usecase` define interfaces; `adapter` as implementa. Isso mantém a matemática pura (Hawkes/EDO/Min-Norm) testável e independente de framework.
 
-Ver também: [REPRODUCIBILITY.md](REPRODUCIBILITY.md) · [SECURITY.md](SECURITY.md) · [PAPER_CODE_TRUTH_MAP.md](PAPER_CODE_TRUTH_MAP.md)
+Ver também: [reproducibility.md](reproducibility.md) · [security.md](security.md) · [paper-code-truth-map.md](paper-code-truth-map.md)

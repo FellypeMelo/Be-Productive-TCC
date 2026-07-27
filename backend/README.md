@@ -40,4 +40,4 @@ internal/
 - **Pacto de Ulisses** (Modo Absoluto) enforçado a partir da sessão de foco ativa, server-side.
 - Ao chamar o Python, envia `X-Internal-Auth` quando `RECOMMENDER_SHARED_SECRET` está definido.
 
-Detalhes em [`../Docs/SECURITY.md`](../Docs/SECURITY.md) e [`../Docs/ARCHITECTURE.md`](../Docs/ARCHITECTURE.md).
+Detalhes em [`../docs/pt-BR/security.md`](../docs/pt-BR/security.md) e [`../docs/pt-BR/architecture.md`](../docs/pt-BR/architecture.md).

@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Three-layer architecture:
 - **Go Backend** (`backend/`) — API gateway at port **8080**. Handles auth (JWT), content CRUD, focus sessions, communities, user settings. Single entry point for the frontend.
 - **Python Recommender** (`recommender/`) — FastAPI at port **8002**. AI scoring layer called only by Go during feed generation. Implements Hawkes Processes, Ego Depletion EDO, Quality Score with min-norm safety aggregation, Thompson Sampling.
-- **SvelteKit Frontend** (`frontend/`) — Svelte + TypeScript at port **5173`. Talks ONLY to Go Backend.
+- **SvelteKit Frontend** (`frontend/`) — Svelte + TypeScript at port **5173**. Talks ONLY to Go Backend.
 
 Data flow: `Frontend → Go (JWT auth) → Python (HTTP POST) → MySQL → Python scores → Go aggregates → Frontend`
 
@@ -38,15 +38,15 @@ cd recommender
 python -m venv venv && . venv/Scripts/activate   # Windows venv
 pip install -r requirements.txt
 uvicorn src.api.main:app --port 8002 --reload    # Dev server
-python -m pytest src/ -v              # All tests (48 passing)
+python -m pytest src/ -v              # All tests (89 passing)
 python -m pytest src/abm/tests/ -v    # ABM simulation tests only
 python -m pytest src/application/tests/ -v  # Use case tests only
 ```
 
 ### Database
 ```bash
-mysql -u root -p be_productive < backend/migrations/001_create_tables.up.sql
-mysql -u root -p be_productive < backend/migrations/002_seed_data.up.sql
+mysql -u root -p -e "CREATE DATABASE be_productive;"
+cd backend && go run cmd/seeder/main.go   # applies migrations/*.up.sql + scripts/mock_data.sql
 ```
 
 ## Architecture
@@ -125,7 +125,7 @@ VITE_API_URL=http://localhost:8080/api/v1
 
 - **Go**: `go test ./...` — colocated `*_test.go` files
 - **Python**: `python -m pytest src/ -v` — `tests/` subdirs at each layer (89 passing). Needs `scipy`, `scikit-learn`, `matplotlib`, `seaborn` per `requirements.txt`
-- **Frontend**: `npm run check` for TypeScript; no test runner configured yet
+- **Frontend**: `npm run check` for TypeScript; `npm run test` runs Vitest (2 files, 11 passing tests: `api.test.ts`, `friction-logic.test.ts`); `npx playwright test` runs the E2E suite in `frontend/e2e/` (3 specs — auth, feed, focus — plus a global-setup; requires the full stack running)
 - ABM tests (`src/abm/tests/`) are standalone — they validate the paper's statistical claims (N=1000, T=60, Cohen's d, Mann-Whitney U) and include a **sanity test** (all mechanisms off → d ≈ 0) proving the effect is not baked into the harness
 
 ## Database Tables
