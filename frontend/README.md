@@ -42,4 +42,4 @@ src/
 └── routes/             # feed, focus, auth, communities, settings
 ```
 
-Ver [`../Docs/ARCHITECTURE.md`](../Docs/ARCHITECTURE.md) para o modelo Edge-AI e [`../Docs/SECURITY.md`](../Docs/SECURITY.md) para privacidade.
+Ver [`../docs/pt-BR/architecture.md`](../docs/pt-BR/architecture.md) para o modelo Edge-AI e [`../docs/pt-BR/security.md`](../docs/pt-BR/security.md) para privacidade.

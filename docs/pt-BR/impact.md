@@ -39,4 +39,4 @@ O artigo é classificado em **Engenharias, Ciências da Saúde e Ciências Socia
 - A validação por ABM (`recommender/src/abm/`) é uma bancada de simulação parametrizável (impulsividade, vulnerabilidade, força da intervenção).
 - O motor de fadiga on-device (`frontend/src/lib/fatigue.ts`) é um módulo TypeScript independente.
 
-Ver [REPRODUCIBILITY.md](REPRODUCIBILITY.md) para executar a bancada e [PAPER_CODE_TRUTH_MAP.md](PAPER_CODE_TRUTH_MAP.md) para o mapa afirmação↔código.
+Ver [reproducibility.md](reproducibility.md) para executar a bancada e [paper-code-truth-map.md](paper-code-truth-map.md) para o mapa afirmação↔código.

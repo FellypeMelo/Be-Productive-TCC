@@ -40,7 +40,7 @@ src/
 python -m src.abm.run_simulation      # regenera d=3.25, ablação e figuras em abm_results/
 ```
 
-O experimento é **sem confundimento** (recuperação igual nos dois braços, carga endógena) e inclui teste de sanidade (mecanismos off → d ≈ 0). Ver [`../Docs/REPRODUCIBILITY.md`](../Docs/REPRODUCIBILITY.md).
+O experimento é **sem confundimento** (recuperação igual nos dois braços, carga endógena) e inclui teste de sanidade (mecanismos off → d ≈ 0). Ver [`../docs/pt-BR/reproducibility.md`](../docs/pt-BR/reproducibility.md).
 
 ## Notas
 

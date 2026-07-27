@@ -1,159 +1,202 @@
 # Be-Productive
 
-**Rede Social com Foco em Saúde Mental** — uma plataforma que equilibra produtividade e bem-estar por meio de recomendação ética.
+**English** | [Português (Brasil)](README.pt-BR.md)
+
+[![Paper DOI](https://img.shields.io/badge/DOI-10.70773%2Frevistatopicos%2F781363235-blue)](https://doi.org/10.70773/revistatopicos/781363235) ![Stack](https://img.shields.io/badge/stack-Go%20%7C%20Python%20%7C%20SvelteKit-informational) ![License](https://img.shields.io/badge/license-none_declared-lightgrey)
+
+A mental-health-oriented social network where the recommendation algorithm optimizes for the user's cognitive reserve instead of raw engagement.
 
 ---
 
-## 📄 Base científica e o papel deste repositório
+## What this is
 
-Este repositório é a **implementação de referência — reforçada e reprodutível — do modelo Be-Productive** proposto no artigo:
+Be-Productive is the **reference implementation of a published, peer-reviewed academic paper**:
 
-> **Arquitetura Algorítmica para Atenção Sustentável: O Modelo Be-Productive como Resposta à Sobrecarga Cognitiva no Capitalismo de Vigilância.**
+> **Arquitetura Algorítmica para Atenção Sustentável: O Modelo Be-Productive como Resposta à Sobrecarga Cognitiva no Capitalismo de Vigilância**
+> *(Algorithmic Architecture for Sustainable Attention: The Be-Productive Model as a Response to Cognitive Overload in Surveillance Capitalism)*
 > Revista Tópicos (ISSN 2965-6672, Qualis A2). DOI: [10.70773/revistatopicos/781363235](https://doi.org/10.70773/revistatopicos/781363235)
 
-O artigo apresenta a arquitetura como uma **possibilidade técnica** — demonstra que *é viável* estruturar sistemas de recomendação que protejam a reserva cognitiva do usuário ("é tecnicamente viável", "estabelece um caminho pragmático"). Ele não se coloca como asserção fechada, e sim como prova de conceito e caminho de engenharia.
+The paper presents the architecture as a **technical possibility** — it argues the approach is *technically viable* and lays out a pragmatic engineering path, without claiming to be the final word. This repository is that possibility built and exercised: a runnable, testable, three-tier prototype that implements the paper's mathematical model end to end, plus a standalone experiment that reproduces the paper's headline statistical result under a stricter, confound-free design (see [Verified results](#verified-results)). The published paper itself is unmodified; this code is its evolution, not a replacement for it.
 
-**Este código realiza essa possibilidade e a fortalece**, sem alterar o artigo publicado. O artigo permanece exatamente como foi revisado por pares; o repositório é a sua evolução — a versão que qualquer pessoa pode executar, auditar e reproduzir. Notavelmente, a implementação **reproduz o mesmo `Cohen's d = 3.25` de forma metodologicamente honesta** (ver abaixo), de modo que sustenta o resultado do artigo em vez de contradizê-lo.
+It was developed as a final-year capstone project (**TCC — Trabalho de Conclusão de Curso**) at **FAETERJ-RIO**.
 
-- Mapa de rastreabilidade afirmação↔código: [`Docs/PAPER_CODE_TRUTH_MAP.md`](Docs/PAPER_CODE_TRUTH_MAP.md)
-- Prova estatística reprodutível: [`recommender/abm_results/statistical_proof.md`](recommender/abm_results/statistical_proof.md)
+- Claim-by-claim traceability between the paper and the code: [`docs/en/paper-code-truth-map.md`](docs/en/paper-code-truth-map.md)
+- Reproducible statistical proof: [`recommender/abm_results/statistical_proof.md`](recommender/abm_results/statistical_proof.md)
 
-### ✨ O que esta implementação acrescenta à proposta do artigo
+### What this implementation adds beyond the paper's proposal
 
-| Pilar do artigo | Nesta implementação de referência |
+| Paper concept | In this implementation |
 |---|---|
-| Validação por ABM (d = 3.25) | Experimento **sem confundimento**: recuperação (μ_rest) igual nos dois braços e carga endógena; d = 3.25 reproduzido por execução semeada, com **tabela de ablação** e **teste de sanidade** (mecanismos desligados → d ≈ 0) |
-| Processos de Hawkes (Eq. 2) | Ponto auto-excitante **real**, somado sobre o histórico de eventos (não mais um único exponencial do atraso médio) |
-| Thompson Sampling | Posteriores Beta que **de fato atualizam** com a recompensa observada |
-| Filtragem Min-Norm (Eq. 3) | **Exercida** na seleção de conteúdo da validação; classificadores determinísticos e reprodutíveis |
-| Edge AI / on-device | EDO de fadiga + Hawkes rodam **no navegador** (`frontend/src/lib/fatigue.ts`); telemetria bruta nunca sai do dispositivo |
-| Pacto de Ulisses | Modo Absoluto **enforçado no servidor** a partir da sessão de foco ativa, não de um flag de cliente |
-| — (robustez de produção) | bcrypt no lugar de SHA-256, identidade derivada do JWT (sem IDOR), guarda de segredo interno no recomendador |
+| ABM validation (d = 3.25) | A **confound-free** experiment: recovery (μ_rest) is identical in both arms and load is endogenous; d = 3.25 reproduced by a seeded run, with an **ablation table** and a **sanity check** (mechanisms off → d ≈ 0) |
+| Hawkes processes (Eq. 2) | A **real** self-exciting point process, summed over event history (not a single exponential of the mean delay) |
+| Thompson Sampling | Beta posteriors that **actually update** from observed reward |
+| Min-Norm filtering (Eq. 3) | **Exercised** in content selection for validation; deterministic, reproducible safety classifiers |
+| Edge AI / on-device inference | The fatigue ODE + Hawkes process run **in the browser** (`frontend/src/lib/fatigue.ts`); raw telemetry never leaves the device |
+| Ulysses Pact | Absolute Mode is **enforced server-side** from the active focus session, not from a client-controlled flag |
+| — (production hardening) | bcrypt instead of SHA-256, JWT-derived identity (no IDOR), internal shared-secret guard between Go and the recommender |
 
----
+## Why it exists
 
-> **Projeto acadêmico — FAETERJ-RIO.** Desenvolvido como Trabalho de Conclusão de Curso e materializado no artigo revisado por pares acima. O objetivo primário é científico e educacional: demonstrar, com código auditável e resultados reprodutíveis, que eficiência algorítmica não precisa ser predatória.
+Be-Productive frames itself as a "cognitive airbag": instead of maximizing raw engagement, it detects impulsive consumption patterns and introduces **positive friction**, while preserving the user's own declared intent (a "Ulysses Pact" the user sets for themselves, which the system then helps enforce).
 
-## 🌍 Impacto interdisciplinar — para além da computação
+Core features:
 
-O artigo é classificado em **Engenharias, Ciências da Saúde e Ciências Sociais Aplicadas** — e o modelo foi desenhado para dialogar com múltiplos campos. A mesma base matemática e arquitetural pode servir de ponto de partida para:
+- **Focus Goals** — user-defined productivity/entertainment time budgets (Ulysses Pact)
+- **Personalized feed** — content weighted by quality and well-being (Min-Norm, Eq. 3)
+- **On-device positive friction** — desaturation and slowdown as cognitive reserve drops
+- **Content moderation** — multi-objective safety aggregation
 
-- **Saúde mental & psicologia clínica** — a EDO de reserva cognitiva e a detecção de "excitação residual" (Hawkes) oferecem instrumentação para estudar fadiga atencional, dependência digital, TDAH e recaídas cognitivas.
-- **Educação / EdTech** — ambientes de estudo e plataformas de aprendizagem que protegem o Sistema 2 (deliberação profunda) em vez de fragmentá-lo; suporte concreto ao "aprender a focar".
-- **Interação Humano-Computador & UX ética** — a "fricção positiva" e o alinhamento a valores (Value-Aligned RecSys) como padrão de design replicável.
-- **Saúde pública & políticas digitais** — evidência técnica para regulação de bem-estar digital (ex.: Digital Services Act), transparência algorítmica e mitigação de risco em larga escala.
-- **Neurociência & ciência da atenção** — modelagem formal (EDO + processos pontuais) de esgotamento e reengajamento como ferramenta de simulação.
-- **Ética, direito digital & privacidade** — Edge AI e *privacy by design* (inferência no dispositivo, anonimato comportamental) como referência de conformidade LGPD/RGPD.
-- **Economia comportamental** — operacionalização do "Pacto de Ulisses", desconto hiperbólico e pré-compromisso em software.
-- **Produtividade organizacional & bem-estar corporativo** — base para ferramentas B2B de foco e higiene atencional no trabalho.
+The project is candid about where it currently falls short of a production system: safety classifiers and the hybrid recommender are explicitly documented as **deterministic stand-ins**, not trained models — see [`docs/en/roadmap.md`](docs/en/roadmap.md) and the "Important Notes" section of [`CLAUDE.md`](CLAUDE.md).
 
-Em resumo: o repositório é tanto uma prova de conceito de engenharia quanto um **artefato de pesquisa reutilizável** por qualquer uma dessas áreas.
+## Interdisciplinary relevance
 
-## 🧠 Sobre o Projeto
+The paper is classified under Engineering, Health Sciences, and Applied Social Sciences, and the underlying model is meant to be reusable outside computer science:
 
-Be-Productive utiliza algoritmos éticos de recomendação para promover o equilíbrio entre produtividade e entretenimento, priorizando a saúde mental. Em vez de maximizar engajamento bruto, o sistema atua como um "airbag cognitivo": detecta consumo impulsivo e introduz **fricção positiva**, preservando a intenção declarada do usuário.
+- **Mental health & clinical psychology** — the cognitive-reserve ODE and Hawkes-based detection of "residual excitation" as instrumentation for studying attentional fatigue and digital dependency.
+- **Education / EdTech** — study environments that protect deliberate (System 2) attention instead of fragmenting it.
+- **HCI & ethical UX** — "positive friction" and value-aligned recommendation as a replicable design pattern.
+- **Digital policy** — a concrete technical reference point for digital-wellbeing regulation and algorithmic transparency debates.
+- **Behavioral economics** — the Ulysses Pact, hyperbolic discounting, and pre-commitment implemented in software.
+- **Privacy / data protection** — on-device inference (Edge AI) as a privacy-by-design reference pattern.
 
-### Funcionalidades Principais
+See [`docs/en/impact.md`](docs/en/impact.md) for the full discussion.
 
-- 🎯 **Metas de Foco** — defina tempos para produtividade e entretenimento (Pacto de Ulisses)
-- 📰 **Feed Personalizado** — conteúdo ponderado por qualidade e bem-estar (Min-Norm, Eq. 3)
-- 🌱 **Fricção Positiva On-Device** — dessaturação e desaceleração quando a reserva cognitiva cai
-- 🤖 **Moderação Inteligente** — agregação de segurança multiobjetivo
+## Architecture
 
-## 🏗️ Arquitetura
+```mermaid
+flowchart LR
+    subgraph Client["Browser"]
+        FE["SvelteKit Frontend :5173\nEdge AI on-device:\nEgo-Depletion ODE (Eq.4) + Hawkes (Eq.2)"]
+    end
+    subgraph Gateway["Go API Gateway :8080"]
+        GO["Clean Architecture\nJWT + bcrypt auth\ncontent / focus / community CRUD\nserver-side Ulysses Pact"]
+    end
+    subgraph Rec["Python FastAPI Recommender :8002"]
+        PY["Hawkes intensity, Min-Norm quality score,\nThompson Sampling\n(called only by Go)"]
+    end
+    DB[(MySQL 8)]
 
+    FE -- "HTTP + JWT\n(friction verdict only,\nno raw telemetry)" --> GO
+    GO -- "HTTP POST\nX-Internal-Auth" --> PY
+    GO --> DB
+    PY -. "reads conteudo\n(read-only)" .-> DB
 ```
-Frontend (SvelteKit :5173)  ──HTTP/JWT──►  Go Backend (:8080)  ──HTTP/POST──►  Python Recommender (:8002)
-        │                                        │                                    │
-   Edge AI on-device                        API gateway + MySQL                 scoring matemático
-   (EDO + Hawkes,                           (auth, CRUD, foco,                  (Hawkes, EDO, Min-Norm,
-    fricção local)                           comunidades)                        Thompson)
-```
 
-O **frontend fala apenas com o Go**. A inferência de fadiga (EDO + Hawkes) roda **no dispositivo**; o servidor recebe apenas o veredito de fricção. O Python é chamado somente pelo Go (geração de feed).
+The frontend talks **only** to the Go backend, never directly to Python. Fatigue inference (the Ego-Depletion ODE and the bi-kernel Hawkes process from the paper) runs **on-device** in the browser, so raw scroll/interaction telemetry never leaves the client — the server only ever receives a friction verdict. Python is invoked exclusively by Go, only for feed generation.
+
+The repository also ships a standalone **Agent-Based Simulation** (`recommender/src/abm`) used purely for offline statistical validation — it is not part of the runtime request path.
 
 ```
 Be-Productive/
-├── frontend/          # SvelteKit + TypeScript (Edge AI on-device)
-├── backend/           # Go + MySQL (gateway, auth, foco)
-└── recommender/       # Python + FastAPI + numpy/scipy (scoring + ABM)
+├── frontend/          # SvelteKit + TypeScript (on-device Edge AI)
+├── backend/           # Go + MySQL (API gateway, auth, focus)
+├── recommender/        # Python + FastAPI + numpy/scipy (scoring + ABM)
+├── docs/               # Internal docs: docs/en (English) + docs/pt-BR (Português), mirrored 1:1
+└── setup.bat / start.bat / stop.bat / view-logs.bat   # Windows convenience scripts
 ```
 
-## 🚀 Quick Start
+## Quickstart
 
-### Pré-requisitos
+Verified in this repository's actual scripts and manifests — not aspirational.
 
-- Node.js 18+
-- Go 1.22+
-- Python 3.10+
-- MySQL 8.0+
+### Prerequisites
 
-### 1. Banco de Dados
+- Node.js **20.19+** (required by Vite 7)
+- Go **1.25+**
+- Python **3.10+**
+- MySQL **8.0+**
+
+### 1. Database
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE be_productive;"
-mysql -u root -p be_productive < backend/migrations/001_create_tables.up.sql
-mysql -u root -p be_productive < backend/migrations/002_seed_data.up.sql
 ```
 
-### 2. Backend (Go)
+### 2. Backend (Go, port 8080)
 
 ```bash
 cd backend
+cp .env.example .env      # set DB_*, JWT_SECRET, RECOMMENDER_URL, RECOMMENDER_SHARED_SECRET
 go mod download
-# .env: DB_*, SERVER_PORT=8080, RECOMMENDER_URL=http://localhost:8002,
-#       JWT_SECRET=<segredo>, RECOMMENDER_SHARED_SECRET=<segredo interno>
+go run cmd/seeder/main.go # applies backend/migrations/*.up.sql + backend/scripts/mock_data.sql
 go run cmd/server/main.go
 ```
 
-### 3. Frontend (SvelteKit)
-
-```bash
-cd frontend
-npm install
-npm run dev        # http://localhost:5173
-```
-
-### 4. Recommender (Python)
+### 3. Recommender (Python, port 8002)
 
 ```bash
 cd recommender
-python -m venv venv && venv\Scripts\activate    # Windows
-# source venv/bin/activate                        # Linux/Mac
+python -m venv venv && venv\Scripts\activate   # Windows; `source venv/bin/activate` on Linux/macOS
 pip install -r requirements.txt
-# .env opcional: RECOMMENDER_SHARED_SECRET=<mesmo valor do backend>
 uvicorn src.api.main:app --port 8002 --reload
 ```
 
-## 🔬 Reprodutibilidade científica (ABM)
+> `recommender/.env.example` currently lists `PORT=8001`, which is stale — every other place in the codebase (Go's default `RECOMMENDER_URL`, `CLAUDE.md`, the per-layer READMEs, and `start.bat`) uses **8002**. Pass `--port 8002` explicitly, as shown above, until that file is corrected.
 
-O experimento que sustenta o artigo é totalmente reprodutível e semeado:
+### 4. Frontend (SvelteKit, port 5173)
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+### All-in-one (Windows)
+
+The repo root ships batch scripts that automate the same steps: `setup.bat` (install everything), then `go run cmd/seeder/main.go` once, then `start.bat` (launches all three services with logs under `logs/`), `stop.bat`, and `view-logs.bat`.
+
+## Verified results
+
+The paper's headline result is `Cohen's d = 3.25` on the reserve-AUC metric between the Be-Productive arm and a baseline arm, from an Agent-Based Simulation (N=1000, T=60, seeded). This repository ships a **confound-free reproduction** of that experiment — recovery (μ_rest) is identical across arms and load is endogenous, so the only difference between arms is the algorithm's own behavior:
+
+| Metric | Value |
+|---|---|
+| Cohen's d — reserve AUC | **3.25** |
+| Cohen's d — bounded R_final/R_max metric | 3.62 |
+| Mann-Whitney U p-value | ≈ 3.8 × 10⁻²⁹⁵ |
+| Median KL divergence (declared intent vs. actual consumption) | 0.874 (baseline) → 0.205 (Be-Productive) |
+
+**Ablation** (attributing the effect to each mechanism):
+
+| Configuration | Cohen's d (AUC) |
+|---|---|
+| Full model | 3.25 |
+| Min-Norm only | 0.35 |
+| Friction only | 2.57 |
+| Steering only (Thompson Sampling + Hawkes) | −0.01 |
+| Sanity check — all mechanisms off | ≈ 0.02 |
+
+The sanity-check row is the important one: with every mechanism disabled, the effect vanishes, which is evidence the effect is produced by the mechanisms and not baked into the simulation harness.
+
+Source of truth: [`recommender/abm_results/statistical_proof.md`](recommender/abm_results/statistical_proof.md), regenerable with:
 
 ```bash
 cd recommender
 python -m src.abm.run_simulation
 ```
 
-Isso regenera, em `recommender/abm_results/`:
+This regenerates `statistical_proof.md` plus `fig_1_ego_depletion.png`, `fig_2_kl_divergence.png`, and `fig_3_robustness_manifold.png` under `recommender/abm_results/` — these are committed, intentionally-generated research artifacts, not stale build output. This repository does not ship copies of the paper's own published figures; the ones under `recommender/abm_results/` are produced by this repository's own code, independently of the paper.
 
-- **`statistical_proof.md`** — `Cohen's d = 3.25`, `p ≈ 10⁻²⁹⁵`, tabela de ablação e teste de sanidade
-- **`fig_1_ego_depletion.png`**, **`fig_2_kl_divergence.png`**, **`fig_3_robustness_manifold.png`**
+## Testing & CI
 
-O desenho é justo por construção: `μ_rest` (recuperação) é idêntico nos dois braços e a carga (v_scroll, v_alt) emerge do conteúdo servido e da fricção — a única diferença entre os braços são as ações do algoritmo. Com os mecanismos desligados, o efeito desaparece (d ≈ 0), provando que ele não está embutido no arcabouço.
+Re-verified while preparing this documentation (commands run directly against this worktree):
 
-> As figuras nas pastas `Docs/` permanecem **as publicadas** (artigo intocado). As figuras honestas geradas pelo código vivem em `recommender/abm_results/`.
+| Layer | Command | Result |
+|---|---|---|
+| Go backend | `cd backend && go test ./...` | All 6 packages with tests pass (`go test ./... -v` reports 73 passing test cases) |
+| Python recommender | `cd recommender && python -m pytest src/ -q` | **89 passed**, across 14 test files under `src/**/tests/` (includes the ABM sanity check) |
+| Frontend (unit) | `cd frontend && npm run test` | **11 passed**, across 2 Vitest files (`api.test.ts`, `friction-logic.test.ts`) |
+| Frontend (types) | `cd frontend && npm run check` | `svelte-check` — 0 errors, 0 warnings |
+| Frontend (E2E) | `cd frontend && npx playwright test` | 3 Playwright specs exist (`auth`, `feed`, `focus`, plus a `global-setup`) — not executed here; they require the full stack (MySQL + all three services) running live |
 
-## 🧪 Testes
+**There is no CI workflow in this repository** (`.github/workflows/` did not exist before this documentation pass). Every command above is run manually today. Treat any third-party badge or claim of "build passing" for this repository with suspicion unless a workflow file is actually present.
 
-```bash
-cd backend      && go test ./...                 # gateway Go
-cd recommender  && python -m pytest src/ -q       # 89 testes (inclui teste de sanidade do ABM)
-cd frontend     && npm run check                  # type-check TypeScript/Svelte
-```
+`CLAUDE.md` previously stated the frontend had "no test runner configured" — that was inaccurate (`vitest` is a real devDependency and the two files above are real tests); this has been corrected in that file.
 
-## 🔧 Variáveis de Ambiente
+## Environment variables
 
-**Backend (`.env`)**
+**Backend** (`backend/.env`, see `backend/.env.example`)
 
 ```env
 SERVER_HOST=localhost
@@ -163,39 +206,76 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=
 DB_NAME=be_productive
+JWT_SECRET=change_me_to_a_secure_random_string
 RECOMMENDER_URL=http://localhost:8002
 RECOMMENDER_SHARED_SECRET=
-JWT_SECRET=
 ```
 
-**Frontend (`.env`)**
+**Recommender** (`recommender/.env`, optional — internal endpoints are open in dev when unset)
+
+```env
+RECOMMENDER_SHARED_SECRET=   # must match the backend's value
+```
+
+**Frontend** (`frontend/.env`, see `frontend/.env.example`)
 
 ```env
 VITE_API_URL=http://localhost:8080/api/v1
 ```
 
-## 📚 Principais Endpoints (via Go)
+## Main endpoints (via Go)
 
-- `POST /api/v1/auth/register` · `POST /api/v1/auth/login`
-- `GET  /api/v1/feed` — feed personalizado (delega scoring ao Python)
-- `POST /api/v1/content` · `POST /api/v1/content/{id}/feedback` · `POST /api/v1/content/{id}/report`
-- `POST /api/v1/focus/goals` · `GET /api/v1/focus/goals` · `POST /api/v1/focus/sessions` · `PUT /api/v1/focus/sessions/{id}`
+```
+GET  /health
 
-## 📖 Documentação
+POST /api/v1/auth/register
+POST /api/v1/auth/login
 
-| Documento | Conteúdo |
-|---|---|
-| [`Docs/ARCHITECTURE.md`](Docs/ARCHITECTURE.md) | Arquitetura de três camadas, fluxo de dados, Edge AI on-device |
-| [`Docs/REPRODUCIBILITY.md`](Docs/REPRODUCIBILITY.md) | Como reproduzir o experimento (d = 3.25), ablação e figuras |
-| [`Docs/PAPER_CODE_TRUTH_MAP.md`](Docs/PAPER_CODE_TRUTH_MAP.md) | Rastreabilidade afirmação-do-artigo ↔ ponto-do-código |
-| [`Docs/IMPACT.md`](Docs/IMPACT.md) | Fins acadêmicos e aplicações interdisciplinares |
-| [`Docs/ROADMAP.md`](Docs/ROADMAP.md) | Plano de evolução em fases, alinhado à visão do artigo |
-| [`Docs/SECURITY.md`](Docs/SECURITY.md) | Postura de segurança e privacidade |
-| Por camada | [`backend/README.md`](backend/README.md) · [`recommender/README.md`](recommender/README.md) · [`frontend/README.md`](frontend/README.md) |
+GET  /api/v1/users/{id}            PUT /api/v1/users/{id}
+GET  /api/v1/users/{id}/topics     POST /api/v1/users/{id}/topics
+GET  /api/v1/users/{id}/settings   PUT /api/v1/users/{id}/settings
 
-## 📝 Licença e uso acadêmico
+GET  /api/v1/feed                  # delegates scoring to the Python recommender
 
-Projeto acadêmico desenvolvido na **FAETERJ-RIO**. Uso educacional e de pesquisa. Ao referenciar este trabalho, cite o artigo publicado (DOI abaixo).
+POST /api/v1/content                       GET  /api/v1/content/{id}
+POST /api/v1/content/{id}/feedback         POST /api/v1/content/{id}/report
+
+GET  /api/v1/communities                   GET  /api/v1/communities/me
+POST /api/v1/communities/{id}/join         POST /api/v1/communities/{id}/leave
+
+POST /api/v1/focus/goals                   GET  /api/v1/focus/goals
+POST /api/v1/focus/sessions                PUT  /api/v1/focus/sessions/{id}
+GET  /api/v1/focus/sessions/{id}/goals     GET  /api/v1/focus/sessions/{id}/report
+```
+
+All routes except `/health` and the two auth routes require a JWT (`Authorization: Bearer <token>`); the acting user is derived from the token claims, not from request bodies or query parameters. Full source: `backend/internal/adapter/http/router/router.go`.
+
+## Documentation
+
+Internal docs live under [`docs/`](docs/README.md), mirrored in English (`docs/en/`) and Portuguese (`docs/pt-BR/`) with identical filenames and structure:
+
+| Document | Content | English | Português (Brasil) |
+|---|---|---|---|
+| Architecture | Three-tier architecture, data flow, on-device Edge AI | [`docs/en/architecture.md`](docs/en/architecture.md) | [`docs/pt-BR/architecture.md`](docs/pt-BR/architecture.md) |
+| Reproducibility | How to reproduce the d = 3.25 experiment, ablation, figures | [`docs/en/reproducibility.md`](docs/en/reproducibility.md) | [`docs/pt-BR/reproducibility.md`](docs/pt-BR/reproducibility.md) |
+| Paper ↔ Code truth map | Paper-claim ↔ code-location traceability, including known gaps | [`docs/en/paper-code-truth-map.md`](docs/en/paper-code-truth-map.md) | [`docs/pt-BR/paper-code-truth-map.md`](docs/pt-BR/paper-code-truth-map.md) |
+| Academic impact | Academic purpose and interdisciplinary applications | [`docs/en/impact.md`](docs/en/impact.md) | [`docs/pt-BR/impact.md`](docs/pt-BR/impact.md) |
+| Roadmap | Phased evolution roadmap | [`docs/en/roadmap.md`](docs/en/roadmap.md) | [`docs/pt-BR/roadmap.md`](docs/pt-BR/roadmap.md) |
+| Security posture | Applied security posture and hardening TODOs (not the vulnerability-disclosure policy — see [`SECURITY.md`](SECURITY.md) at the repo root for that) | [`docs/en/security.md`](docs/en/security.md) | [`docs/pt-BR/security.md`](docs/pt-BR/security.md) |
+
+Per-layer READMEs — currently Portuguese only, not yet mirrored in English as a separate file (an explicit scope decision, not an oversight): [`backend/README.md`](backend/README.md) · [`recommender/README.md`](recommender/README.md) · [`frontend/README.md`](frontend/README.md).
+
+`CLAUDE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, and `CHANGELOG.md` at the repository root are in English.
+
+## Roadmap
+
+See [`docs/en/roadmap.md`](docs/en/roadmap.md) for the phased plan from the current deterministic stand-ins (safety classifiers, hybrid recommender) toward trained/ONNX models, Edge-AI maturity, in-vivo validation, and production hardening.
+
+## License
+
+**No license file currently exists in this repository.** In the absence of an explicit `LICENSE`, default copyright rules apply: all rights are reserved by the author, and no reuse, redistribution, or derivative work is licensed to third parties. This is an open decision that belongs to the author, not something this documentation pass resolves.
+
+If you want to reference this work academically, cite the published paper:
 
 ```
 Melo, F. S. S. et al. Arquitetura Algorítmica para Atenção Sustentável:
@@ -203,6 +283,10 @@ O Modelo Be-Productive como Resposta à Sobrecarga Cognitiva no Capitalismo
 de Vigilância. Revista Tópicos, 2026. DOI: 10.70773/revistatopicos/781363235.
 ```
 
+## Author
+
+Academic capstone project (TCC) at **FAETERJ-RIO**, materialized in the peer-reviewed paper cited above (citation: `Melo, F. S. S. et al.`). Repository: [github.com/FellypeMelo/Be-Productive-TCC](https://github.com/FellypeMelo/Be-Productive-TCC).
+
 ---
 
-Implementação de referência do modelo publicado sob DOI [10.70773/revistatopicos/781363235](https://doi.org/10.70773/revistatopicos/781363235). O artigo permanece intocado; este repositório é a sua evolução executável e reprodutível.
+Reference implementation of the model published under DOI [10.70773/revistatopicos/781363235](https://doi.org/10.70773/revistatopicos/781363235). The paper itself is untouched; this repository is its executable, reproducible evolution.

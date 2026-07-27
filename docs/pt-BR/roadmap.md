@@ -69,7 +69,7 @@ Legenda de estado: ✅ feito · 🟡 parcial · ⬜ planejado.
 
 - ⬜ **Acessibilidade** (WCAG AA), i18n (PT/EN), tema claro/escuro real.
 - ⬜ **Runner de testes de frontend** (Vitest já presente) com cobertura de componentes; E2E Playwright ampliado.
-- ⬜ **Documentação viva**: manter [ARCHITECTURE](ARCHITECTURE.md), [REPRODUCIBILITY](REPRODUCIBILITY.md), [SECURITY](SECURITY.md) e [PAPER_CODE_TRUTH_MAP](PAPER_CODE_TRUTH_MAP.md) sincronizados a cada mudança estrutural.
+- ⬜ **Documentação viva**: manter [architecture](architecture.md), [reproducibility](reproducibility.md), [security](security.md) e [paper-code-truth-map](paper-code-truth-map.md) sincronizados a cada mudança estrutural.
 
 ---
 

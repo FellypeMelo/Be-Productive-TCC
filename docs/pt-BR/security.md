@@ -25,4 +25,4 @@ Um sistema cuja tese é proteger usuários vulneráveis não pode, ele próprio,
 - A população da simulação é **100% sintética** (log-normal), sem dados empíricos reais.
 - Job de anonimização remove PII de usuários inativos (`backend/internal/usecase/user/anonimize_job.go`).
 
-Ver [ARCHITECTURE.md](ARCHITECTURE.md) para o modelo de confiança entre camadas.
+Ver [architecture.md](architecture.md) para o modelo de confiança entre camadas.

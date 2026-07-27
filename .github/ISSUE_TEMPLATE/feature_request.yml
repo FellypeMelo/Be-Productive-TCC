@@ -1,0 +1,63 @@
+name: Feature request
+description: Propose a new feature or an enhancement to an existing one.
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Because this project is the reference implementation of a published paper, please note whether your proposal:
+        - implements something already described in the paper but not yet in the code (see `docs/en/paper-code-truth-map.md`),
+        - matches an item already listed in `docs/en/roadmap.md`, or
+        - is a genuinely new idea outside the paper's scope.
+
+        Any of the three is welcome — this just helps set expectations for review.
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Affected layer
+      options:
+        - Backend (Go, backend/)
+        - Recommender (Python, recommender/)
+        - Frontend (SvelteKit, frontend/)
+        - Cross-cutting (all layers) / infrastructure
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What's missing or awkward today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to see implemented?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about and why you didn't pick them.
+
+  - type: textarea
+    id: paper-link
+    attributes:
+      label: Relation to the paper (if any)
+      description: If this maps to a specific equation, algorithm, or claim in the published paper, mention it here.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked docs/en/roadmap.md and this isn't already tracked there.
+          required: true
