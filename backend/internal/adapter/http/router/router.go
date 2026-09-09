@@ -36,6 +36,13 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 		cfg.Recommender.URL,
 		content.WithSharedSecret(cfg.Recommender.SharedSecret),
 		content.WithFocusGateway(focusRepo),
+		content.WithResearchConsentReader(func(ctx context.Context, userID int64) (bool, error) {
+			settings, err := userRepo.GetSettings(ctx, userID)
+			if err != nil {
+				return false, err
+			}
+			return settings.PesquisaConsentimento, nil
+		}),
 	)
 	focusService := focus.NewService(focusRepo)
 	communityService := community.NewService(communityRepo)
@@ -86,6 +93,7 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 	mux.Handle("POST /api/v1/content/{id}/feedback", auth(http.HandlerFunc(contentHandler.SubmitFeedback)))
 	mux.Handle("POST /api/v1/content/{id}/report", auth(http.HandlerFunc(contentHandler.Report)))
 	mux.Handle("POST /api/v1/content/{id}/events", auth(http.HandlerFunc(contentHandler.RecordInteraction)))
+	mux.Handle("POST /api/v1/experiments/exposures", auth(http.HandlerFunc(contentHandler.RecordExperimentExposure)))
 
 	// Community routes (Protected) (UC04)
 	mux.Handle("GET /api/v1/communities", auth(http.HandlerFunc(communityHandler.List)))

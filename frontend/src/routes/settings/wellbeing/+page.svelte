@@ -74,7 +74,7 @@
 
         {#if isLoading}
             <div class="space-y-4">
-                {#each Array(3) as _}
+                {#each Array(4) as _}
                     <div class="card p-6 flex items-center justify-between">
                         <div class="space-y-2 flex-1">
                             <div class="skeleton h-4 w-40"></div>
@@ -86,6 +86,23 @@
             </div>
         {:else if settings}
             <div class="space-y-4">
+                <label class="card p-5 sm:p-6 flex items-center justify-between gap-5 cursor-pointer hover:border-ink transition-colors border-accent/40 bg-accent-wash/20">
+                    <div class="flex items-start gap-4">
+                        <span class="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center shrink-0">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+                        </span>
+                        <div>
+                            <h3 class="font-semibold text-ink">Participar do estudo de atenção sustentável</h3>
+                            <p class="text-sm text-muted mt-0.5">Ajude a avaliar duas formas de organizar o feed. É opcional, separado da personalização e pode ser revogado a qualquer momento.</p>
+                            <p class="text-xs text-muted mt-2">Enviamos apenas resultados agregados do experimento; rolagem e sinais brutos permanecem neste navegador.</p>
+                        </div>
+                    </div>
+                    <span class="relative inline-flex shrink-0">
+                        <input type="checkbox" bind:checked={settings.consentimento_pesquisa} class="sr-only peer" />
+                        <span class="w-11 h-6 rounded-full bg-line transition-colors peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5"></span>
+                    </span>
+                </label>
+
                 <label class="card p-5 sm:p-6 flex items-center justify-between gap-5 cursor-pointer hover:border-ink transition-colors">
                     <div class="flex items-start gap-4">
                         <span class="w-10 h-10 rounded-xl bg-accent-wash text-accent flex items-center justify-center shrink-0">

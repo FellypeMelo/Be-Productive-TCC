@@ -36,17 +36,25 @@ type CreateContentInput struct {
 
 // FeedResult holds the complete feed payload including model scores.
 type FeedResult struct {
-	Contents      []domain.Content
-	Scores        map[int64]float64
-	FrictionLevel string
-	ModelVersion  string
-	Experiment    string
-	Explanations  map[int64][]string
-	Fallback      bool
+	Contents          []domain.Content
+	Scores            map[int64]float64
+	FrictionLevel     string
+	ModelVersion      string
+	Experiment        string
+	ExperimentID      string
+	Variant           string
+	AssignmentVersion string
+	Eligible          bool
+	Explanations      map[int64][]string
+	Fallback          bool
 }
 
 type InteractionRepository interface {
 	AddInteraction(ctx context.Context, event domain.ContentInteraction) error
+}
+
+type ExposureRepository interface {
+	AddExperimentExposure(ctx context.Context, exposure domain.ExperimentExposure) error
 }
 
 // FocusGateway exposes the user's server-side focus state used to enforce the
@@ -59,11 +67,12 @@ type FocusGateway interface {
 
 // Service handles content business logic
 type Service struct {
-	repo           Repository
-	recommenderURL string
-	sharedSecret   string
-	focus          FocusGateway
-	httpClient     *http.Client
+	repo            Repository
+	recommenderURL  string
+	sharedSecret    string
+	focus           FocusGateway
+	researchConsent func(context.Context, int64) (bool, error)
+	httpClient      *http.Client
 }
 
 // Option configures optional Service dependencies.
@@ -77,6 +86,12 @@ func WithSharedSecret(secret string) Option {
 // WithFocusGateway wires the focus state provider used to enforce Absolute Mode.
 func WithFocusGateway(focus FocusGateway) Option {
 	return func(s *Service) { s.focus = focus }
+}
+
+// WithResearchConsentReader keeps research eligibility server-owned while
+// allowing product personalization to remain independent of research consent.
+func WithResearchConsentReader(reader func(context.Context, int64) (bool, error)) Option {
+	return func(s *Service) { s.researchConsent = reader }
 }
 
 // NewService creates a new content service
@@ -135,7 +150,13 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 	}
 
 	// 1. Try to get recommendations from external service
-	contentIDs, scores, frictionLevel, modelVersion, experiment, explanations, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal, protectiveModeActive)
+	researchConsent := false
+	if s.researchConsent != nil {
+		if consent, consentErr := s.researchConsent(ctx, userID); consentErr == nil {
+			researchConsent = consent
+		}
+	}
+	contentIDs, scores, frictionLevel, modelVersion, experiment, experimentID, variant, assignmentVersion, eligible, explanations, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal, protectiveModeActive, researchConsent)
 	if err != nil || len(contentIDs) == 0 {
 		if protectiveModeActive {
 			// Fail closed: a recommender outage must not silently replace a
@@ -146,6 +167,8 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 				FrictionLevel: "high",
 				ModelVersion:  "protective-fallback-v1",
 				Experiment:    "protective",
+				ExperimentID:  "sustainable-attention-v1",
+				Variant:       "not_eligible",
 				Explanations:  map[int64][]string{},
 				Fallback:      true,
 			}, nil
@@ -162,6 +185,8 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 			FrictionLevel: "none",
 			ModelVersion:  "db-fallback-v1",
 			Experiment:    "fallback",
+			ExperimentID:  "sustainable-attention-v1",
+			Variant:       "not_eligible",
 			Explanations:  map[int64][]string{},
 			Fallback:      true,
 		}, nil
@@ -191,12 +216,16 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 	}
 
 	return &FeedResult{
-		Contents:      contents,
-		Scores:        scoreMap,
-		FrictionLevel: frictionLevel,
-		ModelVersion:  modelVersion,
-		Experiment:    experiment,
-		Explanations:  explanations,
+		Contents:          contents,
+		Scores:            scoreMap,
+		FrictionLevel:     frictionLevel,
+		ModelVersion:      modelVersion,
+		Experiment:        experiment,
+		ExperimentID:      experimentID,
+		Variant:           variant,
+		AssignmentVersion: assignmentVersion,
+		Eligible:          eligible,
+		Explanations:      explanations,
 	}, nil
 }
 
@@ -209,7 +238,7 @@ func (s *Service) updateContentScores(ctx context.Context, contentIDs []int64, s
 	}
 }
 
-func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string, protectiveModeActive bool) ([]int64, []float64, string, string, string, map[int64][]string, error) {
+func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string, protectiveModeActive bool, researchConsent bool) ([]int64, []float64, string, string, string, string, string, string, bool, map[int64][]string, error) {
 	url := fmt.Sprintf("%s/api/v1/recommend", s.recommenderURL)
 
 	params := map[string]interface{}{
@@ -217,6 +246,7 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 		"limit":                  limit,
 		"absolute_mode_active":   absoluteModeActive,
 		"protective_mode_active": protectiveModeActive,
+		"research_consent":       researchConsent,
 	}
 	if category != "" {
 		params["category"] = category
@@ -232,7 +262,7 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, nil, "none", "", "", nil, err
+		return nil, nil, "none", "", "", "", "", "", false, nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if s.sharedSecret != "" {
@@ -241,24 +271,28 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, nil, "none", "", "", nil, err
+		return nil, nil, "none", "", "", "", "", "", false, nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, "none", "", "", nil, fmt.Errorf("recommender returned status %d", resp.StatusCode)
+		return nil, nil, "none", "", "", "", "", "", false, nil, fmt.Errorf("recommender returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
-		ContentIDs    []int64             `json:"content_ids"`
-		Scores        []float64           `json:"scores"`
-		FrictionLevel string              `json:"friction_level"`
-		ModelVersion  string              `json:"model_version"`
-		Experiment    string              `json:"experiment"`
-		Explanations  map[string][]string `json:"explanations"`
+		ContentIDs        []int64             `json:"content_ids"`
+		Scores            []float64           `json:"scores"`
+		FrictionLevel     string              `json:"friction_level"`
+		ModelVersion      string              `json:"model_version"`
+		Experiment        string              `json:"experiment"`
+		ExperimentID      string              `json:"experiment_id"`
+		Variant           string              `json:"variant"`
+		AssignmentVersion string              `json:"assignment_version"`
+		Eligible          bool                `json:"eligible"`
+		Explanations      map[string][]string `json:"explanations"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, nil, "none", "", "", nil, err
+		return nil, nil, "none", "", "", "", "", "", false, nil, err
 	}
 	explanations := make(map[int64][]string, len(result.Explanations))
 	for rawID, reasons := range result.Explanations {
@@ -266,7 +300,27 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 			explanations[id] = reasons
 		}
 	}
-	return result.ContentIDs, result.Scores, result.FrictionLevel, result.ModelVersion, result.Experiment, explanations, nil
+	return result.ContentIDs, result.Scores, result.FrictionLevel, result.ModelVersion, result.Experiment, result.ExperimentID, result.Variant, result.AssignmentVersion, result.Eligible, explanations, nil
+}
+
+// RecordExperimentExposure stores only the minimum exposure contract. The
+// handler supplies the authenticated user id; no raw scroll or context data is accepted.
+func (s *Service) RecordExperimentExposure(ctx context.Context, exposure domain.ExperimentExposure) error {
+	if exposure.EventID == "" || len(exposure.EventID) > 64 || exposure.UserID < 1 ||
+		exposure.ExperimentID != "sustainable-attention-v1" ||
+		exposure.AssignmentVersion != "sha256-v1" ||
+		exposure.AlgorithmVersion == "" || len(exposure.AlgorithmVersion) > 64 ||
+		exposure.RequestID == "" || len(exposure.RequestID) > 128 ||
+		(exposure.Variant != "control" && exposure.Variant != "treatment") ||
+		!exposure.Eligible || exposure.PositionCount < 0 || exposure.PositionCount > 50 {
+		return domain.ErrInvalidInput
+	}
+	repo, ok := s.repo.(ExposureRepository)
+	if !ok {
+		return domain.ErrInternalServer
+	}
+	exposure.CreatedAt = time.Now().UTC()
+	return repo.AddExperimentExposure(ctx, exposure)
 }
 
 // RecordInteraction stores consent-safe product events. Raw fatigue telemetry is excluded.

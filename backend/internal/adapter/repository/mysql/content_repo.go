@@ -259,3 +259,18 @@ func (r *ContentRepository) AddInteraction(ctx context.Context, event domain.Con
 		event.DwellSeconds, event.Position, event.Algorithm, event.Experiment, event.FrictionLevel, event.CreatedAt)
 	return err
 }
+
+func (r *ContentRepository) AddExperimentExposure(ctx context.Context, exposure domain.ExperimentExposure) error {
+	query := `
+		INSERT INTO experimento_exposicao
+		(event_id, experiment_id, variant, assignment_version, algorithm_version,
+		 request_id, id_usuario, eligible, served, fallback, position_count, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE event_id = event_id
+	`
+	_, err := r.db.ExecContext(ctx, query, exposure.EventID, exposure.ExperimentID,
+		exposure.Variant, exposure.AssignmentVersion, exposure.AlgorithmVersion,
+		exposure.RequestID, exposure.UserID, exposure.Eligible, exposure.Served,
+		exposure.Fallback, exposure.PositionCount, exposure.CreatedAt)
+	return err
+}

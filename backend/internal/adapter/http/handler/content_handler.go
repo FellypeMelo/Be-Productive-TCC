@@ -127,15 +127,39 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]any{
-		"content_ids":    extractContentIDs(result.Contents),
-		"scores":         result.Scores,
-		"items":          result.Contents,
-		"friction_level": result.FrictionLevel,
-		"model_version":  result.ModelVersion,
-		"experiment":     result.Experiment,
-		"explanations":   result.Explanations,
-		"fallback":       result.Fallback,
+		"content_ids":        extractContentIDs(result.Contents),
+		"scores":             result.Scores,
+		"items":              result.Contents,
+		"friction_level":     result.FrictionLevel,
+		"model_version":      result.ModelVersion,
+		"experiment":         result.Experiment,
+		"experiment_id":      result.ExperimentID,
+		"variant":            result.Variant,
+		"assignment_version": result.AssignmentVersion,
+		"eligible":           result.Eligible,
+		"explanations":       result.Explanations,
+		"fallback":           result.Fallback,
 	})
+}
+
+// RecordExperimentExposure persists the minimum exposure contract for an
+// eligible participant. Identity and timestamps are always server-owned.
+func (h *ContentHandler) RecordExperimentExposure(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+	var exposure domain.ExperimentExposure
+	if err := json.NewDecoder(r.Body).Decode(&exposure); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	exposure.UserID = userID
+	if err := h.service.RecordExperimentExposure(r.Context(), exposure); err != nil {
+		handleError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusAccepted, map[string]bool{"accepted": true})
 }
 
 func (h *ContentHandler) RecordInteraction(w http.ResponseWriter, r *http.Request) {

@@ -15,8 +15,12 @@
     let gridRef: HTMLElement;
     let personalizationEnabled = $state(false);
     let fatigueEnabled = $state(false);
+    let researchConsentEnabled = $state(false);
     let modelVersion = "unknown";
     let experiment = "none";
+    let experimentID = "";
+    let assignmentVersion = "";
+    let variant = "not_eligible";
     let explanations = $state<Record<number, string[]>>({});
 
     // Friction state — computed 100% ON-DEVICE by the Edge fatigue engine.
@@ -323,6 +327,7 @@
             const settings = await api.getSettings($currentUser.id_usuario);
             personalizationEnabled = settings.personalizacao_ativa;
             fatigueEnabled = settings.sugestao_saudavel_ativa;
+            researchConsentEnabled = settings.consentimento_pesquisa === true;
             if (fatigueEnabled) {
                 const saved = localStorage.getItem(FATIGUE_STORAGE_KEY);
                 if (saved) {
@@ -356,7 +361,28 @@
             feed = result.items;
             modelVersion = result.model_version;
             experiment = result.experiment;
+            experimentID = result.experiment_id || "";
+            assignmentVersion = result.assignment_version || "";
+            variant = result.variant || "not_eligible";
             explanations = result.explanations || {};
+            if (researchConsentEnabled && result.eligible &&
+                (result.variant === "control" || result.variant === "treatment") &&
+                result.experiment_id && result.assignment_version) {
+                void api.recordExperimentExposure({
+                    event_id: eventID(),
+                    experiment_id: result.experiment_id,
+                    variant: result.variant,
+                    assignment_version: result.assignment_version,
+                    algorithm_version: result.model_version,
+                    request_id: eventID(),
+                    eligible: true,
+                    served: feed.length > 0,
+                    fallback: result.fallback,
+                    position_count: Math.min(feed.length, 50),
+                }).catch(() => {
+                    // Exposure recording must never block feed navigation.
+                });
+            }
             if (personalizationEnabled && !result.fallback) {
                 void Promise.allSettled(feed.map((content, position) =>
                     recordEvent(content.id_conteudo, "impression", position)

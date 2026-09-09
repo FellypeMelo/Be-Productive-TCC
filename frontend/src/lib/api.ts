@@ -134,6 +134,13 @@ export const api = {
             keepalive: true,
         }),
 
+    recordExperimentExposure: (exposure: ExperimentExposureInput) =>
+        fetchApi<{ accepted: boolean }>('/experiments/exposures', {
+            method: 'POST',
+            body: JSON.stringify(exposure),
+            keepalive: true,
+        }),
+
     // Focus
     createGoal: (data: CreateGoalInput) =>
         fetchApi<FocusGoal[]>('/focus/goals', {
@@ -205,6 +212,8 @@ export interface UserSettings {
     sugestao_saudavel_ativa: boolean;
     personalizacao_ativa: boolean;
     notificacao_foco_ativa: boolean;
+    consentimento_pesquisa: boolean;
+    consentimento_pesquisa_versao?: string;
 }
 export interface User {
     id_usuario: number;
@@ -290,6 +299,10 @@ export interface FeedResponse {
     friction_level: "none" | "mild" | "high" | "block";
     model_version: string;
     experiment: string;
+    experiment_id: string;
+    variant: string;
+    assignment_version: string;
+    eligible: boolean;
     explanations: Record<number, string[]>;
     fallback: boolean;
 }
@@ -301,4 +314,17 @@ export interface ContentEventInput {
     position: number;
     algorithm: string;
     experiment: string;
+}
+
+export interface ExperimentExposureInput {
+    event_id: string;
+    experiment_id: string;
+    variant: 'control' | 'treatment';
+    assignment_version: string;
+    algorithm_version: string;
+    request_id: string;
+    eligible: boolean;
+    served: boolean;
+    fallback: boolean;
+    position_count: number;
 }
