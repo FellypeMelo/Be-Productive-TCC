@@ -39,6 +39,7 @@ class RecommendationUseCase:
         category: Optional[str] = None,
         topic_id: Optional[int] = None,
         protective_mode_active: bool = False,
+        research_consent: bool = False,
     ) -> List[ContentItem]:
         if topic_id is None:
             candidates = self.repo.get_candidate_contents(user_id=user_id, category=category)
@@ -46,7 +47,7 @@ class RecommendationUseCase:
             candidates = self.repo.get_candidate_contents(
                 user_id=user_id, category=category, topic_id=topic_id
             )
-        experiment_variant = stable_variant(user_id)
+        experiment_variant = stable_variant(user_id, research_consent)
 
         # Hawkes classification based on user's recent behavior
         hawkes_result = None

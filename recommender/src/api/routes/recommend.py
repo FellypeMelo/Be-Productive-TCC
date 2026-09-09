@@ -10,7 +10,12 @@ from src.infrastructure.safety_gateway import ToxicitySafetyGateway
 from src.infrastructure.hybrid_scorer import HybridScorer
 from src.inference.hawkes_classifier import HawkesClassifier
 from src.api.deps import get_fatigue_use_case
-from src.application.experiments import stable_variant
+from src.application.experiments import (
+    ALGORITHM_VERSION,
+    ASSIGNMENT_VERSION,
+    EXPERIMENT_ID,
+    experiment_assignment,
+)
 
 router = APIRouter()
 
@@ -25,6 +30,9 @@ class RecommendRequest(BaseModel):
     declared_goal: Optional[Literal["PRODUTIVIDADE", "ENTRETENIMENTO"]] = None
     # Binary order computed on-device. Raw fatigue telemetry is never sent.
     protective_mode_active: bool = False
+    # Separate opt-in for research participation; product personalization is
+    # intentionally independent from this flag.
+    research_consent: bool = False
 
 class RecommendResponse(BaseModel):
     """Response schema for recommendations"""
@@ -33,6 +41,11 @@ class RecommendResponse(BaseModel):
     model_version: str
     friction_level: Optional[str] = None  # NEW: from fatigue policy
     experiment: str
+    experiment_id: str
+    assignment_version: str
+    variant: str
+    eligible: bool
+    algorithm_version: str
     explanations: Dict[int, List[str]]
 
 class ThompsonResponse(BaseModel):
@@ -70,18 +83,25 @@ async def recommend(request: RecommendRequest, use_case: RecommendationUseCase =
             category=request.category,
             topic_id=request.topic_id,
             protective_mode_active=request.protective_mode_active,
+            research_consent=request.research_consent,
         )
 
         # Check fatigue policy (Algorithm 3)
         fatigue_uc = get_fatigue_use_case()
         friction = fatigue_uc.get_friction_policy(request.user_id)
 
+        assignment = experiment_assignment(request.user_id, request.research_consent)
         return RecommendResponse(
             content_ids=[item.content_id for item in results],
             scores=[item.perceived_value for item in results],
-            model_version="2.2.0-sustainable-attention",
+            model_version=ALGORITHM_VERSION,
             friction_level=friction.value,
-            experiment=stable_variant(request.user_id),
+            experiment=str(assignment["variant"]),
+            experiment_id=EXPERIMENT_ID,
+            assignment_version=ASSIGNMENT_VERSION,
+            variant=str(assignment["variant"]),
+            eligible=bool(assignment["eligible"]),
+            algorithm_version=ALGORITHM_VERSION,
             explanations={item.content_id: item.explanations for item in results},
         )
     except Exception:
@@ -105,9 +125,14 @@ async def recommend_get(
         return {
             "content_ids": [item.content_id for item in results],
             "scores": [item.perceived_value for item in results],
-            "model_version": "2.2.0-sustainable-attention",
+            "model_version": ALGORITHM_VERSION,
             "friction_level": friction.value,
-            "experiment": stable_variant(user_id),
+            "experiment": "not_eligible",
+            "experiment_id": EXPERIMENT_ID,
+            "assignment_version": ASSIGNMENT_VERSION,
+            "variant": "not_eligible",
+            "eligible": False,
+            "algorithm_version": ALGORITHM_VERSION,
             "explanations": {item.content_id: item.explanations for item in results},
         }
     except Exception:

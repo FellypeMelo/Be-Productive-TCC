@@ -1,0 +1,17 @@
+{
+  "experiment_id": "sustainable-attention-v1",
+  "status": "pre_registered",
+  "assignment_version": "sha256-v1",
+  "allocation": {"control": 0.5, "treatment": 0.5, "rollout": [0.05, 0.25, 0.5]},
+  "unit": "user",
+  "primary_metric": "normalized_reserve_auc_7d",
+  "secondary_metrics": ["intent_retention_7d", "session_completion_rate", "friction_acceptance_rate", "content_feedback_rate"],
+  "guardrails": {
+    "srm_alpha": 0.001,
+    "safety_violation_rate_delta": 0.005,
+    "critical_error_rate_delta": 0.002,
+    "retention_7d_delta": -0.02
+  },
+  "analysis": {"method": "intent_to_treat", "confidence_level": 0.95, "minimum_exposure_per_arm": 100},
+  "privacy": {"raw_telemetry_leaves_device": false, "aggregate_requires_research_consent": true}
+}
