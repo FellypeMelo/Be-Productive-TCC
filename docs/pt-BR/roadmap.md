@@ -13,7 +13,7 @@ Legenda de estado: ✅ feito · 🟡 parcial · ⬜ planejado.
 | Edge AI on-device (EDO + Hawkes no navegador) | ✅ |
 | Pacto de Ulisses enforçado server-side | ✅ |
 | Segurança base (bcrypt, sem IDOR, auth interna) | ✅ |
-| Classificadores de segurança / recomendador híbrido | 🟡 stand-ins determinísticos |
+| Classificadores de segurança / recomendador híbrido | 🟡 baselines observáveis; modelos treinados pendentes |
 | Validação com usuários reais | ⬜ |
 
 ---
@@ -21,8 +21,8 @@ Legenda de estado: ✅ feito · 🟡 parcial · ⬜ planejado.
 ## Fase 1 — De stand-ins a modelos reais
 *Objetivo: o Min-Norm e o `base_score` operarem sobre sinal aprendido, não heurística.*
 
-- ⬜ **Classificadores de segurança reais (IA_Safety, Eq. 3).** Substituir o hash determinístico por 5 classificadores ONNX/`llama.cpp` leves (hate speech, desinformação, violência, clickbait, estímulo compulsivo). Rodar quantizados on-device; expor via a mesma interface `SafetyClassifierInterface`.
-- ⬜ **Recomendador híbrido treinado.** Ajustar `ContentBasedModel` (TF-IDF/embeddings) + `CollaborativeModel` (ALS) sobre os dados reais de `conteudo`/`feedback_conteudo`; remover o placeholder determinístico do `HybridScorer` quando fitted.
+- 🟡 **Classificadores de segurança reais (IA_Safety, Eq. 3).** O hash foi removido; uma baseline lexical auditável analisa texto real em cinco dimensões. Modelos ONNX ainda exigem treino e validação.
+- 🟡 **Recomendador híbrido treinado.** O ranking usa sinais reais de conteúdo e interação. TF-IDF/ALS ainda exigem dataset, treino e avaliação.
 - ⬜ **Estimação de Hawkes por MLE.** Ajustar α/β dos dois kernels a partir de trajetórias reais de eventos, em vez de constantes fixas.
 - ⬜ **Calibração de fadiga por usuário.** Aprender `μ_rest`, `k1`, `k2` individuais a partir do comportamento observado (com consentimento), sincronizados via os endpoints Edge já existentes.
 
@@ -54,7 +54,7 @@ Legenda de estado: ✅ feito · 🟡 parcial · ⬜ planejado.
 
 - ⬜ `JWT_SECRET` **fail-closed** (recusar iniciar sem segredo); allowlist de método de assinatura.
 - ⬜ CORS restrito às origens conhecidas; rate limiting; headers de segurança.
-- ⬜ Observabilidade (logs estruturados sem PII, métricas, tracing) e CI (build + testes das 3 camadas em cada PR).
+- 🟡 Logs estruturados, métricas, correlação, readiness e CI das três camadas foram implementados. Tracing distribuído continua planejado.
 - ⬜ Migração da anonimização para usar `last_active` real (hoje usa `updated_at`) e cascatear em linhas comportamentais.
 
 ## Fase 6 — Extensões de pesquisa

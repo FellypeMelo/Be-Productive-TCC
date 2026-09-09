@@ -12,7 +12,7 @@
 
 ## Testing
 
-There is no CI in this repository — paste the actual output of the suite(s) relevant to your change.
+CI runs these checks automatically. Paste local output when it helps reviewers reproduce a failure.
 
 - [ ] `cd backend && go test ./...`
 - [ ] `cd recommender && python -m pytest src/ -q`

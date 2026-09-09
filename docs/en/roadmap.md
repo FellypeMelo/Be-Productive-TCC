@@ -13,7 +13,7 @@ Status legend: ✅ done · 🟡 partial · ⬜ planned.
 | On-device Edge AI (ODE + Hawkes in the browser) | ✅ |
 | Ulysses Pact enforced server-side | ✅ |
 | Baseline security (bcrypt, no IDOR, internal auth) | ✅ |
-| Safety classifiers / hybrid recommender | 🟡 deterministic stand-ins |
+| Safety classifiers / hybrid recommender | 🟡 observable lexical/ranking baselines; trained models pending |
 | Validation with real users | ⬜ |
 
 ---
@@ -21,8 +21,8 @@ Status legend: ✅ done · 🟡 partial · ⬜ planned.
 ## Phase 1 — From stand-ins to real models
 *Goal: Min-Norm and `base_score` operating on learned signal, not heuristics.*
 
-- ⬜ **Real safety classifiers (IA_Safety, Eq. 3).** Replace the deterministic hash with 5 lightweight ONNX/`llama.cpp` classifiers (hate speech, disinformation, violence, clickbait, compulsive-engagement stimulus). Run quantized on-device; expose through the same `SafetyClassifierInterface`.
-- ⬜ **Trained hybrid recommender.** Fit `ContentBasedModel` (TF-IDF/embeddings) + `CollaborativeModel` (ALS) on real `conteudo`/`feedback_conteudo` data; remove `HybridScorer`'s deterministic placeholder once fitted.
+- 🟡 **Real safety classifiers (IA_Safety, Eq. 3).** The ID hash is gone; an auditable five-dimensional lexical baseline analyzes actual text. Train and validate ONNX models before replacing it.
+- 🟡 **Trained hybrid recommender.** Runtime ranking now uses observable interaction and content features. Fit TF-IDF/ALS on real data before enabling learned components.
 - ⬜ **Hawkes estimation via MLE.** Fit α/β for both kernels from real event trajectories, instead of fixed constants.
 - ⬜ **Per-user fatigue calibration.** Learn individual `μ_rest`, `k1`, `k2` from observed behavior (with consent), synced through the existing Edge endpoints.
 
@@ -54,7 +54,7 @@ Status legend: ✅ done · 🟡 partial · ⬜ planned.
 
 - ⬜ **Fail-closed `JWT_SECRET`** (refuse to start without a secret); signing-method allowlist.
 - ⬜ CORS restricted to known origins; rate limiting; security headers.
-- ⬜ Observability (structured logs without PII, metrics, tracing) and CI (build + tests for all three layers on every PR).
+- 🟡 Structured logs, metrics, request correlation, readiness, and three-layer CI are implemented. Distributed tracing remains planned.
 - ⬜ Migrate anonymization to use real `last_active` (today it uses `updated_at`) and cascade across behavioral rows.
 
 ## Phase 6 — Research extensions

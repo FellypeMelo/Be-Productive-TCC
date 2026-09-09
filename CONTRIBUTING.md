@@ -6,7 +6,7 @@ Thanks for considering a contribution. This is an academic capstone project (TCC
 
 - Skim [`README.md`](README.md) for the architecture and the three-tier trust boundary (frontend → Go → Python, never frontend → Python directly).
 - Skim [`CLAUDE.md`](CLAUDE.md) for the layer-by-layer structure, data flow, and the project's own list of known shortcuts (deterministic safety classifiers, unfitted hybrid recommender, etc.) — don't "fix" those silently; see [`docs/en/roadmap.md`](docs/en/roadmap.md) first, they are usually intentional and documented.
-- There is currently **no CI pipeline**. You are responsible for running the relevant test suite(s) yourself before opening a pull request.
+- CI runs all three layer gates. Run the relevant suite locally before opening a pull request for faster feedback.
 
 ## Project layout
 

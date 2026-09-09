@@ -32,9 +32,12 @@ do código que a torna verdadeira. Gerado após a correção de coerência de 20
 | Afirmação do artigo | Verdade no código | Arquivo |
 |---|---|---|
 | **Edge AI**: inferência de fadiga estritamente no dispositivo | EDO + Hawkes rodam **no navegador**; telemetria bruta nunca sai do device | `frontend/src/lib/fatigue.ts` |
-| Servidor recebe apenas ordens/sinais | Frontend fala **só com o Go**; `RECOMMENDER_URL` removido; sem upload de `v_scroll`/`v_alt` | `frontend/src/lib/api.ts` |
+| Servidor recebe apenas ordens/sinais | Frontend envia ao Go somente a ordem binária `protective_mode_active`; não envia `v_scroll`, `v_alt`, reserva ou nível de fricção | `frontend/src/lib/api.ts`, `frontend/src/routes/feed/+page.svelte` |
 | Fricção positiva (Algoritmo 3) ao esgotar reserva | Nível derivado localmente de `R/R_max`; **fail-closed**; bloqueio com confirmação deliberada | `frontend/src/routes/feed/+page.svelte` |
+| Conteúdo denso durante ciclo impulsivo | Ordem protetiva filtra candidatos abaixo do limiar de suporte atencional (qualidade + profundidade) e o Go não usa feed irrestrito como fallback | `recommender/src/application/recommendation_use_case.py`, `backend/internal/usecase/content/service.go` |
 | Pacto de Ulisses (meta em estado lúcido, travada) | Modo Absoluto **derivado da sessão de foco ativa** no servidor, não de flag por requisição | `backend/internal/usecase/content/service.go`, `adapter/repository/mysql/focus_repo.go` |
+
+O ranking observável dá 72% do peso positivo à afinidade com a intenção declarada e à qualidade do conteúdo. Histórico de reação recebe 8%, com prior Bayesiano e confiança proporcional à evidência; isso impede que um clique isolado ou popularidade imediata dominem o feed.
 
 ## Segurança (não é afirmação do artigo, mas requisito de um sistema de proteção)
 
@@ -43,9 +46,9 @@ do código que a torna verdadeira. Gerado após a correção de coerência de 20
 | Hashing de senha | **bcrypt** (upgrade transparente de SHA-256 legado no login) | `backend/internal/usecase/user/service.go` |
 | Identidade da requisição | Derivada do **JWT**, não do corpo/query (IDOR-safe; 403 em divergência) | `backend/internal/adapter/http/handler/*.go` |
 | Endpoints internos do Python | Guarda `X-Internal-Auth` (`RECOMMENDER_SHARED_SECRET`) | `recommender/src/api/deps.py` |
+| Segredos e origem | `JWT_SECRET` sem default inseguro; segredo interno obrigatório em produção; CORS por allowlist | `backend/internal/infrastructure/config/config.go`, `recommender/src/api/main.py` |
 
 ## Pendências conhecidas (transparência)
 
-- Classificadores de segurança e o escore híbrido são **stand-ins determinísticos documentados**, não modelos ONNX/treinados reais — reprodutíveis e honestamente rotulados, prontos para substituição.
+- Segurança usa baseline lexical auditável e ranking híbrido usa sinais observáveis. Nenhum deles é apresentado como modelo ONNX/treinado.
 - O **texto publicado** (seção de Metodologia) ainda descreve o desenho antigo; alinhar o texto (corrigendum) é decisão dos autores.
-- `JWT_SECRET` default hardcoded e CORS `*` permanecem como itens de hardening (Tier 1) fora do escopo desta rodada, exceto bcrypt/IDOR já aplicados.

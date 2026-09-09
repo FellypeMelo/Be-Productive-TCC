@@ -13,7 +13,8 @@ These internal docs are mirrored in two languages, with matching filenames and s
 | Academic impact | [`en/impact.md`](en/impact.md) | [`pt-BR/impact.md`](pt-BR/impact.md) |
 | Roadmap | [`en/roadmap.md`](en/roadmap.md) | [`pt-BR/roadmap.md`](pt-BR/roadmap.md) |
 | Security posture | [`en/security.md`](en/security.md) | [`pt-BR/security.md`](pt-BR/security.md) |
+| Milestones | [`en/milestones.md`](en/milestones.md) | [`pt-BR/milestones.md`](pt-BR/milestones.md) |
 
-Language-neutral assets (if any are added later — e.g. an `openapi.yaml`, `.puml` diagram sources, or images) live under `en/` only and are linked from both trees rather than duplicated.
+Language-neutral assets, including [`openapi.yaml`](openapi.yaml), live at this level and are linked from both trees.
 
 For the root-level, GitHub-facing documents (project README, contribution guide, vulnerability-disclosure policy, changelog), see the repository root: [`../README.md`](../README.md) ([`../README.pt-BR.md`](../README.pt-BR.md) for the pt-BR variant), [`../CONTRIBUTING.md`](../CONTRIBUTING.md), [`../SECURITY.md`](../SECURITY.md), [`../CHANGELOG.md`](../CHANGELOG.md).

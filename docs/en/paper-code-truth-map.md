@@ -32,9 +32,12 @@ point in the code that makes it true. Generated after the 2026-07-09 coherence p
 | Paper claim | Truth in the code | File |
 |---|---|---|
 | **Edge AI**: fatigue inference strictly on-device | ODE + Hawkes run **in the browser**; raw telemetry never leaves the device | `frontend/src/lib/fatigue.ts` |
-| Server receives only orders/signals | Frontend talks **only to Go**; `RECOMMENDER_URL` removed; no upload of `v_scroll`/`v_alt` | `frontend/src/lib/api.ts` |
+| Server receives only orders/signals | Frontend sends Go only the `protective_mode_active` binary order; it does not send `v_scroll`, `v_alt`, reserve, or friction level | `frontend/src/lib/api.ts`, `frontend/src/routes/feed/+page.svelte` |
 | Positive friction (Algorithm 3) when reserve is depleted | Level derived locally from `R/R_max`; **fail-closed**; blocking requires deliberate confirmation | `frontend/src/routes/feed/+page.svelte` |
+| Dense content during an impulsive cycle | The protective order filters candidates below the attention-support threshold (quality + depth), and Go never substitutes an unrestricted fallback feed | `recommender/src/application/recommendation_use_case.py`, `backend/internal/usecase/content/service.go` |
 | Ulysses Pact (goal set in a lucid state, then locked) | Absolute Mode **derived from the active focus session** on the server, not from a per-request flag | `backend/internal/usecase/content/service.go`, `adapter/repository/mysql/focus_repo.go` |
+
+The observable ranker assigns 72% of its positive weight to declared-intent affinity and content quality. Reaction history receives 8%, with a Bayesian prior and evidence-weighted confidence, so a single click or immediate popularity cannot dominate the feed.
 
 ## Security (not a paper claim, but a requirement for a protection system)
 
@@ -43,9 +46,9 @@ point in the code that makes it true. Generated after the 2026-07-09 coherence p
 | Password hashing | **bcrypt** (transparent upgrade from legacy SHA-256 on login) | `backend/internal/usecase/user/service.go` |
 | Request identity | Derived from the **JWT**, not the body/query (IDOR-safe; 403 on mismatch) | `backend/internal/adapter/http/handler/*.go` |
 | Python's internal endpoints | Guarded by `X-Internal-Auth` (`RECOMMENDER_SHARED_SECRET`) | `recommender/src/api/deps.py` |
+| Secrets and origins | No insecure `JWT_SECRET` default; internal secret required in production; allowlisted CORS | `backend/internal/infrastructure/config/config.go`, `recommender/src/api/main.py` |
 
 ## Known gaps (transparency)
 
-- Safety classifiers and the hybrid score are **documented deterministic stand-ins**, not real trained/ONNX models — reproducible and honestly labeled, ready for replacement.
+- Safety is an auditable lexical baseline and hybrid ranking uses observable signals. Neither is presented as a trained/ONNX model.
 - The **published text** (Methodology section) still describes the earlier design; aligning the text (a corrigendum) is a decision for the authors.
-- A hardcoded default `JWT_SECRET` and wildcard CORS remain as hardening items (Tier 1) outside the scope of this round, except for the bcrypt/IDOR fixes already applied.

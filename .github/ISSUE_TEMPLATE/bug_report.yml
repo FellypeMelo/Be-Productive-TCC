@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug. This repository has **no CI pipeline**, so please include exact commands and output — it's the fastest way for a maintainer to reproduce the issue without a full environment already running.
+        Thanks for reporting a bug. Include exact commands and output so maintainers can reproduce failures beyond the automated CI coverage.
 
   - type: dropdown
     id: layer

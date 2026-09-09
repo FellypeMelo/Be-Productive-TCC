@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: Be-Productive Gateway API
+  version: 2.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /feed:
+    get:
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: category, in: query, schema: {type: string, enum: [PRODUTIVIDADE, ENTRETENIMENTO]}}
+        - {name: topic_id, in: query, schema: {type: integer, minimum: 1}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 50, default: 20}}
+      responses:
+        "200": {description: Ranked feed with model metadata and explanations}
+  /content/{id}/events:
+    post:
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: integer}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ContentEvent"}
+      responses:
+        "202": {description: Idempotent event accepted}
+        "400": {description: Invalid event}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  schemas:
+    ContentEvent:
+      type: object
+      required: [event_id, type, dwell_seconds, position, algorithm, experiment, friction_level]
+      properties:
+        event_id: {type: string, maxLength: 64}
+        type: {type: string, enum: [impression, open, complete, hide]}
+        dwell_seconds: {type: integer, minimum: 0}
+        position: {type: integer, minimum: 0}
+        algorithm: {type: string, maxLength: 64}
+        experiment: {type: string, maxLength: 64}
+        friction_level: {type: string, enum: [none, mild, high, block]}

@@ -30,7 +30,7 @@ It was developed as a final-year capstone project (**TCC — Trabalho de Conclus
 | ABM validation (d = 3.25) | A **confound-free** experiment: recovery (μ_rest) is identical in both arms and load is endogenous; d = 3.25 reproduced by a seeded run, with an **ablation table** and a **sanity check** (mechanisms off → d ≈ 0) |
 | Hawkes processes (Eq. 2) | A **real** self-exciting point process, summed over event history (not a single exponential of the mean delay) |
 | Thompson Sampling | Beta posteriors that **actually update** from observed reward |
-| Min-Norm filtering (Eq. 3) | **Exercised** in content selection for validation; deterministic, reproducible safety classifiers |
+| Min-Norm filtering (Eq. 3) | **Exercised** with an auditable text-based safety baseline over title, body, and tags |
 | Edge AI / on-device inference | The fatigue ODE + Hawkes process run **in the browser** (`frontend/src/lib/fatigue.ts`); raw telemetry never leaves the device |
 | Ulysses Pact | Absolute Mode is **enforced server-side** from the active focus session, not from a client-controlled flag |
 | — (production hardening) | bcrypt instead of SHA-256, JWT-derived identity (no IDOR), internal shared-secret guard between Go and the recommender |
@@ -46,7 +46,7 @@ Core features:
 - **On-device positive friction** — desaturation and slowdown as cognitive reserve drops
 - **Content moderation** — multi-objective safety aggregation
 
-The project is candid about where it currently falls short of a production system: safety classifiers and the hybrid recommender are explicitly documented as **deterministic stand-ins**, not trained models — see [`docs/en/roadmap.md`](docs/en/roadmap.md) and the "Important Notes" section of [`CLAUDE.md`](CLAUDE.md).
+The project is candid about where it currently falls short of a production system: safety uses an auditable lexical baseline and ranking uses observable product signals, not trained safety/ALS models — see [`docs/en/roadmap.md`](docs/en/roadmap.md) and [`docs/en/milestones.md`](docs/en/milestones.md).
 
 ## Interdisciplinary relevance
 
@@ -76,13 +76,13 @@ flowchart LR
     end
     DB[(MySQL 8)]
 
-    FE -- "HTTP + JWT\n(friction verdict only,\nno raw telemetry)" --> GO
+    FE -- "HTTP + JWT\n(binary protection order,\nno raw telemetry)" --> GO
     GO -- "HTTP POST\nX-Internal-Auth" --> PY
     GO --> DB
     PY -. "reads conteudo\n(read-only)" .-> DB
 ```
 
-The frontend talks **only** to the Go backend, never directly to Python. Fatigue inference (the Ego-Depletion ODE and the bi-kernel Hawkes process from the paper) runs **on-device** in the browser, so raw scroll/interaction telemetry never leaves the client — the server only ever receives a friction verdict. Python is invoked exclusively by Go, only for feed generation.
+The frontend talks **only** to the Go backend, never directly to Python. Fatigue inference (the Ego-Depletion ODE and the bi-kernel Hawkes process from the paper) runs **on-device** in the browser, so scroll velocity, context switches, reserve, and friction level never leave the client — the server receives only a binary protection order for feed generation. Python is invoked exclusively by Go.
 
 The repository also ships a standalone **Agent-Based Simulation** (`recommender/src/abm`) used purely for offline statistical validation — it is not part of the runtime request path.
 
@@ -131,7 +131,7 @@ pip install -r requirements.txt
 uvicorn src.api.main:app --port 8002 --reload
 ```
 
-> `recommender/.env.example` currently lists `PORT=8001`, which is stale — every other place in the codebase (Go's default `RECOMMENDER_URL`, `CLAUDE.md`, the per-layer READMEs, and `start.bat`) uses **8002**. Pass `--port 8002` explicitly, as shown above, until that file is corrected.
+The recommender listens on port **8002** across local scripts, examples, and Compose.
 
 ### 4. Frontend (SvelteKit, port 5173)
 
@@ -190,7 +190,7 @@ Re-verified while preparing this documentation (commands run directly against th
 | Frontend (types) | `cd frontend && npm run check` | `svelte-check` — 0 errors, 0 warnings |
 | Frontend (E2E) | `cd frontend && npx playwright test` | 3 Playwright specs exist (`auth`, `feed`, `focus`, plus a `global-setup`) — not executed here; they require the full stack (MySQL + all three services) running live |
 
-**There is no CI workflow in this repository** (`.github/workflows/` did not exist before this documentation pass). Every command above is run manually today. Treat any third-party badge or claim of "build passing" for this repository with suspicion unless a workflow file is actually present.
+The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs backend tests, recommender tests, frontend type-check/tests, and the frontend production build on every pull request.
 
 `CLAUDE.md` previously stated the frontend had "no test runner configured" — that was inaccurate (`vitest` is a real devDependency and the two files above are real tests); this has been corrected in that file.
 
@@ -269,7 +269,7 @@ Per-layer READMEs — currently Portuguese only, not yet mirrored in English as 
 
 ## Roadmap
 
-See [`docs/en/roadmap.md`](docs/en/roadmap.md) for the phased plan from the current deterministic stand-ins (safety classifiers, hybrid recommender) toward trained/ONNX models, Edge-AI maturity, in-vivo validation, and production hardening.
+See [`docs/en/roadmap.md`](docs/en/roadmap.md) for the remaining path toward trained/ONNX models and in-vivo validation. Implemented engineering milestones are tracked in [`docs/en/milestones.md`](docs/en/milestones.md).
 
 ## License
 

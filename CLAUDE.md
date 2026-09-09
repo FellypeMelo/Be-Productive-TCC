@@ -137,8 +137,8 @@ Both Go and Python connect to the same MySQL database. Go writes and reads; Pyth
 ## Important Notes
 
 - Password hashing uses **bcrypt** (`DefaultCost`); legacy SHA-256 hashes are verified once and transparently re-hashed to bcrypt on next successful login
-- Safety classifiers are **deterministic stand-ins** (stable per-`content_id` hash → reproducible probabilities, ~10% flagged higher-risk); infrastructure supports real ONNX models when available
-- HybridRecommender is not fitted; the scorer returns a **documented deterministic per-content heuristic** in [0.3, 0.9] (not a silent 0.5, not random)
+- Safety is a deterministic lexical baseline over title, body, and tags; infrastructure supports real ONNX models when labeled data becomes available
+- Runtime ranking uses observable affinity, quality, recency, feedback, repetition, and stable exploration; TF-IDF/ALS remain unfitted until real training data exists
 - **Edge AI is real**: the Ego-Depletion EDO (Eq. 4) and Hawkes dual-kernel (Eq. 2) run **on-device** in the browser (`frontend/src/lib/fatigue.ts`); raw telemetry (`v_scroll`, `v_alt`) never leaves the device. The frontend talks **only** to Go (port 8080)
 - Python's internal endpoints (recommend/fatigue/behavior) require an `X-Internal-Auth` header matching `RECOMMENDER_SHARED_SECRET` when that env var is set (open in dev when unset). Go sends it on the feed call
 - Go handlers derive the acting user from the **JWT claims**, not from request bodies/queries (IDOR-safe); Absolute Mode / Ulysses Pact is enforced server-side from the user's active focus session

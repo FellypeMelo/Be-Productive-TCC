@@ -27,7 +27,7 @@ O artigo apresenta a arquitetura como uma **possibilidade técnica** — demonst
 | Validação por ABM (d = 3.25) | Experimento **sem confundimento**: recuperação (μ_rest) igual nos dois braços e carga endógena; d = 3.25 reproduzido por execução semeada, com **tabela de ablação** e **teste de sanidade** (mecanismos desligados → d ≈ 0) |
 | Processos de Hawkes (Eq. 2) | Ponto auto-excitante **real**, somado sobre o histórico de eventos (não mais um único exponencial do atraso médio) |
 | Thompson Sampling | Posteriores Beta que **de fato atualizam** com a recompensa observada |
-| Filtragem Min-Norm (Eq. 3) | **Exercida** na seleção de conteúdo da validação; classificadores determinísticos e reprodutíveis |
+| Filtragem Min-Norm (Eq. 3) | **Exercida** com baseline textual auditável sobre título, corpo e tags |
 | Edge AI / on-device | EDO de fadiga + Hawkes rodam **no navegador** (`frontend/src/lib/fatigue.ts`); telemetria bruta nunca sai do dispositivo |
 | Pacto de Ulisses | Modo Absoluto **enforçado no servidor** a partir da sessão de foco ativa, não de um flag de cliente |
 | — (robustez de produção) | bcrypt no lugar de SHA-256, identidade derivada do JWT (sem IDOR), guarda de segredo interno no recomendador |
@@ -72,7 +72,7 @@ Frontend (SvelteKit :5173)  ──HTTP/JWT──►  Go Backend (:8080)  ──H
     fricção local)                           comunidades)                        Thompson)
 ```
 
-O **frontend fala apenas com o Go**. A inferência de fadiga (EDO + Hawkes) roda **no dispositivo**; o servidor recebe apenas o veredito de fricção. O Python é chamado somente pelo Go (geração de feed).
+O **frontend fala apenas com o Go**. A inferência de fadiga (EDO + Hawkes) roda **no dispositivo**; o servidor recebe somente uma ordem binária de proteção, sem rolagem, trocas de contexto, reserva ou nível de fricção. O Python é chamado somente pelo Go (geração de feed).
 
 ```
 Be-Productive/
