@@ -30,6 +30,10 @@ type Service struct {
 	jwtKey []byte
 }
 
+// ResearchConsentVersion is bumped whenever the consent language or protocol
+// changes. The server controls this value; clients submit only the boolean.
+const ResearchConsentVersion = "sustainable-attention-v1"
+
 // NewService creates a new user service
 func NewService(repo Repository, jwtKey string) *Service {
 	return &Service{
@@ -206,5 +210,13 @@ func (s *Service) GetSettings(ctx context.Context, userID int64) (*domain.UserSe
 
 // UpdateSettings modifies user preferences (UC17)
 func (s *Service) UpdateSettings(ctx context.Context, settings *domain.UserSettings) error {
+	if settings == nil || settings.UsuarioID < 1 {
+		return domain.ErrInvalidInput
+	}
+	if settings.PesquisaConsentimento {
+		settings.PesquisaConsentimentoVersao = ResearchConsentVersion
+	} else {
+		settings.PesquisaConsentimentoVersao = ""
+	}
 	return s.repo.UpdateSettings(ctx, settings)
 }

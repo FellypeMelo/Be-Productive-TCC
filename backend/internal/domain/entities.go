@@ -74,6 +74,23 @@ type ContentInteraction struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+// ExperimentExposure records the minimum server-side exposure contract for an
+// eligible real-user experiment. It intentionally contains no raw telemetry.
+type ExperimentExposure struct {
+	EventID           string    `json:"event_id"`
+	ExperimentID      string    `json:"experiment_id"`
+	Variant           string    `json:"variant"`
+	AssignmentVersion string    `json:"assignment_version"`
+	AlgorithmVersion  string    `json:"algorithm_version"`
+	RequestID         string    `json:"request_id"`
+	UserID            int64     `json:"user_id"`
+	Eligible          bool      `json:"eligible"`
+	Served            bool      `json:"served"`
+	Fallback          bool      `json:"fallback"`
+	PositionCount     int       `json:"position_count"`
+	CreatedAt         time.Time `json:"created_at"`
+}
+
 // FocusGoalStatus enum
 type FocusGoalStatus string
 
@@ -98,6 +115,8 @@ type UserSettings struct {
 	SugestaoSaudavelAtiva bool  `json:"sugestao_saudavel_ativa"`
 	PersonalizacaoAtiva   bool  `json:"personalizacao_ativa"`
 	NotificacaoFocoAtiva  bool  `json:"notificacao_foco_ativa"`
+	PesquisaConsentimento bool  `json:"consentimento_pesquisa"`
+	PesquisaConsentimentoVersao string `json:"consentimento_pesquisa_versao,omitempty"`
 }
 
 // Session represents a focus session

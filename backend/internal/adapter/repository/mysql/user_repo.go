@@ -132,13 +132,15 @@ func (r *UserRepository) GetTopics(ctx context.Context, userID int64) ([]domain.
 // GetSettings retrieves user configuration (UC17)
 func (r *UserRepository) GetSettings(ctx context.Context, userID int64) (*domain.UserSettings, error) {
 	query := `
-		SELECT id_usuario, sugestao_saudavel_ativa, personalizacao_ativa, notificacao_foco_ativa
+		SELECT id_usuario, sugestao_saudavel_ativa, personalizacao_ativa,
+		       notificacao_foco_ativa, consentimento_pesquisa, consentimento_pesquisa_versao
 		FROM usuario_configuracao WHERE id_usuario = ?
 	`
 	settings := &domain.UserSettings{}
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&settings.UsuarioID, &settings.SugestaoSaudavelAtiva,
-		&settings.PersonalizacaoAtiva, &settings.NotificacaoFocoAtiva)
+		&settings.PersonalizacaoAtiva, &settings.NotificacaoFocoAtiva,
+		&settings.PesquisaConsentimento, &settings.PesquisaConsentimentoVersao)
 
 	if err == sql.ErrNoRows {
 		return &domain.UserSettings{
@@ -146,6 +148,7 @@ func (r *UserRepository) GetSettings(ctx context.Context, userID int64) (*domain
 			SugestaoSaudavelAtiva: true,
 			PersonalizacaoAtiva:   true,
 			NotificacaoFocoAtiva:  true,
+			PesquisaConsentimento: false,
 		}, nil
 	}
 	if err != nil {
@@ -157,16 +160,21 @@ func (r *UserRepository) GetSettings(ctx context.Context, userID int64) (*domain
 // UpdateSettings updates user configuration (UC17)
 func (r *UserRepository) UpdateSettings(ctx context.Context, settings *domain.UserSettings) error {
 	query := `
-		INSERT INTO usuario_configuracao (id_usuario, sugestao_saudavel_ativa, personalizacao_ativa, notificacao_foco_ativa)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO usuario_configuracao
+			(id_usuario, sugestao_saudavel_ativa, personalizacao_ativa,
+			 notificacao_foco_ativa, consentimento_pesquisa, consentimento_pesquisa_versao)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 			sugestao_saudavel_ativa = VALUES(sugestao_saudavel_ativa),
 			personalizacao_ativa = VALUES(personalizacao_ativa),
-			notificacao_foco_ativa = VALUES(notificacao_foco_ativa)
+			notificacao_foco_ativa = VALUES(notificacao_foco_ativa),
+			consentimento_pesquisa = VALUES(consentimento_pesquisa),
+			consentimento_pesquisa_versao = VALUES(consentimento_pesquisa_versao)
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		settings.UsuarioID, settings.SugestaoSaudavelAtiva,
-		settings.PersonalizacaoAtiva, settings.NotificacaoFocoAtiva)
+		settings.PersonalizacaoAtiva, settings.NotificacaoFocoAtiva,
+		settings.PesquisaConsentimento, settings.PesquisaConsentimentoVersao)
 	return err
 }
 
