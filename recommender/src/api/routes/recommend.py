@@ -1,8 +1,8 @@
 """Recommendation endpoints (Strict SRP and DI)"""
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import Optional, List, Literal
+from pydantic import BaseModel, Field
+from typing import Dict, Optional, List, Literal
 
 from src.application.recommendation_use_case import RecommendationUseCase
 from src.infrastructure.repositories import MySQLContentRepository
@@ -10,18 +10,21 @@ from src.infrastructure.safety_gateway import ToxicitySafetyGateway
 from src.infrastructure.hybrid_scorer import HybridScorer
 from src.inference.hawkes_classifier import HawkesClassifier
 from src.api.deps import get_fatigue_use_case
+from src.application.experiments import stable_variant
 
 router = APIRouter()
 
 class RecommendRequest(BaseModel):
     """Request schema for recommendations (RF014)"""
-    user_id: int
+    user_id: int = Field(gt=0)
     category: Optional[Literal["PRODUTIVIDADE", "ENTRETENIMENTO"]] = None
-    topic_id: Optional[int] = None
-    limit: int = 20
+    topic_id: Optional[int] = Field(default=None, gt=0)
+    limit: int = Field(default=20, ge=1, le=50)
     # Added Absolute Mode Support
     absolute_mode_active: bool = False
-    declared_goal: Optional[str] = None
+    declared_goal: Optional[Literal["PRODUTIVIDADE", "ENTRETENIMENTO"]] = None
+    # Binary order computed on-device. Raw fatigue telemetry is never sent.
+    protective_mode_active: bool = False
 
 class RecommendResponse(BaseModel):
     """Response schema for recommendations"""
@@ -29,6 +32,8 @@ class RecommendResponse(BaseModel):
     scores: List[float]
     model_version: str
     friction_level: Optional[str] = None  # NEW: from fatigue policy
+    experiment: str
+    explanations: Dict[int, List[str]]
 
 class ThompsonResponse(BaseModel):
     user_id: int
@@ -38,15 +43,14 @@ class ThompsonResponse(BaseModel):
 
 # Dependency Injection Builders
 _hybrid_scorer = HybridScorer()
+_recommendation_use_case = RecommendationUseCase(
+    MySQLContentRepository(hybrid_scorer=_hybrid_scorer),
+    ToxicitySafetyGateway(),
+    HawkesClassifier(alpha1=0.8, beta1=0.5, alpha2=0.5, beta2=0.01),
+)
 
 def get_recommendation_use_case():
-    repo = MySQLContentRepository(hybrid_scorer=_hybrid_scorer)
-    safety_gateway = ToxicitySafetyGateway()
-    hawkes_clf = HawkesClassifier(
-        alpha1=0.8, beta1=0.5,    # System 1: high arousal, fast decay
-        alpha2=0.5, beta2=0.01,   # System 2: moderate arousal, slow decay
-    )
-    return RecommendationUseCase(repo, safety_gateway, hawkes_clf)
+    return _recommendation_use_case
 
 @router.post("/recommend", response_model=RecommendResponse)
 async def recommend(request: RecommendRequest, use_case: RecommendationUseCase = Depends(get_recommendation_use_case)):
@@ -62,7 +66,10 @@ async def recommend(request: RecommendRequest, use_case: RecommendationUseCase =
             user_id=request.user_id,
             limit=request.limit,
             absolute_mode_active=request.absolute_mode_active,
-            declared_goal=request.declared_goal
+            declared_goal=request.declared_goal,
+            category=request.category,
+            topic_id=request.topic_id,
+            protective_mode_active=request.protective_mode_active,
         )
 
         # Check fatigue policy (Algorithm 3)
@@ -72,11 +79,13 @@ async def recommend(request: RecommendRequest, use_case: RecommendationUseCase =
         return RecommendResponse(
             content_ids=[item.content_id for item in results],
             scores=[item.perceived_value for item in results],
-            model_version="1.1.0-PaperCompliant",
+            model_version="2.2.0-sustainable-attention",
             friction_level=friction.value,
+            experiment=stable_variant(request.user_id),
+            explanations={item.content_id: item.explanations for item in results},
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="recommendation service unavailable")
 
 
 @router.get("/recommend/{user_id}")
@@ -96,11 +105,13 @@ async def recommend_get(
         return {
             "content_ids": [item.content_id for item in results],
             "scores": [item.perceived_value for item in results],
-            "model_version": "1.1.0-PaperCompliant",
+            "model_version": "2.2.0-sustainable-attention",
             "friction_level": friction.value,
+            "experiment": stable_variant(user_id),
+            "explanations": {item.content_id: item.explanations for item in results},
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="recommendation service unavailable")
 
 
 @router.get("/recommend/thompson/{user_id}", response_model=ThompsonResponse)

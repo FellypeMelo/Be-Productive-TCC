@@ -11,7 +11,7 @@ from src.domain.math_models import thompson_sampling_choice, calculate_hawkes_ac
 
 
 class MockContentRepo(ContentRepositoryInterface):
-    def get_candidate_contents(self, category=None, user_id=None):
+    def get_candidate_contents(self, category=None, user_id=None, topic_id=None):
         return [
             ContentItem(1, "PRODUTIVIDADE", 0.8),
             ContentItem(2, "ENTRETENIMENTO", 0.9),
@@ -111,6 +111,80 @@ def test_hawkes_penalizes_entertainment_during_impulsive_state():
     for rec in recs:
         if rec.category == "ENTRETENIMENTO":
             assert rec.perceived_value < 0.10, f"Expected <0.10 for entertainment, got {rec.perceived_value}"
+            assert "impulsive_state_penalty" in rec.explanations
+
+
+def test_diversity_uses_cumulative_category_exposure():
+    items = [
+        ContentItem(1, "PRODUTIVIDADE", 0.90),
+        ContentItem(2, "PRODUTIVIDADE", 0.88),
+        ContentItem(3, "ENTRETENIMENTO", 0.86),
+    ]
+    for item in items:
+        item.perceived_value = item.base_score
+
+    ranked = RecommendationUseCase._diversify(items)
+
+    assert [item.content_id for item in ranked] == [1, 3, 2]
+    assert "diversity_rerank" in ranked[1].explanations
+
+
+def test_diversity_never_promotes_large_relevance_loss():
+    items = [
+        ContentItem(1, "PRODUTIVIDADE", 0.90),
+        ContentItem(2, "PRODUTIVIDADE", 0.88),
+        ContentItem(3, "ENTRETENIMENTO", 0.70),
+    ]
+    for item in items:
+        item.perceived_value = item.base_score
+
+    ranked = RecommendationUseCase._diversify(items)
+
+    assert [item.content_id for item in ranked[:2]] == [1, 2]
+
+
+def test_protective_mode_keeps_only_attention_supporting_content():
+    class ProtectiveRepo(ContentRepositoryInterface):
+        def get_candidate_contents(self, category=None, user_id=None, topic_id=None):
+            return [
+                ContentItem(
+                    10, "ENTRETENIMENTO", 0.95,
+                    title="Clique agora", body="Surpresa!", quality_score=0.35,
+                ),
+                ContentItem(
+                    20, "ENTRETENIMENTO", 0.82,
+                    title="Ensaio sobre cinema lento",
+                    body=" ".join(["análise"] * 180),
+                    quality_score=0.9,
+                ),
+            ]
+
+    use_case = RecommendationUseCase(
+        ProtectiveRepo(), MockSafetyClassifier(), MockHawkesClassifier()
+    )
+
+    recommendations = use_case.generate_recommendations(
+        user_id=1, limit=10, protective_mode_active=True
+    )
+
+    assert [item.content_id for item in recommendations] == [20]
+    assert "protective_dense_content" in recommendations[0].explanations
+
+
+def test_protective_mode_can_return_an_empty_feed():
+    class ShallowRepo(ContentRepositoryInterface):
+        def get_candidate_contents(self, category=None, user_id=None, topic_id=None):
+            return [ContentItem(10, "ENTRETENIMENTO", 0.95, quality_score=0.2)]
+
+    use_case = RecommendationUseCase(
+        ShallowRepo(), MockSafetyClassifier(), MockHawkesClassifier()
+    )
+
+    recommendations = use_case.generate_recommendations(
+        user_id=1, protective_mode_active=True
+    )
+
+    assert recommendations == []
 
 
 # ---- Quality score edge cases ----

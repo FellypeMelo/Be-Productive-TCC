@@ -3,11 +3,14 @@ Be-Productive Recommendation Engine
 FastAPI application entry point
 """
 
+import os
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.deps import require_internal_auth
 from src.api.routes import recommend, health, fatigue, behavior
+from src.infrastructure.observability import metrics_response, observe_request
 
 app = FastAPI(
     title="Be-Productive Recommender",
@@ -16,13 +19,19 @@ app = FastAPI(
 )
 
 # CORS middleware
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:8080").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:8080"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.middleware("http")(observe_request)
 
 # Include routers.
 # Health stays public (liveness/readiness probes). The recommend / fatigue /
@@ -49,3 +58,8 @@ async def root():
         "version": "2.0.0",
         "status": "running"
     }
+
+
+@app.get("/metrics", include_in_schema=False)
+async def metrics():
+    return metrics_response()

@@ -6,6 +6,7 @@ fricção de OUTRA — logo o `friction_level` do feed era eternamente `NONE`. C
 o singleton aqui garante que os dois caminhos compartilhem o mesmo estado de fadiga.
 """
 import os
+import hmac
 from typing import Optional
 
 from fastapi import Header, HTTPException, status
@@ -38,8 +39,13 @@ def require_internal_auth(
     """
     secret = os.getenv("RECOMMENDER_SHARED_SECRET", "").strip()
     if not secret:
+        if os.getenv("APP_ENV", "development").lower() == "production":
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Internal authentication is not configured",
+            )
         return  # dev mode: no secret configured -> open
-    if x_internal_auth != secret:
+    if x_internal_auth is None or not hmac.compare_digest(x_internal_auth, secret):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing X-Internal-Auth header",

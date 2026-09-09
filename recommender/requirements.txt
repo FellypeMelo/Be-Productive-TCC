@@ -17,3 +17,4 @@ seaborn>=0.13
 
 # Test dependency
 pytest>=8.0
+httpx2>=0.1.0

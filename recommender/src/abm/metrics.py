@@ -1,7 +1,7 @@
 import numpy as np
 
 # np.trapz foi renomeado para np.trapezoid no NumPy 2.0; mantém compatibilidade.
-_trapezoid = getattr(np, "trapezoid", np.trapz)
+_trapezoid = getattr(np, "trapezoid", None) or getattr(np, "trapz")
 
 
 def calculate_auc(r_curve: list, dt: float) -> float:

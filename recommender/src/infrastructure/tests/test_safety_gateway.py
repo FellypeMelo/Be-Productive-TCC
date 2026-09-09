@@ -2,6 +2,7 @@ import pytest
 from src.infrastructure.safety_gateway import ToxicitySafetyGateway
 from src.application.interfaces import SafetyClassifierInterface
 from src.domain.value_objects import SafetyProbability
+from src.application.interfaces import ContentItem
 
 
 def test_gateway_implements_safety_classifier_interface():
@@ -59,11 +60,11 @@ def test_same_content_id_yields_identical_probabilities():
     assert first == third
 
 
-def test_different_content_ids_generally_differ():
-    """Distinct content ids should not all collapse to one probability vector."""
+def test_textual_risk_changes_probabilities():
+    """Gateway evaluates content text, not opaque database ids."""
     gw = ToxicitySafetyGateway()
-    vectors = {
-        tuple(p.value for p in gw.infer_safety_probabilities(content_id=cid))
-        for cid in range(50)
-    }
-    assert len(vectors) > 1
+    safe = ContentItem(1, "PRODUTIVIDADE", 0.8, title="Como estudar com calma")
+    risky = ContentItem(2, "ENTRETENIMENTO", 0.8, title="Chocante: agora ou nunca, não pare")
+    safe_probs = gw.infer_content_probabilities(safe)
+    risky_probs = gw.infer_content_probabilities(risky)
+    assert max(p.value for p in risky_probs) > max(p.value for p in safe_probs)

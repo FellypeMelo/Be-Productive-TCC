@@ -3,20 +3,47 @@ from typing import List, Optional
 from src.domain.value_objects import SafetyProbability
 
 class ContentItem:
-    """Mock/DTO structure for content items passing through the application layer."""
-    def __init__(self, content_id: int, category: str, base_score: float):
+    """Content candidate plus observable ranking features."""
+    def __init__(
+        self,
+        content_id: int,
+        category: str,
+        base_score: float,
+        title: str = "",
+        body: str = "",
+        tags: str = "",
+        quality_score: float = 0.5,
+        topic_affinity: float = 0.0,
+        age_hours: float = 0.0,
+        positive_events: int = 0,
+        negative_events: int = 0,
+        impression_count: int = 0,
+    ):
         self.content_id = content_id
         self.category = category
         self.base_score = base_score
-        # Absolute mode zeroing check
+        self.title = title
+        self.body = body
+        self.tags = tags
+        self.quality_score = quality_score
+        self.topic_affinity = topic_affinity
+        self.age_hours = age_hours
+        self.positive_events = positive_events
+        self.negative_events = negative_events
+        self.impression_count = impression_count
+        # Derived locally by the ranker from content quality and textual depth.
+        # It is not an engagement metric and never contains behavioral telemetry.
+        self.attention_support = 0.0
         self.perceived_value = base_score
+        self.explanations: list[str] = []
 
 class ContentRepositoryInterface(ABC):
     @abstractmethod
     def get_candidate_contents(
         self,
         category: Optional[str] = None,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        topic_id: Optional[int] = None,
     ) -> List[ContentItem]:
         """Fetch candidates from DB, optionally scored for user."""
         pass
@@ -26,6 +53,10 @@ class SafetyClassifierInterface(ABC):
     def infer_safety_probabilities(self, content_id: int) -> List[SafetyProbability]:
         """Fetch multi-model safety probabilities (Predatory/Toxic metrics)."""
         pass
+
+    def infer_content_probabilities(self, item: ContentItem) -> List[SafetyProbability]:
+        """Analyze full content when adapter supports it; preserve old adapters."""
+        return self.infer_safety_probabilities(item.content_id)
 
 class TrajectoryRepositoryInterface(ABC):
     @abstractmethod
