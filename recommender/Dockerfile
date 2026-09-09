@@ -5,6 +5,7 @@ RUN useradd --create-home app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src ./src
+COPY experiment_manifest.sustainable-attention-v1.json evaluation_gate_fixture.json ./
 USER app
 EXPOSE 8002
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8002"]
