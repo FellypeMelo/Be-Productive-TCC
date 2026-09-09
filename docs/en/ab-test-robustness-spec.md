@@ -1,6 +1,6 @@
 # SPEC-AB-001 — Robust A/B test for sustainable attention
 
-**Status:** implementation-ready proposal  
+**Status:** initial operational implementation complete; real-user execution still requires protocol, approval, and planned sample  
 **Version:** 1.0  
 **Scope:** consented real-user experiment, separate from the ABM  
 **Principle:** agency and cognitive reserve > declared intent > efficiency > engagement

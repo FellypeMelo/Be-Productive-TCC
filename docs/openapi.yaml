@@ -27,6 +27,17 @@ paths:
       responses:
         "202": {description: Idempotent event accepted}
         "400": {description: Invalid event}
+  /experiments/exposures:
+    post:
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExperimentExposure"}
+      responses:
+        "202": {description: Idempotent exposure accepted}
+        "400": {description: Invalid exposure contract}
 components:
   securitySchemes:
     bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
@@ -42,3 +53,17 @@ components:
         algorithm: {type: string, maxLength: 64}
         experiment: {type: string, maxLength: 64}
         friction_level: {type: string, enum: [none, mild, high, block]}
+    ExperimentExposure:
+      type: object
+      required: [event_id, experiment_id, variant, assignment_version, algorithm_version, request_id, eligible, served, fallback, position_count]
+      properties:
+        event_id: {type: string, maxLength: 64}
+        experiment_id: {type: string, enum: [sustainable-attention-v1]}
+        variant: {type: string, enum: [control, treatment]}
+        assignment_version: {type: string, enum: [sha256-v1]}
+        algorithm_version: {type: string, maxLength: 64}
+        request_id: {type: string, maxLength: 128}
+        eligible: {type: boolean, const: true}
+        served: {type: boolean}
+        fallback: {type: boolean}
+        position_count: {type: integer, minimum: 0, maximum: 50}

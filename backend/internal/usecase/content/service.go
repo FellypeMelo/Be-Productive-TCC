@@ -307,13 +307,26 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 // handler supplies the authenticated user id; no raw scroll or context data is accepted.
 func (s *Service) RecordExperimentExposure(ctx context.Context, exposure domain.ExperimentExposure) error {
 	if exposure.EventID == "" || len(exposure.EventID) > 64 || exposure.UserID < 1 ||
-		exposure.ExperimentID != "sustainable-attention-v1" ||
-		exposure.AssignmentVersion != "sha256-v1" ||
-		exposure.AlgorithmVersion == "" || len(exposure.AlgorithmVersion) > 64 ||
+		exposure.ExperimentID != ExperimentID ||
+		exposure.AssignmentVersion != AssignmentVersion ||
+		exposure.AlgorithmVersion != AlgorithmVersion ||
 		exposure.RequestID == "" || len(exposure.RequestID) > 128 ||
 		(exposure.Variant != "control" && exposure.Variant != "treatment") ||
 		!exposure.Eligible || exposure.PositionCount < 0 || exposure.PositionCount > 50 {
 		return domain.ErrInvalidInput
+	}
+	if stableVariant(exposure.UserID) != exposure.Variant {
+		return domain.ErrInvalidInput
+	}
+	if s.researchConsent == nil {
+		return domain.ErrForbidden
+	}
+	consent, err := s.researchConsent(ctx, exposure.UserID)
+	if err != nil {
+		return domain.ErrInternalServer
+	}
+	if !consent {
+		return domain.ErrForbidden
 	}
 	repo, ok := s.repo.(ExposureRepository)
 	if !ok {

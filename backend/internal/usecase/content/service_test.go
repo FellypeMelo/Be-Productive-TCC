@@ -16,6 +16,7 @@ import (
 type mockContentRepo struct {
 	contents map[int64]*domain.Content
 	created  []*domain.Content
+	exposures []domain.ExperimentExposure
 }
 
 func newMockRepo() *mockContentRepo {
@@ -83,6 +84,10 @@ func (m *mockContentRepo) AddFeedback(ctx context.Context, contentID, userID int
 	return nil
 }
 func (m *mockContentRepo) AddReport(ctx context.Context, contentID, userID int64, motivo, detalhes string) error {
+	return nil
+}
+func (m *mockContentRepo) AddExperimentExposure(ctx context.Context, exposure domain.ExperimentExposure) error {
+	m.exposures = append(m.exposures, exposure)
 	return nil
 }
 
@@ -281,4 +286,35 @@ func TestGetFeedForwardsBinaryProtectiveOrder(t *testing.T) {
 	require.Len(t, result.Contents, 1)
 	assert.Equal(t, "2.2.0-sustainable-attention", result.ModelVersion)
 	assert.Contains(t, result.Explanations[1], "protective_dense_content")
+}
+
+func TestGetFeedForwardsResearchConsent(t *testing.T) {
+	recommender := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request map[string]any
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
+		assert.Equal(t, true, request["research_consent"])
+		_, _ = w.Write([]byte(`{"content_ids":[1],"scores":[0.9],"friction_level":"none","model_version":"2.3.0-sustainable-attention","experiment_id":"sustainable-attention-v1","variant":"control","assignment_version":"sha256-v1","eligible":true,"experiment":"control","explanations":{}}`))
+	}))
+	defer recommender.Close()
+
+	svc := NewService(newMockRepo(), recommender.URL, WithResearchConsentReader(func(context.Context, int64) (bool, error) { return true, nil }))
+	result, err := svc.GetFeed(context.Background(), 1, "", 0, 10, false, "", false)
+	require.NoError(t, err)
+	assert.Equal(t, "sustainable-attention-v1", result.ExperimentID)
+	assert.True(t, result.Eligible)
+}
+
+func TestRecordExperimentExposureRequiresConsentAndValidAssignment(t *testing.T) {
+	repo := newMockRepo()
+	svc := NewService(repo, "", WithResearchConsentReader(func(context.Context, int64) (bool, error) { return true, nil }))
+	exposure := domain.ExperimentExposure{
+		EventID: "exposure-1", ExperimentID: ExperimentID, Variant: stableVariant(1),
+		AssignmentVersion: AssignmentVersion, AlgorithmVersion: AlgorithmVersion,
+		RequestID: "request-1", UserID: 1, Eligible: true, Served: true, PositionCount: 20,
+	}
+	require.NoError(t, svc.RecordExperimentExposure(context.Background(), exposure))
+	assert.Len(t, repo.exposures, 1)
+
+	exposure.Variant = "treatment"
+	assert.ErrorIs(t, svc.RecordExperimentExposure(context.Background(), exposure), domain.ErrInvalidInput)
 }

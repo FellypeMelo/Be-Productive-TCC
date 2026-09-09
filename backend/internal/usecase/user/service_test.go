@@ -256,8 +256,10 @@ func TestSettingsCRUD(t *testing.T) {
 		SugestaoSaudavelAtiva: false,
 		PersonalizacaoAtiva:   false,
 		NotificacaoFocoAtiva:  true,
+		PesquisaConsentimento: true,
 	})
 	assert.NoError(t, err)
+	assert.Equal(t, ResearchConsentVersion, repo.settings.PesquisaConsentimentoVersao)
 }
 
 func TestHashPasswordIsDeterministic(t *testing.T) {

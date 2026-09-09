@@ -1,6 +1,6 @@
 # SPEC-AB-001 — A/B robusto para atenção sustentável
 
-**Status:** proposta pronta para implementação  
+**Status:** implementação operacional inicial concluída; execução real ainda depende de protocolo, aprovação e amostra  
 **Versão:** 1.0  
 **Escopo:** experimento com usuários reais, consentido e separado do ABM  
 **Princípio:** agência e reserva cognitiva > intenção declarada > eficiência > engajamento

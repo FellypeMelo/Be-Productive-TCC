@@ -5,6 +5,7 @@
     import Sidebar from "$lib/components/Sidebar.svelte";
     import { animate, stagger } from "motion";
     import { EdgeFatigueEngine, type FrictionLevel } from "$lib/fatigue";
+    import { LocalReserveAccumulator } from "$lib/sustainable-metrics";
 
     let feed = $state<Content[]>([]);
     let isLoading = $state(true);
@@ -29,6 +30,7 @@
 
     // On-device fatigue inference (Ego-Depletion EDO + Hawkes dual-kernel).
     const fatigueEngine = new EdgeFatigueEngine();
+    const reserveMetrics = new LocalReserveAccumulator();
     let fatigueInterval: ReturnType<typeof setInterval> | null = null;
     let lastScrollY = 0;
     let lastScrollTime = Date.now();
@@ -46,6 +48,7 @@
     const SCROLL_SAMPLE_MS = 200;
     const BLOCK_WAIT_SECONDS = 5;
     const FATIGUE_STORAGE_KEY = "be-productive:fatigue:v1";
+    const RESERVE_METRICS_STORAGE_KEY = "be-productive:metrics:reserve:v1";
     const REASON_LABELS: Record<string, string> = {
         matches_your_topics: "alinhado aos seus interesses",
         high_quality: "alta qualidade",
@@ -282,6 +285,8 @@
             const level = fatigueEngine.tick(dt);
             frictionLevel = level;
             localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(fatigueEngine.snapshot()));
+            reserveMetrics.observe(fatigueEngine.getReserveRatio(), dt);
+            localStorage.setItem(RESERVE_METRICS_STORAGE_KEY, JSON.stringify(reserveMetrics.snapshot()));
 
             // Only this binary order leaves the device. A threshold crossing
             // refreshes the ranking without exposing scroll/context telemetry.
@@ -334,6 +339,8 @@
                     fatigueEngine.restore(JSON.parse(saved));
                     frictionLevel = fatigueEngine.frictionLevel();
                 }
+                const savedMetrics = localStorage.getItem(RESERVE_METRICS_STORAGE_KEY);
+                if (savedMetrics) reserveMetrics.restore(JSON.parse(savedMetrics));
             }
         } catch {
             personalizationEnabled = false;

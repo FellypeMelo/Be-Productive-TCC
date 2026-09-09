@@ -103,4 +103,23 @@ describe('API client', () => {
 
     await expect(api.getUser(1)).rejects.toThrow();
   });
+
+  it('records only the versioned experiment exposure contract', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      status: 202,
+      json: () => Promise.resolve({ success: true, data: { accepted: true } }),
+    });
+
+    await api.recordExperimentExposure({
+      event_id: 'e1', experiment_id: 'sustainable-attention-v1', variant: 'control',
+      assignment_version: 'sha256-v1', algorithm_version: '2.3.0-sustainable-attention',
+      request_id: 'r1', eligible: true, served: true, fallback: false, position_count: 20,
+    });
+
+    const [url, options] = (global.fetch as any).mock.calls[0];
+    expect(url).toContain('/experiments/exposures');
+    expect(JSON.parse(options.body)).not.toHaveProperty('v_scroll');
+    expect(JSON.parse(options.body).variant).toBe('control');
+  });
 });
