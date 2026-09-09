@@ -2,7 +2,7 @@
     import { currentUser, isLoggedIn, ui } from "$lib/stores";
     import { api, type FocusGoal, type Session, type SessionReport, type Content } from "$lib/api";
     import { onMount } from "svelte";
-    import { fade, slide } from "svelte/transition";
+    import { fade } from "svelte/transition";
     import { goto } from "$app/navigation";
     import Sidebar from "$lib/components/Sidebar.svelte";
     import FocusSlide from "$lib/components/FocusSlide.svelte";
@@ -14,11 +14,14 @@
     let showGoalForm = $state(false);
     let showReport = $state<SessionReport | null>(null);
     let lastActiveElement = $state<HTMLElement | null>(null);
+    let loadError = $state("");
+    let formError = $state("");
 
     // Feed for focus mode
     let focusFeed = $state<Content[]>([]);
     let isLoadingFeed = $state(false);
     let activeSlideIndex = $state(0);
+    let focusFeedRef = $state<HTMLElement>();
 
     // Goal form
     let tempoProdutividade = $state(30);
@@ -71,6 +74,7 @@
             activeSlideIndex = 0;
         } catch (err) {
             console.error("Error loading focus feed:", err);
+            focusFeed = [];
         } finally {
             isLoadingFeed = false;
         }
@@ -80,6 +84,7 @@
         if (!$currentUser) return;
         isLoading = true;
         try {
+            loadError = "";
             goals = await api.listGoals($currentUser.id_usuario);
             
             const sessions = await api.listActiveSessions($currentUser.id_usuario);
@@ -115,6 +120,7 @@
             }
         } catch (err) {
             console.error("Error loading goals:", err);
+            loadError = "Não foi possível carregar suas metas agora. Tente atualizar a página.";
         } finally {
             isLoading = false;
         }
@@ -122,10 +128,15 @@
 
     async function createGoal() {
         if (!$currentUser || isSubmitting) return;
-        if (tempoProdutividade === 0 && tempoEntretenimento === 0) {
-            alert("Please set at least 1 minute.");
+        const produtividade = Math.max(0, Math.round(Number(tempoProdutividade) || 0));
+        const entretenimento = Math.max(0, Math.round(Number(tempoEntretenimento) || 0));
+        if (produtividade === 0 && entretenimento === 0) {
+            formError = "Defina pelo menos 1 minuto para começar.";
             return;
         }
+        formError = "";
+        tempoProdutividade = produtividade;
+        tempoEntretenimento = entretenimento;
 
         isSubmitting = true;
         try {
@@ -140,6 +151,7 @@
             await startSession(newGoals);
         } catch (err) {
             console.error("Error creating goal:", err);
+            formError = "Não foi possível criar a meta. Verifique sua conexão e tente novamente.";
         } finally {
             isSubmitting = false;
         }
@@ -167,6 +179,7 @@
             startTimer(true);
         } catch (err) {
             console.error("Error starting session:", err);
+            loadError = "Não foi possível iniciar a sessão. Tente novamente.";
             sessionCooldown = false;
         } finally {
             isSubmitting = false;
@@ -249,7 +262,31 @@
         const target = e.target as HTMLElement;
         activeSlideIndex = Math.round(target.scrollTop / window.innerHeight);
     }
+
+    function applyPreset(productivity: number, rest: number) {
+        tempoProdutividade = productivity;
+        tempoEntretenimento = rest;
+        formError = "";
+    }
+
+    function handleFocusKeydown(event: KeyboardEvent) {
+        if (!$ui.focusMode || !focusFeedRef || focusFeed.length === 0) return;
+        const target = event.target as HTMLElement | null;
+        if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+        const direction = event.key === "ArrowDown" || event.key === "PageDown"
+            ? 1
+            : event.key === "ArrowUp" || event.key === "PageUp"
+                ? -1
+                : 0;
+        if (direction === 0) return;
+        event.preventDefault();
+        const nextIndex = Math.max(0, Math.min(focusFeed.length, activeSlideIndex + direction));
+        const nextSlide = focusFeedRef.children[nextIndex] as HTMLElement | undefined;
+        nextSlide?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 </script>
+
+<svelte:window onkeydown={handleFocusKeydown} />
 
 <svelte:head>
     <title>Foco | Be Productive</title>
@@ -304,17 +341,16 @@
             <!-- Modo de foco imersivo -->
             {@const target = currentCategory === 'PRODUTIVIDADE' ? tempoProdutividade : tempoEntretenimento}
             {@const pct = target > 0 ? Math.min(100, Math.round((elapsedMinutes / target) * 100)) : 0}
-            <div class="h-screen w-full relative flex flex-col bg-paper">
+            <div class="h-[100svh] w-full relative flex flex-col bg-paper">
                 <!-- Barra de status superior -->
-                <nav class="absolute top-0 left-0 w-full z-50 p-4 sm:p-6 flex justify-between items-start gap-3 pointer-events-none">
-                    <div class="card !rounded-full pointer-events-auto overflow-hidden max-w-[70vw]">
-                        <div class="px-4 py-2 flex items-center gap-3">
+                <nav class="absolute top-0 left-0 w-full z-50 p-4 sm:p-6 flex justify-between items-start gap-3 pointer-events-none" aria-label="Controles da sessão">
+                    <div class="focus-hud card !rounded-2xl pointer-events-auto overflow-hidden max-w-[72vw]" aria-live="polite">
+                        <div class="px-3.5 py-2.5 sm:px-4 flex items-center gap-2.5">
                             <span class="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0"></span>
-                            <span class="text-xs font-semibold tracking-tight truncate">{currentCategory === 'PRODUTIVIDADE' ? 'Produtividade' : 'Descanso'}</span>
-                            <span class="text-line">·</span>
+                            <span class="text-xs font-semibold tracking-tight truncate">{currentCategory === 'PRODUTIVIDADE' ? 'Bloco de produtividade' : 'Bloco de descanso'}</span>
                             <span class="text-xs font-medium text-muted tabular-nums shrink-0">{elapsedMinutes} / {target} min</span>
                         </div>
-                        <div class="h-1 bg-hairline">
+                        <div class="h-1.5 bg-hairline" role="progressbar" aria-label="Progresso da sessão" aria-valuemin="0" aria-valuemax="100" aria-valuenow={pct}>
                             <div class="h-full bg-accent transition-all duration-500" style="width: {pct}%"></div>
                         </div>
                     </div>
@@ -323,6 +359,7 @@
                         <button
                             class="btn btn-outline bg-surface shrink-0 pointer-events-auto"
                             onclick={() => endSession(5)}
+                            aria-label={goalReached ? "Concluir sessão" : "Sair da sessão"}
                         >
                             {goalReached ? 'Concluir sessão' : 'Sair agora'}
                         </button>
@@ -350,22 +387,29 @@
 
                 <!-- Feed vertical -->
                 <div
+                    bind:this={focusFeedRef}
                     class="flex-1 overflow-y-scroll snap-y snap-mandatory no-scrollbar"
                     onscroll={handleScroll}
                 >
                     {#if isLoadingFeed}
-                        <div class="h-screen w-full flex items-center justify-center">
+                        <div class="h-full w-full flex flex-col items-center justify-center gap-4">
                             <div class="w-10 h-10 border-[3px] border-line border-t-accent rounded-full animate-spin"></div>
+                            <p class="text-sm text-muted">Preparando uma sequência tranquila…</p>
                         </div>
                     {:else if focusFeed.length === 0}
-                        <div class="h-screen w-full flex flex-col items-center justify-center gap-5 p-6 text-center">
-                            <span class="text-4xl">🌑</span>
-                            <p class="text-muted text-sm max-w-xs">Sem conteúdo para esta fase da sessão.</p>
+                        <div class="h-full w-full flex flex-col items-center justify-center gap-5 p-6 text-center">
+                            <span class="w-14 h-14 rounded-2xl bg-accent-wash text-accent flex items-center justify-center">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg>
+                            </span>
+                            <div>
+                                <p class="font-semibold">Nada novo para esta fase</p>
+                                <p class="text-muted text-sm max-w-xs mt-1">Sua atenção não precisa ser preenchida agora. Você pode encerrar quando quiser.</p>
+                            </div>
                             <button class="btn btn-outline" onclick={() => endSession(null)}>Encerrar sessão</button>
                         </div>
                     {:else}
                         {#each focusFeed as content, i}
-                            <FocusSlide {content} active={activeSlideIndex === i} />
+                            <FocusSlide {content} active={activeSlideIndex === i} index={i} total={focusFeed.length} />
                         {/each}
 
                         <!-- Fim do fluxo -->
@@ -383,11 +427,25 @@
                         </div>
                     {/if}
                 </div>
+                {#if focusFeed.length > 0 && activeSlideIndex === 0 && !isLoadingFeed}
+                    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 pointer-events-none hidden sm:flex items-center gap-2 rounded-full bg-surface/90 border border-line px-3 py-1.5 text-[11px] font-medium text-muted shadow-soft" aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 13 5 5 5-5M12 18V6"/></svg>
+                        Deslize ou use ↑ ↓
+                    </div>
+                {/if}
             </div>
 
         {:else}
             <!-- Configuração de metas -->
             <div class="p-5 sm:p-8 lg:p-12 max-w-4xl mx-auto animate-fadeIn">
+                {#if isLoading}
+                    <div class="space-y-4" aria-label="Carregando foco">
+                        <div class="skeleton h-3 w-28"></div>
+                        <div class="skeleton h-10 w-3/4"></div>
+                        <div class="skeleton h-4 w-2/3"></div>
+                        <div class="card p-7 mt-10 space-y-4"><div class="skeleton h-5 w-1/3"></div><div class="skeleton h-16 w-full"></div></div>
+                    </div>
+                {:else}
                 <header class="mb-8 sm:mb-10">
                     <p class="eyebrow mb-2">Espaço de foco</p>
                     <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Desenhe os limites da sua atenção</h1>
@@ -395,6 +453,13 @@
                         Defina quanto tempo dedicar a produzir e a descansar. Dados reais, foco real.
                     </p>
                 </header>
+
+                {#if loadError}
+                    <div class="privacy-note !bg-danger-wash !text-danger mb-8" role="alert">
+                        <span class="shrink-0 mt-0.5">!</span>
+                        <p class="text-sm">{loadError}</p>
+                    </div>
+                {/if}
 
                 {#if activeGoalCount > 0}
                     <button
@@ -444,7 +509,7 @@
                                     <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Produtividade
                                 </label>
                                 <div class="flex items-baseline gap-2 mt-3">
-                                    <input type="number" id="p" min="0" bind:value={tempoProdutividade} class="input !text-4xl !font-bold !p-0 !border-0 !bg-transparent w-24 tabular-nums focus:!ring-0 focus:!shadow-none" />
+                                    <input type="number" id="p" min="0" max="240" step="5" inputmode="numeric" bind:value={tempoProdutividade} class="input !text-4xl !font-bold !p-0 !border-0 !bg-transparent w-24 tabular-nums focus:!ring-0 focus:!shadow-none" />
                                     <span class="text-sm font-medium text-subtle">min</span>
                                 </div>
                             </div>
@@ -453,9 +518,18 @@
                                     <span class="w-1.5 h-1.5 rounded-full bg-subtle"></span> Descanso
                                 </label>
                                 <div class="flex items-baseline gap-2 mt-3">
-                                    <input type="number" id="e" min="0" bind:value={tempoEntretenimento} class="input !text-4xl !font-bold !p-0 !border-0 !bg-transparent w-24 tabular-nums focus:!ring-0 focus:!shadow-none" />
+                                    <input type="number" id="e" min="0" max="240" step="5" inputmode="numeric" bind:value={tempoEntretenimento} class="input !text-4xl !font-bold !p-0 !border-0 !bg-transparent w-24 tabular-nums focus:!ring-0 focus:!shadow-none" />
                                     <span class="text-sm font-medium text-subtle">min</span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-xs font-semibold text-muted mb-2">Comece por um ritmo</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="chip" onclick={() => applyPreset(25, 5)}>25 + 5 min</button>
+                                <button type="button" class="chip" onclick={() => applyPreset(50, 10)}>50 + 10 min</button>
+                                <button type="button" class="chip" onclick={() => applyPreset(90, 15)}>90 + 15 min</button>
                             </div>
                         </div>
 
@@ -490,7 +564,11 @@
                             </div>
                         </label>
 
-                        <button class="btn btn-accent w-full !py-3.5" onclick={createGoal} disabled={isSubmitting}>
+                        {#if formError}
+                            <p class="text-sm text-danger -mt-4" role="alert">{formError}</p>
+                        {/if}
+
+                        <button class="btn btn-accent w-full !py-3.5" onclick={createGoal} disabled={isSubmitting || tempoTotal <= 0}>
                             {isSubmitting ? 'Preparando…' : 'Iniciar sessão imersiva'}
                         </button>
                     </div>
@@ -517,6 +595,7 @@
                             </div>
                         {/each}
                     </div>
+                {/if}
                 {/if}
             </div>
         {/if}

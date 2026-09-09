@@ -6,12 +6,27 @@
     interface Props {
         content: Content;
         active: boolean;
+        index?: number;
+        total?: number;
     }
 
-    let { content, active }: Props = $props();
+    let { content, active, index = 0, total = 1 }: Props = $props();
 
     let showReportModal = $state(false);
     let feedbackGiven = $state<string | null>(null);
+    let reportReason = $state("não é relevante para mim");
+    let reportDetails = $state("");
+    let reportStatus = $state<"idle" | "sending" | "success" | "error">("idle");
+
+    const mediaLabels: Record<Content["tipo_de_midia"], string> = {
+        TEXTO: "Leitura",
+        VIDEO: "Vídeo",
+        AUDIO: "Áudio",
+    };
+
+    function categoryLabel(category: Content["categoria"]): string {
+        return category === "PRODUTIVIDADE" ? "Produtividade" : "Descanso";
+    }
 
     async function handleFeedback(type: string) {
         if (!$currentUser) return;
@@ -20,6 +35,23 @@
             feedbackGiven = type;
         } catch (err) {
             console.error("Error submitting feedback:", err);
+        }
+    }
+
+    async function submitReport() {
+        if (!$currentUser || reportStatus === "sending") return;
+        reportStatus = "sending";
+        try {
+            await api.reportContent(
+                content.id_conteudo,
+                $currentUser.id_usuario,
+                reportReason,
+                reportDetails.trim(),
+            );
+            reportStatus = "success";
+        } catch (err) {
+            console.error("Error reporting content:", err);
+            reportStatus = "error";
         }
     }
 
@@ -34,7 +66,7 @@
     }
 </script>
 
-<section class="focus-slide h-screen w-full flex flex-col items-center justify-center relative snap-start bg-white overflow-hidden border-b border-black/5">
+<section class="focus-slide h-[100svh] min-h-[620px] w-full flex flex-col items-center justify-center relative snap-start bg-paper overflow-hidden border-b border-line" aria-label="Conteúdo {index + 1} de {total}">
     <!-- Background Type Decoration (Subtle) -->
     <div class="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none">
         <span class="text-[40vh] font-bold uppercase tracking-tighter">
@@ -43,26 +75,31 @@
     </div>
 
     <!-- Main Content Container -->
-    <div class="max-w-4xl w-full h-full flex flex-col p-12 md:p-24 relative z-10">
+    <div class="max-w-5xl w-full h-full flex flex-col px-5 pt-24 pb-7 sm:px-8 sm:pt-28 sm:pb-8 lg:px-12 relative z-10">
         <!-- Metadata Top -->
-        <header class="flex justify-between items-start mb-8">
+        <header class="flex justify-between items-start gap-4 mb-5 sm:mb-7">
             <div class="space-y-2">
-                <div class="flex items-center gap-3">
-                    <span class="px-2 py-0.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest">
-                        {content.categoria}
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="chip chip-accent !cursor-default !text-[10px] uppercase tracking-[.12em]">
+                        {categoryLabel(content.categoria)}
                     </span>
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        #{content.tags_relevantes?.split(',')[0]}
+                    <span class="text-[10px] font-semibold text-subtle uppercase tracking-[.12em]">
+                        {mediaLabels[content.tipo_de_midia]}
                     </span>
                 </div>
-                <h2 class="text-3xl md:text-5xl font-bold tracking-tighter uppercase leading-none max-w-2xl">
+                <h2 class="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.04] max-w-3xl">
                     {content.titulo}
                 </h2>
+                {#if content.tags_relevantes}
+                    <p class="text-xs text-muted truncate max-w-xl">
+                        {content.tags_relevantes.split(',').slice(0, 3).map((tag) => `#${tag.trim()}`).join(' · ')}
+                    </p>
+                {/if}
             </div>
         </header>
 
         <!-- Dynamic Media Area -->
-        <div class="flex-1 flex items-center justify-center w-full min-h-0 bg-gray-50 border border-black/10 group relative">
+        <div class="flex-1 flex items-center justify-center w-full min-h-0 rounded-3xl bg-surface border border-line shadow-soft group relative overflow-hidden">
             {#if content.tipo_de_midia === 'VIDEO'}
                 <iframe
                     title={content.titulo}
@@ -72,9 +109,9 @@
                     allowfullscreen
                 ></iframe>
             {:else if content.tipo_de_midia === 'AUDIO'}
-                <div class="w-full h-full flex flex-col items-center justify-center p-12 space-y-8">
-                    <div class="w-32 h-32 rounded-full border-2 border-black flex items-center justify-center animate-spin-slow">
-                        <span class="text-4xl">🎧</span>
+                <div class="w-full h-full flex flex-col items-center justify-center p-6 sm:p-12 gap-7">
+                    <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-accent-wash text-accent border border-accent/20 flex items-center justify-center animate-spin-slow">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
                     </div>
                     <iframe
                         title={content.titulo}
@@ -88,8 +125,8 @@
                 </div>
             {:else}
                 <!-- TEXT Content -->
-                <div class="w-full h-full overflow-y-auto p-12 md:p-16 prose prose-black max-w-none">
-                    <div class="text-xl leading-relaxed font-serif text-gray-800 space-y-6">
+                <div class="w-full h-full overflow-y-auto p-6 sm:p-10 lg:p-14 max-w-none">
+                    <div class="text-base sm:text-lg leading-[1.75] font-serif text-ink space-y-6 max-w-3xl mx-auto">
                         {content.corpo}
                     </div>
                 </div>
@@ -97,39 +134,84 @@
         </div>
 
         <!-- Interactions Footer -->
-        <footer class="mt-8 flex justify-between items-center">
-            <div class="flex items-center gap-8">
-                <div class="flex gap-4">
+        <footer class="mt-5 sm:mt-7 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div class="flex items-center justify-between sm:justify-start gap-3 sm:gap-6">
+                <div class="flex gap-1.5 sm:gap-2" aria-label="Avaliar conteúdo">
                     <button 
                         class="interaction-btn {feedbackGiven === 'util' ? 'active' : ''}"
                         onclick={() => handleFeedback('util')}
+                        aria-pressed={feedbackGiven === 'util'}
                     >
-                        <span class="text-lg">🎯</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest">Useful</span>
+                        <span class="text-sm">Útil</span>
                     </button>
                     <button 
                         class="interaction-btn {feedbackGiven === 'relaxante' ? 'active' : ''}"
                         onclick={() => handleFeedback('relaxante')}
+                        aria-pressed={feedbackGiven === 'relaxante'}
                     >
-                        <span class="text-lg">😌</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest">Relaxing</span>
+                        <span class="text-sm">Relaxante</span>
                     </button>
                 </div>
                 
                 <button 
-                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors"
+                    class="btn btn-ghost !px-2 !text-xs"
                     onclick={() => (showReportModal = true)}
                 >
-                    Report Issue
+                    Sinalizar
                 </button>
             </div>
 
-            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-300">
-                Author ID: {content.autor_id}
+            <div class="text-xs font-medium text-subtle tabular-nums">
+                Conteúdo {index + 1} de {total}
             </div>
         </footer>
     </div>
 </section>
+
+{#if showReportModal}
+    <div class="fixed inset-0 z-[200] flex items-center justify-center p-5 bg-ink/45 backdrop-blur-sm" role="presentation" onclick={(event) => event.target === event.currentTarget && (showReportModal = false)}>
+        <div class="card w-full max-w-md p-6 sm:p-7 animate-scaleIn" role="dialog" aria-modal="true" aria-labelledby="report-title">
+            {#if reportStatus === "success"}
+                <div class="text-center py-3">
+                    <span class="mx-auto w-12 h-12 rounded-2xl bg-accent-wash text-accent flex items-center justify-center mb-4">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
+                    </span>
+                    <h2 class="text-lg font-bold" id="report-title">Obrigado pelo sinal</h2>
+                    <p class="text-sm text-muted mt-2">Vamos revisar este conteúdo para manter o espaço útil e seguro.</p>
+                    <button class="btn btn-primary w-full mt-6" onclick={() => { showReportModal = false; reportStatus = "idle"; }}>Fechar</button>
+                </div>
+            {:else}
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="eyebrow mb-1">Cuidar do espaço</p>
+                        <h2 class="text-xl font-bold" id="report-title">O que aconteceu?</h2>
+                    </div>
+                    <button class="btn btn-ghost !p-2" aria-label="Fechar sinalização" onclick={() => (showReportModal = false)}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <label class="block text-sm font-medium mt-6" for="report-reason">Motivo</label>
+                <select id="report-reason" class="input mt-2" bind:value={reportReason}>
+                    <option>não é relevante para mim</option>
+                    <option>informação incorreta</option>
+                    <option>conteúdo inadequado</option>
+                    <option>problema técnico</option>
+                </select>
+                <label class="block text-sm font-medium mt-4" for="report-details">Detalhes <span class="font-normal text-subtle">(opcional)</span></label>
+                <textarea id="report-details" class="input mt-2 min-h-24 resize-y" bind:value={reportDetails} placeholder="Conte um pouco mais, se quiser."></textarea>
+                {#if reportStatus === "error"}
+                    <p class="text-sm text-danger mt-3" role="alert">Não foi possível enviar agora. Tente novamente.</p>
+                {/if}
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-6">
+                    <button class="btn btn-ghost" onclick={() => (showReportModal = false)}>Cancelar</button>
+                    <button class="btn btn-primary" onclick={submitReport} disabled={reportStatus === "sending"}>
+                        {reportStatus === "sending" ? "Enviando…" : "Enviar sinal"}
+                    </button>
+                </div>
+            {/if}
+        </div>
+    </div>
+{/if}
 
 <style>
     .focus-slide {
@@ -141,22 +223,26 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        border: 1px solid transparent;
+        justify-content: center;
+        min-height: 2.625rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--color-line);
+        border-radius: 999px;
+        color: var(--color-muted);
+        background: var(--color-surface);
         transition: all 0.2s ease;
-        opacity: 0.6;
+        cursor: pointer;
     }
 
     .interaction-btn:hover {
-        opacity: 1;
-        background: #f9f9f9;
+        color: var(--color-ink);
+        border-color: var(--color-ink);
     }
 
     .interaction-btn.active {
-        opacity: 1;
-        border-color: black;
-        background: white;
+        color: var(--color-accent-ink);
+        border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+        background: var(--color-accent-wash);
     }
 
     .animate-spin-slow {
@@ -168,17 +254,8 @@
         to { transform: rotate(360deg); }
     }
 
-    /* Hide scrollbar for clean look */
-    .prose::-webkit-scrollbar {
-        width: 4px;
+    @media (prefers-reduced-motion: reduce) {
+        .animate-spin-slow { animation: none; }
     }
-    .prose::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .prose::-webkit-scrollbar-thumb {
-        background: #eee;
-    }
-    .prose::-webkit-scrollbar-thumb:hover {
-        background: #ccc;
-    }
+
 </style>
