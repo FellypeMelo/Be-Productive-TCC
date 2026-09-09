@@ -60,6 +60,20 @@ type Content struct {
 	Topics           []Topic         `json:"topics,omitempty"`
 }
 
+// ContentInteraction is a ranking signal from an authenticated user.
+type ContentInteraction struct {
+	EventID       string    `json:"event_id"`
+	ContentID     int64     `json:"content_id"`
+	UserID        int64     `json:"user_id"`
+	Type          string    `json:"type"`
+	DwellSeconds  int       `json:"dwell_seconds"`
+	Position      int       `json:"position"`
+	Algorithm     string    `json:"algorithm"`
+	Experiment    string    `json:"experiment"`
+	FrictionLevel string    `json:"friction_level"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
 // FocusGoalStatus enum
 type FocusGoalStatus string
 

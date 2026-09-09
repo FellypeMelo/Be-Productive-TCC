@@ -247,3 +247,15 @@ func (r *ContentRepository) AddReport(ctx context.Context, contentID, userID int
 	_, err := r.db.ExecContext(ctx, query, contentID, userID, motivo, detalhes)
 	return err
 }
+
+func (r *ContentRepository) AddInteraction(ctx context.Context, event domain.ContentInteraction) error {
+	query := `
+		INSERT INTO interacao_conteudo
+		(event_id, id_conteudo, id_usuario, tipo, dwell_seconds, posicao, algoritmo, experimento, nivel_friccao, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE event_id = event_id
+	`
+	_, err := r.db.ExecContext(ctx, query, event.EventID, event.ContentID, event.UserID, event.Type,
+		event.DwellSeconds, event.Position, event.Algorithm, event.Experiment, event.FrictionLevel, event.CreatedAt)
+	return err
+}

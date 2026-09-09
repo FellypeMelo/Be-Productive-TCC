@@ -105,6 +105,7 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	topicIDStr := r.URL.Query().Get("topic_id")
 	limitStr := r.URL.Query().Get("limit")
 	absoluteModeStr := r.URL.Query().Get("absolute_mode_active")
+	protectiveModeStr := r.URL.Query().Get("protective_mode_active")
 	declaredGoal := r.URL.Query().Get("declared_goal")
 
 	topicID, _ := strconv.ParseInt(topicIDStr, 10, 64)
@@ -117,8 +118,9 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	absoluteModeActive := absoluteModeStr == "true" || absoluteModeStr == "1"
+	protectiveModeActive := protectiveModeStr == "true" || protectiveModeStr == "1"
 
-	result, err := h.service.GetFeed(r.Context(), userID, domain.ContentCategory(category), topicID, limit, absoluteModeActive, declaredGoal)
+	result, err := h.service.GetFeed(r.Context(), userID, domain.ContentCategory(category), topicID, limit, absoluteModeActive, declaredGoal, protectiveModeActive)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -129,7 +131,35 @@ func (h *ContentHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 		"scores":         result.Scores,
 		"items":          result.Contents,
 		"friction_level": result.FrictionLevel,
+		"model_version":  result.ModelVersion,
+		"experiment":     result.Experiment,
+		"explanations":   result.Explanations,
+		"fallback":       result.Fallback,
 	})
+}
+
+func (h *ContentHandler) RecordInteraction(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(w, r)
+	if !ok {
+		return
+	}
+	contentID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || contentID < 1 {
+		respondError(w, http.StatusBadRequest, "invalid content ID")
+		return
+	}
+	var event domain.ContentInteraction
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	event.ContentID = contentID
+	event.UserID = userID
+	if err := h.service.RecordInteraction(r.Context(), event); err != nil {
+		handleError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusAccepted, map[string]bool{"accepted": true})
 }
 
 func extractContentIDs(contents []domain.Content) []int64 {

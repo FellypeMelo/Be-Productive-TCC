@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/be-productive/backend/internal/domain"
@@ -38,6 +39,14 @@ type FeedResult struct {
 	Contents      []domain.Content
 	Scores        map[int64]float64
 	FrictionLevel string
+	ModelVersion  string
+	Experiment    string
+	Explanations  map[int64][]string
+	Fallback      bool
+}
+
+type InteractionRepository interface {
+	AddInteraction(ctx context.Context, event domain.ContentInteraction) error
 }
 
 // FocusGateway exposes the user's server-side focus state used to enforce the
@@ -112,7 +121,7 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*domain.Content, error
 
 // GetFeed returns personalized feed (RF011, RF014)
 // Optionally accepts absoluteModeActive and declaredGoal to activate the recommender's Absolute Mode filter (Eq.2 + Algorithm 4).
-func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) (*FeedResult, error) {
+func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string, protectiveModeActive bool) (*FeedResult, error) {
 	// Enforce the Ulysses Pact server-side: an active absolute-mode focus session
 	// overrides any client-supplied absolute_mode_active / declared_goal. Client
 	// query params remain only as a no-auth fallback for anonymous/testing use.
@@ -126,8 +135,21 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 	}
 
 	// 1. Try to get recommendations from external service
-	contentIDs, scores, frictionLevel, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal)
+	contentIDs, scores, frictionLevel, modelVersion, experiment, explanations, err := s.fetchRecommendations(ctx, userID, category, topicID, limit, absoluteModeActive, declaredGoal, protectiveModeActive)
 	if err != nil || len(contentIDs) == 0 {
+		if protectiveModeActive {
+			// Fail closed: a recommender outage must not silently replace a
+			// protected feed with unrestricted database results.
+			return &FeedResult{
+				Contents:      []domain.Content{},
+				Scores:        map[int64]float64{},
+				FrictionLevel: "high",
+				ModelVersion:  "protective-fallback-v1",
+				Experiment:    "protective",
+				Explanations:  map[int64][]string{},
+				Fallback:      true,
+			}, nil
+		}
 		// Fallback: simple DB-only feed if recommender fails or returns nothing (KISS/Resilience)
 		fmt.Printf("Warning: Recommender failed or returned no data: %v. Falling back to DB feed.\n", err)
 		contents, dbErr := s.repo.GetFeed(ctx, userID, category, topicID, limit)
@@ -138,6 +160,10 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 			Contents:      contents,
 			Scores:        map[int64]float64{},
 			FrictionLevel: "none",
+			ModelVersion:  "db-fallback-v1",
+			Experiment:    "fallback",
+			Explanations:  map[int64][]string{},
+			Fallback:      true,
 		}, nil
 	}
 
@@ -145,14 +171,18 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 	// 2. Fetch content details from Repository using Batch Get
 	contents, err := s.repo.GetByIDs(ctx, contentIDs)
 	if err != nil {
+		if protectiveModeActive {
+			return &FeedResult{
+				Contents: []domain.Content{}, Scores: map[int64]float64{},
+				FrictionLevel: "high", ModelVersion: "protective-fallback-v1",
+				Experiment: "protective", Explanations: map[int64][]string{}, Fallback: true,
+			}, nil
+		}
 		fmt.Printf("Warning: Failed to fetch content details for recommended IDs: %v. Falling back.\n", err)
 		contents, _ = s.repo.GetFeed(ctx, userID, category, topicID, limit)
 	}
 
-	// 3. Update quality scores from recommender
-	s.updateContentScores(ctx, contentIDs, scores)
-
-	// Build score map for frontend
+	// Personalized rank scores never overwrite global content quality.
 	scoreMap := make(map[int64]float64)
 	for i, id := range contentIDs {
 		if i < len(scores) {
@@ -164,6 +194,9 @@ func (s *Service) GetFeed(ctx context.Context, userID int64, category domain.Con
 		Contents:      contents,
 		Scores:        scoreMap,
 		FrictionLevel: frictionLevel,
+		ModelVersion:  modelVersion,
+		Experiment:    experiment,
+		Explanations:  explanations,
 	}, nil
 }
 
@@ -176,13 +209,14 @@ func (s *Service) updateContentScores(ctx context.Context, contentIDs []int64, s
 	}
 }
 
-func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string) ([]int64, []float64, string, error) {
+func (s *Service) fetchRecommendations(ctx context.Context, userID int64, category domain.ContentCategory, topicID int64, limit int, absoluteModeActive bool, declaredGoal string, protectiveModeActive bool) ([]int64, []float64, string, string, string, map[int64][]string, error) {
 	url := fmt.Sprintf("%s/api/v1/recommend", s.recommenderURL)
 
 	params := map[string]interface{}{
-		"user_id":              userID,
-		"limit":                limit,
-		"absolute_mode_active": absoluteModeActive,
+		"user_id":                userID,
+		"limit":                  limit,
+		"absolute_mode_active":   absoluteModeActive,
+		"protective_mode_active": protectiveModeActive,
 	}
 	if category != "" {
 		params["category"] = category
@@ -198,7 +232,7 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, nil, "none", err
+		return nil, nil, "none", "", "", nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if s.sharedSecret != "" {
@@ -207,25 +241,52 @@ func (s *Service) fetchRecommendations(ctx context.Context, userID int64, catego
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, nil, "none", err
+		return nil, nil, "none", "", "", nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, "none", fmt.Errorf("recommender returned status %d", resp.StatusCode)
+		return nil, nil, "none", "", "", nil, fmt.Errorf("recommender returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
-		ContentIDs    []int64   `json:"content_ids"`
-		Scores        []float64 `json:"scores"`
-		FrictionLevel string    `json:"friction_level"`
-		ModelVersion  string    `json:"model_version"`
+		ContentIDs    []int64             `json:"content_ids"`
+		Scores        []float64           `json:"scores"`
+		FrictionLevel string              `json:"friction_level"`
+		ModelVersion  string              `json:"model_version"`
+		Experiment    string              `json:"experiment"`
+		Explanations  map[string][]string `json:"explanations"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, nil, "none", err
+		return nil, nil, "none", "", "", nil, err
 	}
+	explanations := make(map[int64][]string, len(result.Explanations))
+	for rawID, reasons := range result.Explanations {
+		if id, parseErr := strconv.ParseInt(rawID, 10, 64); parseErr == nil {
+			explanations[id] = reasons
+		}
+	}
+	return result.ContentIDs, result.Scores, result.FrictionLevel, result.ModelVersion, result.Experiment, explanations, nil
+}
 
-	return result.ContentIDs, result.Scores, result.FrictionLevel, nil
+// RecordInteraction stores consent-safe product events. Raw fatigue telemetry is excluded.
+func (s *Service) RecordInteraction(ctx context.Context, event domain.ContentInteraction) error {
+	valid := map[string]bool{"impression": true, "open": true, "complete": true, "hide": true}
+	if !valid[event.Type] || event.EventID == "" || event.ContentID < 1 || event.UserID < 1 || event.DwellSeconds < 0 || event.Position < 0 {
+		return domain.ErrInvalidInput
+	}
+	if len(event.EventID) > 64 || len(event.Algorithm) > 64 || len(event.Experiment) > 64 {
+		return domain.ErrInvalidInput
+	}
+	// Fatigue state belongs to the edge client. Keep the legacy column neutral
+	// even if an older or modified client tries to submit a friction verdict.
+	event.FrictionLevel = "none"
+	repo, ok := s.repo.(InteractionRepository)
+	if !ok {
+		return domain.ErrInternalServer
+	}
+	event.CreatedAt = time.Now().UTC()
+	return repo.AddInteraction(ctx, event)
 }
 
 // SubmitFeedback records user feedback and updates quality score (RF015, RN002)

@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/be-productive/backend/internal/adapter/http/router"
@@ -47,8 +49,22 @@ func main() {
 	addr := cfg.Server.Host + ":" + cfg.Server.Port
 	log.Printf("Server starting on %s", addr)
 
-	if err := http.ListenAndServe(addr, r); err != nil {
-		log.Fatalf("Server failed: %v", err)
-		os.Exit(1)
+	server := &http.Server{
+		Addr: addr, Handler: r,
+		ReadTimeout: cfg.Server.ReadTimeout, WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout: cfg.Server.IdleTimeout, ReadHeaderTimeout: 5 * time.Second,
+	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}()
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
 	}
 }

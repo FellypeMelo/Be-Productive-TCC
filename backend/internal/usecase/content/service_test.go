@@ -2,6 +2,9 @@ package content
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -107,7 +110,7 @@ func TestGetFeedReturnsContent(t *testing.T) {
 	repo := newMockRepo()
 	svc := NewService(repo, "http://localhost:8002")
 
-	result, err := svc.GetFeed(context.Background(), 1, "", 0, 20, false, "")
+	result, err := svc.GetFeed(context.Background(), 1, "", 0, 20, false, "", false)
 
 	require.NoError(t, err)
 	assert.Equal(t, 2, len(result.Contents))
@@ -119,7 +122,7 @@ func TestGetFeedWithCategoryFilter(t *testing.T) {
 	repo := newMockRepo()
 	svc := NewService(repo, "http://localhost:8002")
 
-	result, err := svc.GetFeed(context.Background(), 1, domain.CategoryProdutividade, 0, 20, false, "")
+	result, err := svc.GetFeed(context.Background(), 1, domain.CategoryProdutividade, 0, 20, false, "", false)
 
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(result.Contents))
@@ -131,7 +134,7 @@ func TestGetFeedFallbackWhenRecommenderDown(t *testing.T) {
 	// Use a dead URL to trigger fallback
 	svc := NewService(repo, "http://127.0.0.1:19999")
 
-	result, err := svc.GetFeed(context.Background(), 1, "", 0, 10, false, "")
+	result, err := svc.GetFeed(context.Background(), 1, "", 0, 10, false, "", false)
 
 	require.NoError(t, err)
 	assert.Equal(t, "none", result.FrictionLevel)
@@ -142,7 +145,7 @@ func TestGetFeedRespectsLimit(t *testing.T) {
 	repo := newMockRepo()
 	svc := NewService(repo, "http://localhost:8002")
 
-	result, err := svc.GetFeed(context.Background(), 1, "", 0, 1, false, "")
+	result, err := svc.GetFeed(context.Background(), 1, "", 0, 1, false, "", false)
 
 	require.NoError(t, err)
 	assert.True(t, len(result.Contents) <= 1)
@@ -242,4 +245,40 @@ func TestContentHandlerGetFeedWithFrictionLevel(t *testing.T) {
 			assert.Equal(t, level, result.FrictionLevel)
 		})
 	}
+}
+
+func TestGetFeedProtectiveModeFailsClosedWhenRecommenderIsDown(t *testing.T) {
+	repo := newMockRepo()
+	svc := NewService(repo, "http://127.0.0.1:19999")
+
+	result, err := svc.GetFeed(context.Background(), 1, "", 0, 10, false, "", true)
+
+	require.NoError(t, err)
+	assert.Empty(t, result.Contents)
+	assert.Equal(t, "high", result.FrictionLevel)
+	assert.Equal(t, "protective-fallback-v1", result.ModelVersion)
+	assert.True(t, result.Fallback)
+}
+
+func TestGetFeedForwardsBinaryProtectiveOrder(t *testing.T) {
+	recommender := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request map[string]any
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
+		assert.Equal(t, true, request["protective_mode_active"])
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"content_ids":[1], "scores":[0.91], "friction_level":"none",
+			"model_version":"2.2.0-sustainable-attention", "experiment":"control",
+			"explanations":{"1":["protective_dense_content"]}
+		}`))
+	}))
+	defer recommender.Close()
+
+	svc := NewService(newMockRepo(), recommender.URL)
+	result, err := svc.GetFeed(context.Background(), 1, "", 0, 10, false, "", true)
+
+	require.NoError(t, err)
+	require.Len(t, result.Contents, 1)
+	assert.Equal(t, "2.2.0-sustainable-attention", result.ModelVersion)
+	assert.Contains(t, result.Explanations[1], "protective_dense_content")
 }

@@ -1,8 +1,11 @@
 package router
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/be-productive/backend/internal/adapter/http/handler"
 	"github.com/be-productive/backend/internal/adapter/http/middleware"
@@ -16,6 +19,9 @@ import (
 
 func New(db *sql.DB, cfg *config.Config) http.Handler {
 	mux := http.NewServeMux()
+	metrics := middleware.NewMetrics()
+	globalLimiter := middleware.NewRateLimiter(cfg.Server.RateLimit, time.Minute)
+	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 
 	// Repositories
 	userRepo := mysql.NewUserRepository(db)
@@ -42,13 +48,26 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 
 	// Health check
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
+	mux.HandleFunc("GET /health/ready", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		ctx, cancel := context.WithTimeout(r.Context(), time.Second)
+		defer cancel()
+		if err := db.PingContext(ctx); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "not_ready", "database": "unavailable"})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ready", "database": "connected"})
+	})
+	mux.Handle("GET /metrics", metrics)
 
 	// Auth routes (Public)
-	mux.HandleFunc("POST /api/v1/auth/login", userHandler.Login)
-	mux.HandleFunc("POST /api/v1/auth/register", userHandler.Create)
+	mux.Handle("POST /api/v1/auth/login", authLimiter.Middleware(http.HandlerFunc(userHandler.Login)))
+	mux.Handle("POST /api/v1/auth/register", authLimiter.Middleware(http.HandlerFunc(userHandler.Create)))
 
 	// Auth Middleware
 	auth := middleware.AuthMiddleware([]byte(cfg.JWTSecret))
@@ -66,6 +85,7 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 	mux.Handle("GET /api/v1/content/{id}", auth(http.HandlerFunc(contentHandler.GetByID)))
 	mux.Handle("POST /api/v1/content/{id}/feedback", auth(http.HandlerFunc(contentHandler.SubmitFeedback)))
 	mux.Handle("POST /api/v1/content/{id}/report", auth(http.HandlerFunc(contentHandler.Report)))
+	mux.Handle("POST /api/v1/content/{id}/events", auth(http.HandlerFunc(contentHandler.RecordInteraction)))
 
 	// Community routes (Protected) (UC04)
 	mux.Handle("GET /api/v1/communities", auth(http.HandlerFunc(communityHandler.List)))
@@ -86,8 +106,13 @@ func New(db *sql.DB, cfg *config.Config) http.Handler {
 	mux.Handle("GET /api/v1/focus/sessions/{id}/report", auth(http.HandlerFunc(focusHandler.GetReport)))
 
 	// Apply middleware
-	handler := middleware.CORS(mux)
+	handler := middleware.BodyLimit(1<<20, mux)
+	handler = globalLimiter.Middleware(handler)
+	handler = metrics.Middleware(handler)
 	handler = middleware.Logger(handler)
+	handler = middleware.CORS(cfg.Server.AllowedOrigins, handler)
+	handler = middleware.SecurityHeaders(handler)
+	handler = middleware.RequestID(handler)
 	handler = middleware.Recover(handler)
 
 	return handler

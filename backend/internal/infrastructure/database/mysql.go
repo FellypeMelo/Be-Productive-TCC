@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/be-productive/backend/internal/infrastructure/config"
 	_ "github.com/go-sql-driver/mysql"
@@ -29,6 +30,8 @@ func Connect(cfg config.DatabaseConfig) (*sql.DB, error) {
 	// Configure connection pool
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
+	db.SetConnMaxIdleTime(90 * time.Second)
 
 	return db, nil
 }
