@@ -14,6 +14,7 @@ These internal docs are mirrored in two languages, with matching filenames and s
 | Roadmap | [`en/roadmap.md`](en/roadmap.md) | [`pt-BR/roadmap.md`](pt-BR/roadmap.md) |
 | Security posture | [`en/security.md`](en/security.md) | [`pt-BR/security.md`](pt-BR/security.md) |
 | Milestones | [`en/milestones.md`](en/milestones.md) | [`pt-BR/milestones.md`](pt-BR/milestones.md) |
+| A/B test robustness SPEC | [`en/ab-test-robustness-spec.md`](en/ab-test-robustness-spec.md) | [`pt-BR/ab-test-robustness-spec.md`](pt-BR/ab-test-robustness-spec.md) |
 
 Language-neutral assets, including [`openapi.yaml`](openapi.yaml), live at this level and are linked from both trees.
 

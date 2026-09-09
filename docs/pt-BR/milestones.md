@@ -47,7 +47,7 @@ Limite externo: baseline lexical não é classificador treinado. Produção exig
 
 Implementado: atribuição estável `control`/`treatment`; exposição na resposta e eventos; tratamento de diversidade; ABM separado do runtime.
 
-Limite externo: causalidade exige amostra real, consentimento e protocolo pré-registrado.
+Limite externo: causalidade exige amostra real, consentimento e protocolo pré-registrado. O desenho robusto está especificado em [`ab-test-robustness-spec.md`](ab-test-robustness-spec.md), mas ainda não foi executado em usuários reais.
 
 ## 9. Observabilidade e resiliência
 
