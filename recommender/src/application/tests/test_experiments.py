@@ -10,3 +10,7 @@ def test_assignment_is_stable_and_binary():
 def test_assignment_requires_research_consent():
     assert stable_variant(12345, eligible=False) == "not_eligible"
     assert experiment_assignment(12345, eligible=False)["eligible"] is False
+
+
+def test_rollout_can_hold_back_without_reassigning_users():
+    assert stable_variant(12345, eligible=True, rollout_fraction=0.0) == "not_eligible"

@@ -14,6 +14,20 @@ paths:
         - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 50, default: 20}}
       responses:
         "200": {description: Ranked feed with model metadata and explanations}
+  /users/{id}/settings:
+    get:
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses: {"200": {description: Privacy and research consent settings}}
+    put:
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UserSettings"}
+      responses: {"200": {description: Settings updated}}
   /content/{id}/events:
     post:
       security: [{bearerAuth: []}]
@@ -42,6 +56,14 @@ components:
   securitySchemes:
     bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
   schemas:
+    UserSettings:
+      type: object
+      required: [sugestao_saudavel_ativa, personalizacao_ativa, notificacao_foco_ativa, consentimento_pesquisa]
+      properties:
+        sugestao_saudavel_ativa: {type: boolean}
+        personalizacao_ativa: {type: boolean}
+        notificacao_foco_ativa: {type: boolean}
+        consentimento_pesquisa: {type: boolean, description: Explicit opt-in independent of personalization}
     ContentEvent:
       type: object
       required: [event_id, type, dwell_seconds, position, algorithm, experiment, friction_level]
