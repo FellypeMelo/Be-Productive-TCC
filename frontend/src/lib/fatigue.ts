@@ -60,6 +60,12 @@ export interface EdgeFatigueOptions {
     now?: () => number;
 }
 
+export interface FatigueSnapshot {
+    version: 1;
+    reserve: number;
+    savedAt: number;
+}
+
 // --- Sensible defaults ---------------------------------------------------------
 
 const DEFAULT_FATIGUE: FatigueParams = {
@@ -210,6 +216,23 @@ export class EdgeFatigueEngine {
 
     getHawkesRatio(): number {
         return this.lastHawkesRatio;
+    }
+
+    snapshot(): FatigueSnapshot {
+        return { version: 1, reserve: this.reserve, savedAt: Date.now() };
+    }
+
+    restore(snapshot: FatigueSnapshot, maxAgeMs = 8 * 60 * 60 * 1000): boolean {
+        if (snapshot?.version !== 1 || !Number.isFinite(snapshot.reserve) || !Number.isFinite(snapshot.savedAt)) {
+            return false;
+        }
+        const ageMs = Date.now() - snapshot.savedAt;
+        if (ageMs < 0 || ageMs > maxAgeMs) return false;
+        const recovered = snapshot.reserve
+            + this.fatigue.muRest * (this.fatigue.rMax - snapshot.reserve) * (ageMs / 1000);
+        this.reserve = clamp(recovered, 0, this.fatigue.rMax);
+        this.lastFriction = this.deriveFriction();
+        return true;
     }
 
     /** Reset all in-memory state to a fresh, full-reserve engine. */

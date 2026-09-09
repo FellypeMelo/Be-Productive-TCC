@@ -2,17 +2,55 @@
   import { page } from "$app/stores";
   import { currentUser } from "$lib/stores";
   import { api, type Content } from "$lib/api";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import Sidebar from "$lib/components/Sidebar.svelte";
 
   let id = $derived($page.params.id);
   let content = $state<Content | null>(null);
   let isLoading = $state(true);
   let feedbackSent = $state(false);
+  let trackingEnabled = false;
+  let openedAt = Date.now();
+  let rankingContext = {
+    algorithm: "unknown", experiment: "none", position: 0,
+  };
 
-  onMount(() => {
-    loadContent();
+  onMount(async () => {
+    openedAt = Date.now();
+    try {
+      rankingContext = {
+        ...rankingContext,
+        ...JSON.parse(sessionStorage.getItem("be-productive:ranking-context") || "{}"),
+      };
+    } catch {
+      // Missing ranking context is valid for direct links.
+    }
+    await Promise.all([loadContent(), loadTrackingPreference()]);
   });
+
+  onDestroy(() => {
+    const dwellSeconds = Math.floor((Date.now() - openedAt) / 1000);
+    if (!trackingEnabled || !content || dwellSeconds < 15) return;
+    void api.recordContentEvent(content.id_conteudo, {
+      event_id: eventID(), type: "complete", dwell_seconds: dwellSeconds,
+      position: rankingContext.position, algorithm: rankingContext.algorithm,
+      experiment: rankingContext.experiment,
+    }).catch(() => undefined);
+  });
+
+  async function loadTrackingPreference() {
+    if (!$currentUser) return;
+    try {
+      trackingEnabled = (await api.getSettings($currentUser.id_usuario)).personalizacao_ativa;
+    } catch {
+      trackingEnabled = false;
+    }
+  }
+
+  function eventID(): string {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
 
   async function loadContent() {
     isLoading = true;
@@ -75,7 +113,7 @@
 <div class="flex min-h-screen">
   <Sidebar />
 
-  <main class="flex-1 md:ml-64 pt-14 md:pt-0">
+  <main class="flex-1 min-w-0 md:ml-64 pt-14 md:pt-0">
     <div class="p-5 sm:p-8 lg:p-12 max-w-2xl mx-auto">
       {#if isLoading}
         <div class="space-y-6">

@@ -25,6 +25,7 @@
     let tempoEntretenimento = $state(15);
     let modoAbsoluto = $state(false);
     let tempoTotal = $derived(tempoProdutividade + tempoEntretenimento);
+    let activeGoalCount = $derived(goals.filter((g) => g.status === "ATIVA").length);
 
     // Timer & Session State
     let elapsedMinutes = $state(0);
@@ -251,7 +252,7 @@
 </script>
 
 <svelte:head>
-    <title>Focus | Be Productive</title>
+    <title>Foco | Be Productive</title>
 </svelte:head>
 
 <div class="flex min-h-screen bg-paper text-ink">
@@ -259,7 +260,7 @@
         <Sidebar />
     {/if}
 
-    <main class="flex-1 {!$ui.focusMode && !showReport ? 'md:ml-64 pt-14 md:pt-0' : ''}">
+    <main class="flex-1 min-w-0 {!$ui.focusMode && !showReport ? 'md:ml-64 pt-14 md:pt-0' : ''}">
         {#if showReport}
             <!-- Relatório da sessão -->
             {@const concluido = showReport.classification === 'concluido'}
@@ -395,7 +396,7 @@
                     </p>
                 </header>
 
-                {#if goals.filter((g) => g.status === "ATIVA").length > 0}
+                {#if activeGoalCount > 0}
                     <button
                         type="button"
                         onclick={() => startSession()}
@@ -406,9 +407,11 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                             </span>
                             <div>
-                                <h3 class="font-semibold text-lg tracking-tight">Você tem uma meta ativa</h3>
+                                <h3 class="font-semibold text-lg tracking-tight">
+                                    {activeGoalCount === 1 ? "Você tem uma meta ativa" : `Você tem ${activeGoalCount} metas ativas`}
+                                </h3>
                                 <p class="text-sm text-muted mt-0.5">
-                                    Retomar a sessão com {goals.filter((g) => g.status === "ATIVA").length} meta(s).
+                                    {activeGoalCount === 1 ? "Retome seu compromisso de onde parou." : "Retome seus compromissos de onde parou."}
                                 </p>
                             </div>
                         </div>

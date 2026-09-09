@@ -13,6 +13,11 @@
     let selectedTopic = $state<number | null>(null);
     let topics = $state<any[]>([]);
     let gridRef: HTMLElement;
+    let personalizationEnabled = $state(false);
+    let fatigueEnabled = $state(false);
+    let modelVersion = "unknown";
+    let experiment = "none";
+    let explanations = $state<Record<number, string[]>>({});
 
     // Friction state — computed 100% ON-DEVICE by the Edge fatigue engine.
     // Raw telemetry (v_scroll, v_alt) NEVER leaves the browser.
@@ -26,6 +31,7 @@
     let lastTickTime = Date.now();
     // Throttle so a scroll gesture (which fires many events) is sampled, not flooded.
     let lastScrollSampleTime = 0;
+    let lastProtectionOrder = false;
 
     // Explicit-confirm gate for the "block" overlay (no one-click no-op dismissal).
     let blockAcknowledged = $state(false);
@@ -35,6 +41,28 @@
     const TICK_MS = 1500;
     const SCROLL_SAMPLE_MS = 200;
     const BLOCK_WAIT_SECONDS = 5;
+    const FATIGUE_STORAGE_KEY = "be-productive:fatigue:v1";
+    const REASON_LABELS: Record<string, string> = {
+        matches_your_topics: "alinhado aos seus interesses",
+        high_quality: "alta qualidade",
+        positive_history: "útil para você antes",
+        recent: "conteúdo recente",
+        not_repetitive: "traz variedade",
+        negative_history_penalty: "preferência ajustada",
+        repetition_penalty: "repetição reduzida",
+        balanced_candidate: "escolha equilibrada",
+        safety_penalty: "alcance reduzido por segurança",
+        protective_dense_content: "favorece atenção profunda",
+        deliberative_state_boost: "apoia seu momento de foco",
+        diversity_rerank: "amplia perspectivas",
+    };
+
+    function humanReasons(contentID: number): string[] {
+        return (explanations[contentID] || [])
+            .map((reason) => REASON_LABELS[reason])
+            .filter((reason): reason is string => Boolean(reason))
+            .slice(0, 3);
+    }
 
     // Nomes de autores para o feed de demonstração (leitura apenas).
     const AUTHORS: Record<number, string> = {
@@ -168,9 +196,9 @@
 
     onMount(async () => {
         if (!$isLoggedIn) return;
-        loadTopics();
-        loadFeed();
-        startFatigueMonitoring();
+        await loadPrivacySettings();
+        await Promise.all([loadTopics(), loadFeed()]);
+        if (fatigueEnabled) startFatigueMonitoring();
     });
 
     onDestroy(() => {
@@ -249,6 +277,12 @@
 
             const level = fatigueEngine.tick(dt);
             frictionLevel = level;
+            localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(fatigueEngine.snapshot()));
+
+            // Only this binary order leaves the device. A threshold crossing
+            // refreshes the ranking without exposing scroll/context telemetry.
+            const protectionOrder = isProtectionOrderActive();
+            if (protectionOrder !== lastProtectionOrder) void loadFeed();
 
             if (level !== "block") {
                 // User is no longer blocked — clear any pending acknowledgement gate.
@@ -283,17 +317,50 @@
         }
     }
 
+    async function loadPrivacySettings() {
+        if (!$currentUser) return;
+        try {
+            const settings = await api.getSettings($currentUser.id_usuario);
+            personalizationEnabled = settings.personalizacao_ativa;
+            fatigueEnabled = settings.sugestao_saudavel_ativa;
+            if (fatigueEnabled) {
+                const saved = localStorage.getItem(FATIGUE_STORAGE_KEY);
+                if (saved) {
+                    fatigueEngine.restore(JSON.parse(saved));
+                    frictionLevel = fatigueEngine.frictionLevel();
+                }
+            }
+        } catch {
+            personalizationEnabled = false;
+            fatigueEnabled = false;
+        }
+    }
+
     async function loadFeed() {
         isLoading = true;
         try {
             const userID = $currentUser?.id_usuario || 1;
+            const protectionOrder = isProtectionOrderActive();
+            lastProtectionOrder = protectionOrder;
             const result = await api.getFeed(
                 userID,
                 category || undefined,
                 selectedTopic || undefined,
+                20,
+                false,
+                undefined,
+                protectionOrder,
             );
 
             feed = result.items;
+            modelVersion = result.model_version;
+            experiment = result.experiment;
+            explanations = result.explanations || {};
+            if (personalizationEnabled && !result.fallback) {
+                void Promise.allSettled(feed.map((content, position) =>
+                    recordEvent(content.id_conteudo, "impression", position)
+                ));
+            }
             // NOTE: friction is NOT read from the server anymore — it is computed
             // entirely on-device by the Edge fatigue engine (see runFatigueTick).
 
@@ -311,11 +378,47 @@
                 }
             }, 50);
         } catch (err) {
-            feed = mockFeed;
+            // A local protection order is fail-closed even when the network is
+            // unavailable: never replace a protected feed with demo content.
+            feed = isProtectionOrderActive() ? [] : mockFeed;
             // Do not reset friction here — it is owned by the on-device engine.
         } finally {
             isLoading = false;
         }
+    }
+
+    function eventID(): string {
+        if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+            return crypto.randomUUID();
+        }
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    async function recordEvent(
+        contentID: number,
+        type: "impression" | "open" | "complete" | "hide",
+        position: number,
+    ) {
+        if (!personalizationEnabled) return;
+        try {
+            if (type === "open") {
+                sessionStorage.setItem("be-productive:ranking-context", JSON.stringify({
+                    algorithm: modelVersion, experiment, position,
+                }));
+            }
+            await api.recordContentEvent(contentID, {
+                event_id: eventID(), type, dwell_seconds: 0, position,
+                algorithm: modelVersion, experiment,
+            });
+        } catch {
+            // Analytics must never block feed navigation.
+        }
+    }
+
+    function isProtectionOrderActive(): boolean {
+        if (!fatigueEnabled) return false;
+        const level = fatigueEngine.frictionLevel();
+        return level === "high" || level === "block";
     }
 
     function toggleCategory(cat: string | null) {
@@ -379,7 +482,7 @@
 <div class="flex min-h-screen {frictionLevel === 'high' || frictionLevel === 'block' ? 'feed-grayscale' : ''}">
     <Sidebar />
 
-    <main class="flex-1 md:ml-64 pt-14 md:pt-0">
+    <main class="flex-1 min-w-0 md:ml-64 pt-14 md:pt-0">
       <div class="p-5 sm:p-8 lg:p-12 max-w-6xl mx-auto">
         <!-- Banner de fricção ALTA — nudge suave (paleta warn) -->
         {#if frictionLevel === 'high'}
@@ -489,6 +592,21 @@
             </div>
         </header>
 
+        <div class="privacy-note mb-8" role="status">
+            <span class="w-9 h-9 rounded-xl bg-surface text-accent flex items-center justify-center shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </span>
+            <div class="min-w-0 flex-1">
+                <div class="flex flex-col items-start sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                    <p class="font-semibold text-sm">Proteção de atenção no seu dispositivo</p>
+                    <span class="chip chip-accent !py-0.5 !text-[10px]">{fatigueEnabled ? "Ativa" : "Opcional"}</span>
+                </div>
+                <p class="text-xs sm:text-sm mt-1 leading-relaxed opacity-80">
+                    Rolagem e trocas de contexto ficam neste navegador. O servidor recebe somente uma ordem de proteção quando necessário.
+                </p>
+            </div>
+        </div>
+
         <!-- Navegador de tópicos -->
         <div class="mb-8">
             <p class="eyebrow mb-3">Explore seus interesses</p>
@@ -532,11 +650,12 @@
                     {@const prod = content.categoria === "PRODUTIVIDADE"}
                     <a
                         href="/content/{content.id_conteudo}"
+                        onclick={() => void recordEvent(content.id_conteudo, "open", feed.indexOf(content))}
                         class="group rounded-[14px] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                     >
                         <article class="card card-interactive card-reveal p-0 overflow-hidden h-full flex flex-col">
                             <!-- Mídia -->
-                            <div class="relative aspect-[16/10] flex items-center justify-center overflow-hidden {prod ? 'bg-accent-wash' : 'bg-hairline'}">
+                            <div class="relative aspect-[16/8] sm:aspect-[16/10] flex items-center justify-center overflow-hidden {prod ? 'bg-accent-wash' : 'bg-hairline'}">
                                 <div class="{prod ? 'text-accent' : 'text-subtle'} transition-transform duration-300 group-hover:scale-110">
                                     {#if content.tipo_de_midia === "VIDEO"}
                                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
@@ -583,6 +702,17 @@
                                     </div>
                                 {/if}
 
+                                {#if humanReasons(content.id_conteudo).length}
+                                    <div class="flex flex-wrap gap-1.5 mt-3" aria-label="Motivos da recomendação">
+                                        {#each humanReasons(content.id_conteudo) as reason}
+                                            <span class="reason-pill">
+                                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M3 12h18"/></svg>
+                                                {reason}
+                                            </span>
+                                        {/each}
+                                    </div>
+                                {/if}
+
                                 <div class="mt-auto pt-4 flex items-center gap-2 text-xs text-subtle">
                                     <span class="w-5 h-5 rounded-full bg-ink text-paper flex items-center justify-center text-[9px] font-bold uppercase shrink-0">
                                         {authorName(content.autor_id).charAt(0)}
@@ -601,8 +731,14 @@
         {#if !isLoading && feed.length === 0}
             <div class="py-24 sm:py-32 text-center card border-dashed">
                 <p class="text-4xl mb-4">🍃</p>
-                <p class="font-semibold text-ink">Nada por aqui ainda</p>
-                <p class="text-sm text-muted mt-1">Não há conteúdo nesta seção no momento.</p>
+                <p class="font-semibold text-ink">
+                    {isProtectionOrderActive() ? "Uma pausa também é uma boa recomendação" : "Nada por aqui ainda"}
+                </p>
+                <p class="text-sm text-muted mt-1 max-w-md mx-auto">
+                    {isProtectionOrderActive()
+                        ? "O modo protetivo não encontrou conteúdo adequado para este momento. Respire, hidrate-se e volte quando quiser."
+                        : "Não há conteúdo nesta seção no momento."}
+                </p>
             </div>
         {/if}
       </div>

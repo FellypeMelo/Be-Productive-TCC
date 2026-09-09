@@ -1,4 +1,5 @@
 import { writable, derived } from 'svelte/store';
+import { browser } from '$app/environment';
 import type { User } from './api';
 
 // Auth store
@@ -77,6 +78,10 @@ function createAuthStore() {
 }
 
 export const auth = createAuthStore();
+
+// Initialize before protected page components mount. Doing this only in the
+// root layout can race child onMount hooks after a full-page reload.
+if (browser) auth.init();
 
 // UI Store
 interface UIState {

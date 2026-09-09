@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { auth, isLoggedIn } from "$lib/stores";
     import { onMount } from "svelte";
     import { animate } from "motion";
 
@@ -7,8 +6,6 @@
     let featuresRef: HTMLElement;
 
     onMount(() => {
-        auth.init();
-
         // Minimalist entrance animations
         if (heroRef)
             animate(heroRef, { opacity: [0, 1], y: [20, 0] } as any, {
@@ -54,7 +51,8 @@
         bind:this={heroRef}
         class="max-w-6xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 lg:pt-32 pb-16 sm:pb-24 opacity-0"
     >
-        <div class="max-w-3xl">
+        <div class="grid lg:grid-cols-[minmax(0,1fr)_360px] items-center gap-12 lg:gap-20">
+          <div class="max-w-3xl">
             <p class="eyebrow mb-5">Rede social · saúde mental · curadoria ética</p>
             <h1 class="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
                 A atenção é um recurso.
@@ -74,6 +72,28 @@
                     Explorar o feed
                 </a>
             </div>
+          </div>
+
+          <aside class="attention-preview" aria-label="Como a proteção de atenção funciona">
+              <div class="flex items-center justify-between gap-4">
+                  <div>
+                      <p class="eyebrow">Proteção local</p>
+                      <p class="font-semibold mt-1">Seu ritmo permanece seu</p>
+                  </div>
+                  <span class="status-dot"><span></span> Ativa</span>
+              </div>
+              <div class="attention-orbit" aria-hidden="true">
+                  <div class="attention-orbit__inner">
+                      <span>Reserva</span>
+                      <strong>estável</strong>
+                  </div>
+              </div>
+              <div class="space-y-3">
+                  <div class="preview-step"><span>01</span><p><strong>Percebe</strong><br/>rolagem e alternância no aparelho</p></div>
+                  <div class="preview-step"><span>02</span><p><strong>Protege</strong><br/>reduz estímulos no momento certo</p></div>
+                  <div class="preview-step"><span>03</span><p><strong>Preserva</strong><br/>nenhuma telemetria bruta é enviada</p></div>
+              </div>
+          </aside>
         </div>
     </section>
 
@@ -168,3 +188,24 @@
         </div>
     </footer>
 </main>
+
+<style>
+    .attention-preview {
+        border: 1px solid var(--color-line);
+        border-radius: 28px;
+        padding: 1.5rem;
+        background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+        box-shadow: var(--shadow-lift);
+    }
+    .status-dot { display: inline-flex; align-items: center; gap: .4rem; font-size: .72rem; font-weight: 700; color: var(--color-accent-ink); }
+    .status-dot span { width: .5rem; height: .5rem; border-radius: 999px; background: var(--color-accent); box-shadow: 0 0 0 5px var(--color-accent-wash); }
+    .attention-orbit { width: 11rem; height: 11rem; border-radius: 999px; margin: 2rem auto; padding: 1rem; background: conic-gradient(var(--color-accent) 0 78%, var(--color-hairline) 78%); position: relative; }
+    .attention-orbit::before { content: ""; position: absolute; inset: 7px; border-radius: inherit; background: var(--color-surface); }
+    .attention-orbit__inner { position: relative; width: 100%; height: 100%; border-radius: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--color-accent-wash); }
+    .attention-orbit__inner span { color: var(--color-muted); font-size: .75rem; }
+    .attention-orbit__inner strong { color: var(--color-accent-ink); font-size: 1.15rem; }
+    .preview-step { display: grid; grid-template-columns: 2rem 1fr; gap: .75rem; align-items: start; padding-top: .75rem; border-top: 1px solid var(--color-hairline); }
+    .preview-step > span { font: 700 .68rem var(--font-mono); color: var(--color-subtle); padding-top: .15rem; }
+    .preview-step p { font-size: .78rem; line-height: 1.45; color: var(--color-muted); }
+    .preview-step strong { color: var(--color-ink); font-weight: 650; }
+</style>

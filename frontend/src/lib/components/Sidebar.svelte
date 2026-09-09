@@ -57,7 +57,7 @@
 
 <!-- Sidebar / drawer -->
 <aside
-    class="fixed top-0 left-0 w-64 h-screen z-50 bg-surface border-r border-line flex flex-col p-6
+    class="fixed top-0 left-0 w-64 h-screen z-50 bg-surface border-r border-line flex flex-col p-6 shadow-[8px_0_32px_-28px_rgba(17,17,16,.3)]
            transition-transform duration-300 ease-out {open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0"
 >
     <a href="/" class="flex items-center gap-2.5 mb-10 group">
@@ -72,6 +72,7 @@
         {#each primary as item}
             <a
                 href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                        {isActive(item.href) ? 'bg-ink text-paper' : 'text-muted hover:text-ink hover:bg-hairline'}"
             >

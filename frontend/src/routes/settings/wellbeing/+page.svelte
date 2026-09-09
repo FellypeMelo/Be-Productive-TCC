@@ -46,13 +46,13 @@
 </script>
 
 <svelte:head>
-    <title>Wellbeing Settings | Be Productive</title>
+    <title>Bem-estar | Be Productive</title>
 </svelte:head>
 
 <div class="flex min-h-screen">
     <Sidebar />
 
-    <main class="flex-1 md:ml-64 pt-14 md:pt-0">
+    <main class="flex-1 min-w-0 md:ml-64 pt-14 md:pt-0">
       <div class="p-5 sm:p-8 lg:p-12 max-w-3xl mx-auto">
         <header class="mb-8 sm:mb-10">
             <p class="eyebrow mb-2">Preferências</p>
@@ -61,6 +61,16 @@
                 Ajuste como o Be Productive cuida da sua atenção e do seu descanso.
             </p>
         </header>
+
+        <div class="privacy-note mb-6">
+            <span class="w-9 h-9 rounded-xl bg-surface text-accent flex items-center justify-center shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <div>
+                <p class="font-semibold text-sm">Privacidade por padrão</p>
+                <p class="text-xs sm:text-sm mt-1 leading-relaxed opacity-80">A detecção de fadiga usa apenas este navegador. Velocidade de rolagem, trocas de contexto e reserva cognitiva não são salvas no servidor.</p>
+            </div>
+        </div>
 
         {#if isLoading}
             <div class="space-y-4">
@@ -83,7 +93,7 @@
                         </span>
                         <div>
                             <h3 class="font-semibold text-ink">Detecção de fadiga</h3>
-                            <p class="text-sm text-muted mt-0.5">Sugerir pausas após períodos longos de foco.</p>
+                            <p class="text-sm text-muted mt-0.5">Perceber desgaste localmente e sugerir pausas no momento certo.</p>
                         </div>
                     </div>
                     <span class="relative inline-flex shrink-0">
@@ -99,7 +109,7 @@
                         </span>
                         <div>
                             <h3 class="font-semibold text-ink">Personalização inteligente</h3>
-                            <p class="text-sm text-muted mt-0.5">Ajustar o feed com base na sua atividade recente.</p>
+                            <p class="text-sm text-muted mt-0.5">Usar impressões e escolhas de conteúdo para ajustar suas preferências.</p>
                         </div>
                     </div>
                     <span class="relative inline-flex shrink-0">

@@ -53,20 +53,28 @@
 </script>
 
 <svelte:head>
-    <title>Communities | Be Productive</title>
+    <title>Comunidades | Be Productive</title>
 </svelte:head>
 
 <div class="flex min-h-screen">
     <Sidebar />
 
-    <main class="flex-1 md:ml-64 pt-14 md:pt-0">
+    <main class="flex-1 min-w-0 md:ml-64 pt-14 md:pt-0">
       <div class="p-5 sm:p-8 lg:p-12 max-w-6xl mx-auto">
-        <header class="mb-8 sm:mb-10">
-            <p class="eyebrow mb-2">Descobrir</p>
-            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Comunidades</h1>
-            <p class="text-muted text-sm sm:text-base mt-2 max-w-md">
-                Encontre grupos alinhados aos seus interesses e cresça em boa companhia.
-            </p>
+        <header class="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+            <div>
+                <p class="eyebrow mb-2">Descobrir</p>
+                <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Comunidades</h1>
+                <p class="text-muted text-sm sm:text-base mt-2 max-w-md">
+                    Encontre grupos alinhados aos seus interesses e cresça em boa companhia.
+                </p>
+            </div>
+            {#if !isLoading}
+                <div class="calm-panel px-4 py-3 min-w-40">
+                    <p class="eyebrow">Sua rede</p>
+                    <p class="text-sm font-semibold mt-1">{myCommunityIds.size} {myCommunityIds.size === 1 ? "grupo escolhido" : "grupos escolhidos"}</p>
+                </div>
+            {/if}
         </header>
 
         {#if isLoading}
@@ -91,7 +99,7 @@
             <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                 {#each communities as community (community.id_comunidade)}
                     {@const joined = myCommunityIds.has(community.id_comunidade)}
-                    <div class="card card-interactive p-6 flex flex-col animate-fadeIn">
+                    <div class="card card-interactive p-6 flex flex-col animate-fadeIn min-h-[17rem]">
                         <div class="flex items-start justify-between gap-3 mb-4">
                             <span class="w-11 h-11 rounded-xl bg-accent-wash text-accent-ink flex items-center justify-center font-bold uppercase shrink-0">
                                 {community.nome_comunidade?.charAt(0) ?? "#"}

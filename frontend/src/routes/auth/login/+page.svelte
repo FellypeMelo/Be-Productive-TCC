@@ -26,7 +26,7 @@
       auth.login(user, token);
       goto("/feed");
     } catch (err) {
-      error = err instanceof Error ? err.message : "Login failed";
+      error = err instanceof Error ? err.message : "Não foi possível entrar.";
     } finally {
       isLoading = false;
     }
@@ -37,7 +37,7 @@
   <title>Entrar | Be Productive</title>
 </svelte:head>
 
-<main class="min-h-screen bg-paper flex items-center justify-center p-5 sm:p-6">
+<main class="auth-shell min-h-screen bg-paper flex items-center justify-center p-5 sm:p-6">
   <div bind:this={cardRef} class="w-full max-w-sm opacity-0">
     <a
       href="/"

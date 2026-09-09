@@ -77,6 +77,24 @@ describe('API client', () => {
     expect(url).toContain('topic_id=42');
   });
 
+  it('getFeed sends only the binary protection order', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({
+        success: true,
+        data: { content_ids: [], scores: {}, items: [], friction_level: 'high' },
+      }),
+    });
+
+    await api.getFeed(1, undefined, undefined, 20, false, undefined, true);
+
+    const url = (global.fetch as any).mock.calls[0][0];
+    expect(url).toContain('protective_mode_active=true');
+    expect(url).not.toContain('v_scroll');
+    expect(url).not.toContain('v_alt');
+  });
+
   it('non-auth endpoint 401 throws error', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,

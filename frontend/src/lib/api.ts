@@ -95,7 +95,7 @@ export const api = {
         fetchApi<Topic[]>(`/users/${userId}/topics`).then(data => data || []),
 
     // Content
-    getFeed: (userId: number, category?: string, topicId?: number, limit = 20, absoluteModeActive = false, declaredGoal?: string) => {
+    getFeed: (userId: number, category?: string, topicId?: number, limit = 20, absoluteModeActive = false, declaredGoal?: string, protectiveModeActive = false) => {
         const params = new URLSearchParams({
             limit: limit.toString(),
         });
@@ -103,6 +103,7 @@ export const api = {
         if (topicId) params.set('topic_id', topicId.toString());
         if (absoluteModeActive) params.set('absolute_mode_active', 'true');
         if (declaredGoal) params.set('declared_goal', declaredGoal);
+        if (protectiveModeActive) params.set('protective_mode_active', 'true');
         return fetchApi<FeedResponse>(`/feed?${params}`);
     },
 
@@ -124,6 +125,13 @@ export const api = {
         fetchApi<{ success: boolean }>(`/content/${contentId}/report`, {
             method: 'POST',
             body: JSON.stringify({ user_id: userId, motivo, detalhes }),
+        }),
+
+    recordContentEvent: (contentId: number, event: ContentEventInput) =>
+        fetchApi<{ accepted: boolean }>(`/content/${contentId}/events`, {
+            method: 'POST',
+            body: JSON.stringify(event),
+            keepalive: true,
         }),
 
     // Focus
@@ -280,4 +288,17 @@ export interface FeedResponse {
     scores: Record<number, number>;
     items: Content[];
     friction_level: "none" | "mild" | "high" | "block";
+    model_version: string;
+    experiment: string;
+    explanations: Record<number, string[]>;
+    fallback: boolean;
+}
+
+export interface ContentEventInput {
+    event_id: string;
+    type: 'impression' | 'open' | 'complete' | 'hide';
+    dwell_seconds: number;
+    position: number;
+    algorithm: string;
+    experiment: string;
 }
