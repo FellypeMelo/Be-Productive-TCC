@@ -1,0 +1,82 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: be_productive
+      MYSQL_ROOT_PASSWORD: local-development-only
+    ports:
+      - "3306:3306"
+    healthcheck:
+      # Force TCP: the initialization-only socket can answer before MySQL is
+      # reachable by sibling containers, producing a false-positive healthcheck.
+      test: ["CMD", "mysqladmin", "ping", "--protocol=tcp", "-h", "127.0.0.1", "-plocal-development-only"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  recommender:
+    build: ./recommender
+    environment:
+      APP_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: local-development-only
+      DB_NAME: be_productive
+      RECOMMENDER_SHARED_SECRET: local-recommender-secret-32-characters
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+
+  migrate:
+    build: ./backend
+    entrypoint: ["/app/seeder"]
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: local-development-only
+      DB_NAME: be_productive
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    environment:
+      APP_ENV: development
+      SERVER_HOST: 0.0.0.0
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: local-development-only
+      DB_NAME: be_productive
+      JWT_SECRET: local-jwt-secret-with-at-least-32-characters
+      RECOMMENDER_URL: http://recommender:8002
+      RECOMMENDER_SHARED_SECRET: local-recommender-secret-32-characters
+      ALLOWED_ORIGINS: http://localhost:5173
+    depends_on:
+      mysql:
+        condition: service_healthy
+      recommender:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8080/api/v1
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+volumes:
+  mysql-data:
