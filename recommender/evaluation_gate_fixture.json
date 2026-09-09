@@ -1,0 +1,15 @@
+{
+  "experiment_id": "sustainable-attention-v1",
+  "assignment_version": "sha256-v1",
+  "rows": [
+    {"user_id": 101, "variant": "control", "primary_metric": 0.72},
+    {"user_id": 102, "variant": "control", "primary_metric": 0.68},
+    {"user_id": 103, "variant": "treatment", "primary_metric": 0.74},
+    {"user_id": 104, "variant": "treatment", "primary_metric": 0.76}
+  ],
+  "guardrails": {
+    "safety_violation_rate": {"control": 0.010, "treatment": 0.010},
+    "critical_error_rate": {"control": 0.001, "treatment": 0.001},
+    "retention_7d": {"control": 0.800, "treatment": 0.800}
+  }
+}

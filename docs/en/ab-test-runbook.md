@@ -9,6 +9,8 @@ This runbook operates the implementation without turning ABM results into effica
 3. Set `EXPERIMENT_ROLLOUT` in the recommender container to `0.05`, `0.25`, or `0.50`.
 4. Rebuild the service and record the image digest. Assignment is per user and does not move during ramp-up.
 
+The `CI` workflow blocks pull requests and pushes that fail any service tests or the `ab-experiment-gate` job. That job runs `contract` mode inside the Docker image; run `analysis` mode against the real window aggregate.
+
 ## Monitoring and rollback
 
 Use `experimento_exposicao` as the valid exposure source; `event_id` makes writes idempotent. Run the aggregate-only ITT report with `python -m src.evaluation.ab_report`. Stop a window for SRM (`p < 0.001`), critical errors, safety, accessibility, or retention guardrails. Set `EXPERIMENT_ROLLOUT=0` for rollback and retain existing exposures for audit.

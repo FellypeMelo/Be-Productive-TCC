@@ -9,6 +9,8 @@ Este runbook descreve como operar a implementação sem transformar o resultado 
 3. Configurar `EXPERIMENT_ROLLOUT` no container do recommender para `0.05`, `0.25` ou `0.50`.
 4. Reconstruir o serviço e registrar o digest da imagem. A atribuição permanece por usuário e não muda durante a rampa.
 
+O workflow `CI` bloqueia PRs e pushes que falhem nos testes dos três serviços ou no job `ab-experiment-gate`. Esse job executa o modo `contract` dentro da imagem Docker; o modo `analysis` deve ser executado sobre o agregado real da janela.
+
 ## Monitoramento
 
 - `experimento_exposicao` é a fonte de exposição válida; `event_id` torna a gravação idempotente.
