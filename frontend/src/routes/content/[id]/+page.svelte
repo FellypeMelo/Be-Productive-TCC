@@ -9,6 +9,8 @@
   let content = $state<Content | null>(null);
   let isLoading = $state(true);
   let feedbackSent = $state(false);
+  let saved = $state(false);
+  let shareMessage = $state("");
   let trackingEnabled = false;
   let openedAt = Date.now();
   let rankingContext = {
@@ -52,10 +54,39 @@
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
+  function toggleSaved() {
+    if (!content) return;
+    const key = `be-productive:saved:${content.id_conteudo}`;
+    saved = !saved;
+    if (saved) localStorage.setItem(key, "true");
+    else localStorage.removeItem(key);
+  }
+
+  async function shareContent() {
+    if (!content) return;
+    const shareData = { title: content.titulo, text: "Confira este conteúdo no Be Productive", url: window.location.href };
+    try {
+      const canNativeShare = typeof navigator.share === "function";
+      if (canNativeShare) {
+        await navigator.share(shareData);
+        shareMessage = "Compartilhado";
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+        shareMessage = "Link copiado";
+      } else {
+        shareMessage = "Compartilhamento indisponível neste navegador";
+      }
+    } catch {
+      shareMessage = "Não foi possível compartilhar agora";
+    }
+    setTimeout(() => (shareMessage = ""), 2500);
+  }
+
   async function loadContent() {
     isLoading = true;
     try {
       content = await api.getContent(parseInt(id || "0"));
+      saved = localStorage.getItem(`be-productive:saved:${content.id_conteudo}`) === "true";
     } catch (err) {
       console.error("Failed to load content:", err);
       // Mock fallback for development if API fails
@@ -235,9 +266,18 @@
                 </div>
               </div>
 
-              <div class="flex gap-2.5">
-                <button class="btn btn-outline">Compartilhar</button>
-                <button class="btn btn-primary">Salvar</button>
+              <div class="flex flex-wrap items-center justify-end gap-2.5">
+                <button class="btn btn-outline" onclick={shareContent}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  Compartilhar
+                </button>
+                <button class="btn {saved ? 'btn-accent' : 'btn-primary'}" onclick={toggleSaved} aria-pressed={saved}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                  {saved ? "Salvo" : "Salvar"}
+                </button>
+                {#if shareMessage}
+                  <span class="text-xs text-accent" role="status">{shareMessage}</span>
+                {/if}
               </div>
             </div>
 

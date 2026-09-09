@@ -338,6 +338,7 @@
 
     async function loadFeed() {
         isLoading = true;
+        error = "";
         try {
             const userID = $currentUser?.id_usuario || 1;
             const protectionOrder = isProtectionOrderActive();
@@ -381,6 +382,9 @@
             // A local protection order is fail-closed even when the network is
             // unavailable: never replace a protected feed with demo content.
             feed = isProtectionOrderActive() ? [] : mockFeed;
+            error = isProtectionOrderActive()
+                ? "A proteção continua ativa, mas o servidor não respondeu. Mostrando uma pausa segura."
+                : "Estamos usando uma seleção local enquanto reconectamos ao servidor.";
             // Do not reset friction here — it is owned by the on-device engine.
         } finally {
             isLoading = false;
@@ -571,12 +575,14 @@
                     <button
                         onclick={() => toggleCategory(null)}
                         class="chip {category === null ? 'chip-active' : ''}"
+                        aria-pressed={category === null}
                     >
                         Tudo
                     </button>
                     <button
                         onclick={() => toggleCategory("PRODUTIVIDADE")}
                         class="chip {category === 'PRODUTIVIDADE' ? 'chip-active' : ''}"
+                        aria-pressed={category === 'PRODUTIVIDADE'}
                     >
                         <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
                         Produtividade
@@ -584,6 +590,7 @@
                     <button
                         onclick={() => toggleCategory("ENTRETENIMENTO")}
                         class="chip {category === 'ENTRETENIMENTO' ? 'chip-active' : ''}"
+                        aria-pressed={category === 'ENTRETENIMENTO'}
                     >
                         <span class="w-1.5 h-1.5 rounded-full bg-subtle"></span>
                         Entretenimento
@@ -607,6 +614,12 @@
             </div>
         </div>
 
+        {#if error}
+            <div class="mb-8 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted" role="status">
+                <span class="font-semibold text-ink">Nota:</span> {error}
+            </div>
+        {/if}
+
         <!-- Navegador de tópicos -->
         <div class="mb-8">
             <p class="eyebrow mb-3">Explore seus interesses</p>
@@ -614,6 +627,7 @@
                 <button
                     onclick={() => toggleTopic(null)}
                     class="chip whitespace-nowrap {selectedTopic === null ? 'chip-active' : ''}"
+                    aria-pressed={selectedTopic === null}
                 >
                     Para você
                 </button>
@@ -621,6 +635,7 @@
                     <button
                         onclick={() => toggleTopic(topic.id_topico)}
                         class="chip whitespace-nowrap {selectedTopic === topic.id_topico ? 'chip-active' : ''}"
+                        aria-pressed={selectedTopic === topic.id_topico}
                     >
                         {topic.nome_topico}
                     </button>
